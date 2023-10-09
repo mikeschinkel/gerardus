@@ -1,11 +1,15 @@
 package parser
 
+import (
+	"gerardus/scanner"
+)
+
 type ModFile struct {
-	File
+	scanner.File
 	Content []byte
 }
 
-func NewModFile(file File, content []byte) *ModFile {
+func NewModFile(file scanner.File, content []byte) *ModFile {
 	return &ModFile{
 		File:    file,
 		Content: content,

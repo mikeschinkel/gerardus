@@ -7,10 +7,11 @@ import (
 	"regexp"
 
 	"gerardus/paths"
+	"gerardus/scanner"
 )
 
 type GoFile struct {
-	File
+	scanner.File
 	Package   *Package
 	Imports   ImportsMap
 	Functions Functions
@@ -20,7 +21,7 @@ type GoFile struct {
 	Path       string // Only needed for DebugString
 }
 
-func NewGoFile(file File, pkgName string) *GoFile {
+func NewGoFile(file scanner.File, pkgName string) *GoFile {
 	return &GoFile{
 		File:       file,
 		Path:       file.RelPath(),
@@ -75,7 +76,7 @@ func (gf *GoFile) HasFunctions() bool {
 	return len(gf.Functions) > 0
 }
 
-func AsGoFile(file File) *GoFile {
+func AsGoFile(file scanner.File) *GoFile {
 	goFile, ok := file.(*GoFile)
 	if !ok {
 		panicf("Attempting to generate package on '%T'; %v", file)
@@ -85,9 +86,9 @@ func AsGoFile(file File) *GoFile {
 
 var matchPackage = regexp.MustCompile(`^\s*package\s+(.+)\s*$`)
 
-func loadPackageName(file File) (name string, err error) {
+func loadPackageName(file scanner.File) (name string, err error) {
 	var exists bool
-	var scanner *bufio.Scanner
+	var scnr *bufio.Scanner
 	var fh *os.File
 	var match []string
 
@@ -107,9 +108,9 @@ func loadPackageName(file File) (name string, err error) {
 	}
 	defer Close(fh, WarnOnError)
 
-	scanner = bufio.NewScanner(fh)
-	for scanner.Scan() {
-		line := scanner.Text()
+	scnr = bufio.NewScanner(fh)
+	for scnr.Scan() {
+		line := scnr.Text()
 		// Use regex to match the line
 		match = matchPackage.FindStringSubmatch(line)
 		if match != nil {
@@ -117,7 +118,7 @@ func loadPackageName(file File) (name string, err error) {
 			break
 		}
 	}
-	err = scanner.Err()
+	err = scnr.Err()
 end:
 	return name, err
 }

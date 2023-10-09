@@ -1,15 +1,36 @@
 package main
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 
+	"gerardus/cli"
 	"gerardus/options"
+	"gerardus/paths"
 )
 
 func usage(msg string, args ...any) {
 	options.StdErr(msg+"\n\n", args...)
-	options.StdErr("\tUsage: gerardus [-src=<source_dir>] [-out=<output_dir>] [-data=<sqlite_db>] run\n")
+	_ = cli.ExecHelp()
 	os.Exit(1)
+}
+
+func makeAbs(path string) (string, error) {
+	absDir, err := paths.Absolute(path)
+	if err != nil {
+		err = fmt.Errorf("error converting to absolute path: %s; %w",
+			path, err)
+	}
+	return absDir, err
+}
+
+func defaultSourceDir() string {
+	dir := os.Getenv("GOROOT")
+	if len(dir) > 0 {
+		dir = filepath.Join(dir, "src")
+	}
+	return dir
 }
 
 // printSymbolTypes is just an archetype for how to call SQLC generated funcs

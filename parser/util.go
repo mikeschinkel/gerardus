@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"go/ast"
 	"io"
-
-	"gerardus/options"
+	"os"
 )
 
 func panicf(msg string, args ...any) {
@@ -43,6 +42,6 @@ func Close(c io.Closer, f func(err error)) {
 
 func WarnOnError(err error) {
 	if err != nil {
-		options.StdErr(err.Error())
+		_, _ = fmt.Fprintln(os.Stderr, err.Error())
 	}
 }

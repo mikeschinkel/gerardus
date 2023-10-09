@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"gerardus/collector"
+	"gerardus/scanner"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -14,7 +15,7 @@ type SurveyAttrs interface {
 
 type SurveyPersister struct {
 	survey    SurveyAttrs
-	surveyID  int64
+	surveyId  int64
 	fileId    int64
 	filepath  string
 	dataStore *DataStore
@@ -27,22 +28,29 @@ func NewSurveyPersister(survey SurveyAttrs, ds *DataStore) *SurveyPersister {
 	}
 }
 
-func (sp *SurveyPersister) Persist(ctx context.Context, facetChan chan collector.CodeFacet) (err error) {
+//goland:noinspection GoUnusedParameter
+func (sp *SurveyPersister) Persist(ctx context.Context, fs scanner.Files) (err error) {
+	return nil // TODO Make this work with a slice of files
+}
+
+func (sp *SurveyPersister) PersistChan(ctx context.Context, facetChan chan collector.CodeFacet) (err error) {
 	var group *errgroup.Group
-	var cb Codebase
+	var codebaseID int64
 	var survey Survey
-	cb, err = sp.dataStore.UpsertCodebase(ctx, sp.survey.RepoURL())
+	ds := sp.dataStore
+
+	codebaseID, err = ds.LoadCodebaseIdByRepoURL(ctx, sp.survey.RepoURL())
 	if err != nil {
 		goto end
 	}
-	survey, err = sp.dataStore.InsertSurvey(ctx, InsertSurveyParams{
-		CodebaseID: cb.ID,
+	survey, err = ds.InsertSurvey(ctx, InsertSurveyParams{
+		CodebaseID: codebaseID,
 		LocalDir:   sp.survey.LocalDir(),
 	})
 	if err != nil {
 		goto end
 	}
-	sp.surveyID = survey.ID
+	sp.surveyId = survey.ID
 	group, ctx = errgroup.WithContext(ctx)
 	group.Go(func() (err error) {
 		return sp.persistFacet(ctx, facetChan)
@@ -121,9 +129,10 @@ func (sp *SurveyPersister) importSpecInsertFunc(ctx context.Context, is collecto
 		goto end
 	}
 	_, err = sp.dataStore.UpsertImport(ctx, UpsertImportParams{
-		FileID:  fileId,
-		Package: is.Package,
-		Alias:   is.Alias,
+		FileID:    fileId,
+		SurveyID:  sp.surveyId,
+		PackageID: "",
+		Alias:     is.Alias,
 	})
 	if err != nil {
 		goto end
@@ -140,7 +149,7 @@ func (sp *SurveyPersister) getFileId(ctx context.Context, f collector.File) (fid
 		goto end
 	}
 	mf, err = sp.dataStore.UpsertFile(ctx, UpsertFileParams{
-		SurveyID: sp.surveyID,
+		SurveyID: sp.surveyId,
 		Filepath: f.RelPath(),
 	})
 	if err != nil {

@@ -1,11 +1,11 @@
-/output
-/output/**
 /bin
 /bin/**
 /persister/db.go
 /persister/models.go
 /persister/query.sql.go
-/dummy/
-/dummy/**
-/quick/
-/quick/**
+/test/output
+/test/output/**
+/test/dummy/
+/test/dummy/**
+/test/quick/
+/test/quick/**

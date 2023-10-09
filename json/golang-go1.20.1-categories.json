@@ -1,0 +1,1088 @@
+{
+   "project":   {
+      "name": "golang",
+      "about": "The Go Programming Language Standard Library",
+      "repo_url": "https://github.com/golang/go"
+   },
+   "codebase":   {
+      "version_tag": "go1.21.0",
+      "source_url": "https://github.com/golang/go/tree/go1.21.0/src",
+      "local_dir_var": "GO_1_20_0_DIR"
+   },
+   "legend":     {
+      "*/pprof/driver":        "github.com/google/pprof/driver",
+      "*/arch/arm/armasm":     "golang.org/x/arch/arm/armasm",
+      "*/arch/ppc64/ppc64asm": "golang.org/x/arch/ppc64/ppc64asm",
+      "*/mod/modfile":         "golang.org/x/arch/mod/modfile",
+      "*/mod/sumdb":           "golang.org/x/arch/mod/sumdb",
+      "*/mod/zip":             "golang.org/x/arch/mod/zip",
+      "*/tools/go/analysis":   "golang.org/x/tools/go/analysis",
+      "*/crypto/cryptobyte":   "golang.org/x/crypto/cryptobyte",
+      "*/net/lif":             "golang.org/x/net/lif",
+      "*/net/route":           "golang.org/x/net/route"
+   },
+   "categories": [
+      {
+         "slug":       "algorithm",
+         "name":       "Algorithm",
+         "see_also":   [
+            "implementation"
+         ],
+         "interfaces": [
+            {
+               "package":   "container/heap",
+               "interface": "Interface"
+            },
+            {
+               "package":   "compress/flate",
+               "interface": "Reader"
+            },
+            {
+               "package":   "compress/flate",
+               "interface": "Resetter"
+            },
+            {
+               "package":   "compress/zlib",
+               "interface": "Resetter"
+            },
+            {
+               "package":   "crypto",
+               "interface": "Decypter"
+            },
+            {
+               "package":   "crypto",
+               "interface": "Signer"
+            },
+            {
+               "package":   "crypto",
+               "interface": "SignerOpts"
+            },
+            {
+               "package":   "crypto/cipher",
+               "interface": "Block"
+            },
+            {
+               "package":   "crypto/cipher",
+               "interface": "AEAD"
+            },
+            {
+               "package":   "crypto/elliptic",
+               "interface": "Curve"
+            },
+            {
+               "package":   "encoding/json",
+               "interface": "Marshaler"
+            },
+            {
+               "package":   "encoding/json",
+               "interface": "Unmarshaler"
+            },
+            {
+               "package":   "encoding/xml",
+               "interface": "Marshaler"
+            },
+            {
+               "package":   "encoding/xml",
+               "interface": "Marshaler"
+            },
+            {
+               "package":   "encoding/xml",
+               "interface": "Unmarshaler"
+            },
+            {
+               "package":   "encoding/xml",
+               "interface": "UnmarshalerAttr"
+            },
+            {
+               "package":   "encoding/xml",
+               "interface": "TokenReader"
+            },
+            {
+               "package":   "go/ast",
+               "interface": "Node"
+            },
+            {
+               "package":   "go/ast",
+               "interface": "Vistor"
+            },
+            {
+               "package":   "go/types",
+               "interface": "Importer"
+            },
+            {
+               "package":   "go/types",
+               "interface": "ImporterFrom"
+            },
+            {
+               "package":   "hash",
+               "interface": "Hash"
+            },
+            {
+               "package":   "hash",
+               "interface": "Hash32"
+            },
+            {
+               "package":   "hash",
+               "interface": "Hash64"
+            },
+            {
+               "package":   "math/rand",
+               "interface": "Source"
+            },
+            {
+               "package":   "math/rand",
+               "interface": "Source64"
+            },
+            {
+               "package":   "net/http/cookiejar",
+               "interface": "PublicSuffixList"
+            },
+            {
+               "package":   "sort",
+               "interface": "Interface"
+            },
+            {
+               "package":   "*/mod/sumdb/note",
+               "interface": "Signer"
+            },
+            {
+               "package":   "*/mod/sumdb/note",
+               "interface": "Verifier"
+            },
+            {
+               "package":   "*/mod/sumdb/tlog",
+               "interface": "TileReader"
+            },
+            {
+               "package":   "*/mod/sumdb/tlog",
+               "interface": "HashReader"
+            }
+         ]
+      },
+      {
+         "slug":       "data",
+         "name":       "Data",
+         "see_also":   [
+            "algorithm",
+            "reading-writing",
+            "file-system",
+            "getting-setting"
+         ],
+         "interfaces": [
+            {
+               "package":   "crypto/cipher",
+               "interface": "Stream"
+            },
+            {
+               "package":   "database/sql/driver",
+               "interface": "NamedValueChecker"
+            },
+            {
+               "package":   "database/sql/driver",
+               "interface": "ValueConverter"
+            },
+            {
+               "package":   "database/sql/driver",
+               "interface": "Validator"
+            },
+            {
+               "package":   "database/sql/driver",
+               "interface": "Valuer"
+            },
+            {
+               "package":   "debug/macho",
+               "interface": "Load"
+            },
+            {
+               "package":   "encoding",
+               "interface": "BinaryMarshaler"
+            },
+            {
+               "package":   "encoding",
+               "interface": "BinaryUnmarshaler"
+            },
+            {
+               "package":   "encoding",
+               "interface": "TextMarshaler"
+            },
+            {
+               "package":   "encoding",
+               "interface": "TextUnmarshaler"
+            },
+            {
+               "package":   "encoding/binary",
+               "interface": "AppendByteOrder"
+            },
+            {
+               "package":   "encoding/binary",
+               "interface": "ByteOrder"
+            },
+            {
+               "package":   "encoding/gob",
+               "interface": "GobDecoder"
+            },
+            {
+               "package":   "encoding/gob",
+               "interface": "GobEncoder"
+            },
+            {
+               "package":   "expvar",
+               "interface": "Var"
+            },
+            {
+               "package":   "fmt",
+               "interface": "Formatter"
+            },
+            {
+               "package":   "fmt",
+               "interface": "GoStringer"
+            },
+            {
+               "package":   "fmt",
+               "interface": "State"
+            },
+            {
+               "package":   "fmt",
+               "interface": "Stringer"
+            },
+            {
+               "package":   "fmt",
+               "interface": "Scanner"
+            },
+            {
+               "package":   "go/types",
+               "interface": "Sizes"
+            },
+            {
+               "package":   "go/types",
+               "interface": "Type"
+            },
+            {
+               "package":   "image/color",
+               "interface": "Model"
+            },
+            {
+               "package":   "io/fs",
+               "interface": "FileInfo"
+            },
+            {
+               "package":   "log/slog",
+               "interface": "LogValuer"
+            },
+            {
+               "package":   "net",
+               "interface": "Addr"
+            },
+            {
+               "package":   "*/crypto/cryptobyte",
+               "interface": "MarshalingValue"
+            },
+            {
+               "package":   "*/text/transform",
+               "interface": "Transformer"
+            },
+            {
+               "package":   "*/text/transform",
+               "interface": "SpanningTransformer"
+            }
+         ]
+      },
+      {
+         "slug":       "driver",
+         "name":       "Driver",
+         "interfaces": [
+            {
+               "package":    "database/sql/driver",
+               "interfaces": "Conn"
+            },
+            {
+               "package":    "database/sql/driver",
+               "interfaces": "Connector"
+            },
+            {
+               "package":    "database/sql/driver",
+               "interfaces": "Driver"
+            },
+            {
+               "package":    "database/sql/driver",
+               "interfaces": "Execer"
+            },
+            {
+               "package":    "database/sql/driver",
+               "interfaces": "NamedValueChecker"
+            },
+            {
+               "package":    "database/sql/driver",
+               "interfaces": "Pinger"
+            },
+            {
+               "package":    "database/sql/driver",
+               "interfaces": "Queryer"
+            },
+            {
+               "package":    "database/sql/driver",
+               "interfaces": "Result"
+            },
+            {
+               "package":    "database/sql/driver",
+               "interfaces": "Rows"
+            },
+            {
+               "package":    "database/sql/driver",
+               "interfaces": "Scanner"
+            },
+            {
+               "package":    "database/sql/driver",
+               "interfaces": "SessionResetter"
+            },
+            {
+               "package":    "database/sql/driver",
+               "interfaces": "Stmt"
+            },
+            {
+               "package":    "database/sql/driver",
+               "interfaces": "Tx"
+            },
+            {
+               "package":    "database/sql/driver",
+               "interfaces": "ValueConverter"
+            },
+            {
+               "package":    "database/sql/driver",
+               "interfaces": "Valuer"
+            },
+            {
+               "package":    "log/slog",
+               "interfaces": "Handler"
+            },
+            {
+               "package":    "*/pprof/driver",
+               "interfaces": "Fetcher"
+            },
+            {
+               "package":    "*/pprof/driver",
+               "interfaces": "FlagSet"
+            },
+            {
+               "package":    "*/pprof/driver",
+               "interfaces": "ObjFile"
+            },
+            {
+               "package":    "*/pprof/driver",
+               "interfaces": "ObjTool"
+            },
+            {
+               "package":    "*/pprof/driver",
+               "interfaces": "Symbolizer"
+            },
+            {
+               "package":    "*/pprof/driver",
+               "interfaces": "UI"
+            },
+            {
+               "package":    "*/pprof/driver",
+               "interfaces": "Writer"
+            }
+         ]
+      },
+      {
+         "slug":       "file-system",
+         "name":       "File system",
+         "see_also":   [
+            "data",
+            "process-control",
+            "reading-writing",
+            "representation",
+            "subtype"
+         ],
+         "interfaces": [
+            {
+               "package":    "cmd/pack",
+               "interfaces": "FileLike"
+            },
+            {
+               "package":    "io/fs",
+               "interfaces": "DirEntry"
+            },
+            {
+               "package":    "io/fs",
+               "interfaces": "FS"
+            },
+            {
+               "package":    "io/fs",
+               "interfaces": "File"
+            },
+            {
+               "package":    "io/fs",
+               "interfaces": "FileInfo"
+            },
+            {
+               "package":    "io/fs",
+               "interfaces": "ReadDirFile"
+            },
+            {
+               "package":    "io/fs",
+               "interfaces": "GlobFS"
+            },
+            {
+               "package":    "io/fs",
+               "interfaces": "ReadDirFS"
+            },
+            {
+               "package":    "io/fs",
+               "interfaces": "ReadFileFS"
+            },
+            {
+               "package":    "io/fs",
+               "interfaces": "StatFS"
+            },
+            {
+               "package":    "io/fs",
+               "interfaces": "SubFS"
+            },
+            {
+               "package":    "mime/multipart",
+               "interfaces": "File"
+            },
+            {
+               "package":    "net/http",
+               "interfaces": "File"
+            },
+            {
+               "package":    "net/http",
+               "interfaces": "FileSystem"
+            },
+            {
+               "package":    "syscall",
+               "interfaces": "Conn"
+            },
+            {
+               "package":    "*/pprof/driver",
+               "interfaces": "ObjTool"
+            },
+            {
+               "package":    "*/mod/zip",
+               "interfaces": "File"
+            }
+         ]
+      },
+      {
+         "slug":       "getting-setting",
+         "name":       "Getting and/or Setting",
+         "interfaces": [
+            {
+               "package":    "crypto/tls",
+               "interfaces": "ClientSessionCache"
+            },
+            {
+               "package":    "flag",
+               "interfaces": "Getter"
+            },
+            {
+               "package":    "flag",
+               "interfaces": "Value"
+            },
+            {
+               "package":    "image/png",
+               "interfaces": "EncoderBufferPool"
+            },
+            {
+               "package":    "log/slog",
+               "interfaces": "Leveler"
+            },
+            {
+               "package":    "log/slog",
+               "interfaces": "LogValuer"
+            },
+            {
+               "package":    "net",
+               "interfaces": "Addr"
+            },
+            {
+               "package":    "net",
+               "interfaces": "Error"
+            },
+            {
+               "package":    "net/http",
+               "interfaces": "Cookiejar"
+            },
+            {
+               "package":    "net/http/httputil",
+               "interfaces": "BufferPool"
+            },
+            {
+               "package":    "*/mod/sumdb/note",
+               "interfaces": "Verifiers"
+            }
+         ]
+      },
+      {
+         "slug":       "implementation",
+         "name":       "Implementation",
+         "see_also":   [
+            "algorithm",
+            "file-system",
+            "reading-writing",
+            "protocol"
+         ],
+         "interfaces": [
+            {
+               "package":    "image/draw",
+               "interfaces": "Drawer"
+            },
+            {
+               "package":    "image/draw",
+               "interfaces": "Image"
+            },
+            {
+               "package":    "image/draw",
+               "interfaces": "Quantizer"
+            },
+            {
+               "package":    "image/draw",
+               "interfaces": "RGBA64Image"
+            },
+            {
+               "package":    "log/slog",
+               "interfaces": "Handler"
+            },
+            {
+               "package":    "log/slog",
+               "interfaces": "LogValuer"
+            },
+            {
+               "package":    "net",
+               "interfaces": "Conn"
+            },
+            {
+               "package":    "net",
+               "interfaces": "Listener"
+            },
+            {
+               "package":    "net",
+               "interfaces": "PacketConn"
+            },
+            {
+               "package":    "net/http",
+               "interfaces": "RoundTripper"
+            },
+            {
+               "package":    "net/http/cookiejar",
+               "interfaces": "PublicSuffixList"
+            },
+            {
+               "package":    "testing/quick",
+               "interfaces": "Generator"
+            },
+            {
+               "package":    "*/mod/sumdb",
+               "interfaces": "ClientOps"
+            },
+            {
+               "package":    "*/mod/sumdb",
+               "interfaces": "ServerOps"
+            }
+
+         ]
+      },
+      {
+         "slug":       "membership",
+         "name":       "Membership",
+         "interfaces": [
+            {
+               "package":    "runtime",
+               "interfaces": "Error"
+            },
+            {
+               "package":    "golang.org/x/arch/arm/armasm",
+               "interfaces": "Arg"
+            },
+            {
+               "package":    "golang.org/x/arch/ppc64/ppc64asm",
+               "interfaces": "Arg"
+            },
+            {
+               "package":    "golang.org/x/tools/go/analysis",
+               "interfaces": "Fact"
+            }
+
+         ]
+      },
+      {
+         "slug":       "parsing",
+         "name":       "Parsing",
+         "see_also":   [
+            "data",
+            "process-control"
+         ],
+         "interfaces": [
+            {
+               "package":    "go/ast",
+               "interfaces": "Node"
+            },
+            {
+               "package":    "go/ast",
+               "interfaces": "Vistor"
+            },
+            {
+               "package":    "*/mod/modfile",
+               "interfaces": "Expr"
+            },
+            {
+               "package":    "*/tools/go/analysis",
+               "interfaces": "Range"
+            }
+         ]
+      },
+      {
+         "slug":       "process-control",
+         "name":       "Process control",
+         "see_also":   [
+            "file-system",
+            "driver",
+            "implementation",
+            "protocol"
+         ],
+         "interfaces": [
+            {
+               "package":    "container/heap",
+               "interfaces": "Interface"
+            },
+            {
+               "package":    "context",
+               "interfaces": "Context"
+            },
+            {
+               "package":    "database/sql",
+               "interfaces": "SessionResetter"
+            },
+            {
+               "package":    "fmt",
+               "interfaces": "ScanState"
+            },
+            {
+               "package":    "http",
+               "interfaces": "RoundTripper"
+            },
+            {
+               "package":    "log/slog",
+               "interfaces": "Leveler"
+            },
+            {
+               "package":    "sync",
+               "interfaces": "Lock"
+            },
+            {
+               "package":    "sync",
+               "interfaces": "PoolDequeue"
+            },
+            {
+               "package":    "os",
+               "interfaces": "Signal"
+            },
+            {
+               "package":    "runtime",
+               "interfaces": "Error"
+            },
+            {
+               "package":    "mutex",
+               "interfaces": "Locker"
+            },
+            {
+               "package":    "syscall",
+               "interfaces": "RawConn"
+            },
+            {
+               "package":    "*/net/lif",
+               "interfaces": "Addr"
+            },
+            {
+               "package":    "*/net/route",
+               "interfaces": "Addr"
+            }
+         ]
+      },
+      {
+         "slug":       "protocol",
+         "name":       "Protocol",
+         "see_also":   [
+            "process-control"
+         ],
+         "interfaces": [
+            {
+               "package":    "net",
+               "interfaces": "Conn"
+            },
+            {
+               "package":    "net",
+               "interfaces": "Error"
+            },
+            {
+               "package":    "net",
+               "interfaces": "Listener"
+            },
+            {
+               "package":    "net",
+               "interfaces": "PacketConn"
+            },
+            {
+               "package":    "net/http",
+               "interfaces": "RoundTripper"
+            },
+            {
+               "package":    "net/http",
+               "interfaces": "Pusher"
+            },
+            {
+               "package":    "net/http",
+               "interfaces": "Cookiejar"
+            },
+            {
+               "package":    "net/http",
+               "interfaces": "Handler"
+            },
+            {
+               "package":    "net/http",
+               "interfaces": "Flusher"
+            },
+            {
+               "package":    "net/http",
+               "interfaces": "Hijacker"
+            },
+            {
+               "package":    "net/http",
+               "interfaces": "ResponseWriter"
+            },
+            {
+               "package":    "net/http/cookiejar",
+               "interfaces": "PublicSuffixList"
+            },
+            {
+               "package":    "net/rpc",
+               "interfaces": "ClientCodec"
+            },
+            {
+               "package":    "net/rpc",
+               "interfaces": "ServerCodec"
+            },
+            {
+               "package":    "net/smtp",
+               "interfaces": "Auth"
+            },
+            {
+               "package":    "syscall",
+               "interfaces": "Conn"
+            }
+         ]
+      },
+      {
+         "slug":       "reading-writing",
+         "name":       "Reading and/or Writing",
+         "see_also":   [
+            "file-system",
+            "driver",
+            "process-control",
+            "protocol",
+            "implementation"
+         ],
+         "interfaces": [
+            {
+               "package":    "compress/flate",
+               "interfaces": "Reader"
+            },
+            {
+               "package":    "fmt",
+               "interfaces": "ScanState"
+            },
+            {
+               "package":    "io",
+               "interfaces": "ByteReader"
+            },
+            {
+               "package":    "io",
+               "interfaces": "ByteScanner"
+            },
+            {
+               "package":    "io",
+               "interfaces": "ByteWriter"
+            },
+            {
+               "package":    "io",
+               "interfaces": "Closer"
+            },
+            {
+               "package":    "io",
+               "interfaces": "Reader"
+            },
+            {
+               "package":    "io",
+               "interfaces": "ReaderAt"
+            },
+            {
+               "package":    "io",
+               "interfaces": "ReaderFrom"
+            },
+            {
+               "package":    "io",
+               "interfaces": "RuneReader"
+            },
+            {
+               "package":    "io",
+               "interfaces": "RuneScanner"
+            },
+            {
+               "package":    "io",
+               "interfaces": "Seeker"
+            },
+            {
+               "package":    "io",
+               "interfaces": "StringWriter"
+            },
+            {
+               "package":    "io",
+               "interfaces": "Writer"
+            },
+            {
+               "package":    "io",
+               "interfaces": "WriterAt"
+            },
+            {
+               "package":    "io",
+               "interfaces": "WriterTo"
+            }
+         ]
+      },
+      {
+         "slug":       "representation",
+         "name":       "Representation",
+         "see_also":   [
+            "data",
+            "file-system"
+         ],
+         "interfaces": [
+            {
+               "package":    "debug/dwarf",
+               "interfaces": "Type"
+            },
+            {
+               "package":    "encoding/binary",
+               "interfaces": "ByteOrder"
+            },
+            {
+               "package":    "image",
+               "interfaces": "Image"
+            },
+            {
+               "package":    "image",
+               "interfaces": "RBG64Image"
+            },
+            {
+               "package":    "image",
+               "interfaces": "PalattedImage"
+            },
+            {
+               "package":    "image/color",
+               "interfaces": "Color"
+            },
+            {
+               "package":    "log/slog",
+               "interfaces": "LogValuer"
+            },
+            {
+               "package":    "net",
+               "interfaces": "Addr"
+            },
+            {
+               "package":    "*/arch/arm/armasm",
+               "interfaces": "Arg"
+            },
+            {
+               "package":    "*/arch/ppc64/ppc64asm",
+               "interfaces": "Arg"
+            },
+            {
+               "package":    "*/net/route",
+               "interfaces": "Message"
+            },
+            {
+               "package":    "*/net/route",
+               "interfaces": "Sys"
+            }
+         ]
+      },
+      {
+         "slug":       "subtype",
+         "name":       "Subtype",
+         "see_also":   [
+            "file-system",
+            "reading-writing"
+         ],
+         "interfaces": [
+            {
+               "package":    "cmd/pack",
+               "interfaces": "FileLike"
+            },
+            {
+               "package":    "crypto/cipher",
+               "interfaces": "Block"
+            },
+            {
+               "package":    "crypto/cipher",
+               "interfaces": "AEAD"
+            },
+            {
+               "package":    "database/sql",
+               "interfaces": "Scanner"
+            },
+            {
+               "package":    "debug/dwarf",
+               "interfaces": "Type"
+            },
+            {
+               "package":    "encoding/binary",
+               "interfaces": "ByteOrder"
+            },
+            {
+               "package":    "expvar",
+               "interfaces": "Var"
+            },
+            {
+               "package":    "fmt",
+               "interfaces": "GoStringer"
+            },
+            {
+               "package":    "fmt",
+               "interfaces": "Scanner"
+            },
+            {
+               "package":    "go/ast",
+               "interfaces": "Node"
+            },
+            {
+               "package":    "go/types",
+               "interfaces": "Type"
+            },
+            {
+               "package":    "hash",
+               "interfaces": "Hash"
+            },
+            {
+               "package":    "hash",
+               "interfaces": "Hash32"
+            },
+            {
+               "package":    "hash",
+               "interfaces": "Hash64"
+            },
+            {
+               "package":    "image",
+               "interfaces": "Image"
+            },
+            {
+               "package":    "image",
+               "interfaces": "RBG64Image"
+            },
+            {
+               "package":    "image/draw",
+               "interfaces": "Image"
+            },
+            {
+               "package":    "image/draw",
+               "interfaces": "RGBA64Image"
+            },
+            {
+               "package":    "log/slog",
+               "interfaces": "Handler"
+            },
+            {
+               "package":    "net",
+               "interfaces": "Addr"
+            },
+            {
+               "package":    "net",
+               "interfaces": "Conn"
+            },
+            {
+               "package":    "net",
+               "interfaces": "Error"
+            },
+            {
+               "package":    "net",
+               "interfaces": "Listener"
+            },
+            {
+               "package":    "net",
+               "interfaces": "PacketConn"
+            },
+            {
+               "package":    "net/http",
+               "interfaces": "RoundTripper"
+            },
+            {
+               "package":    "net/rpc",
+               "interfaces": "ClientCodec"
+            },
+            {
+               "package":    "net/rpc",
+               "interfaces": "ServerCodec"
+            },
+            {
+               "package":    "runtime",
+               "interfaces": "Error"
+            },
+            {
+               "package":    "syscall",
+               "interfaces": "Conn"
+            },
+            {
+               "package":    "syscall",
+               "interfaces": "RawConn"
+            },
+            {
+               "package":    "*/arch/arm/armasm",
+               "interfaces": "Arg"
+            },
+            {
+               "package":    "*/arch/ppc64/ppc64asm",
+               "interfaces": "Arg"
+            },
+            {
+               "package":    "*/mod/modfile",
+               "interfaces": "Expr"
+            },
+            {
+               "package":    "*/tools/go/analysis",
+               "interfaces": "Fact"
+            },
+            {
+               "package":    "*/tools/go/analysis",
+               "interfaces": "Range"
+            },
+            {
+               "package":    "*/net/lif",
+               "interfaces": "Addr"
+            },
+            {
+               "package":    "*/net/route",
+               "interfaces": "Addr"
+            },
+            {
+               "package":    "*/net/route",
+               "interfaces": "Message"
+            },
+            {
+               "package":    "*/net/route",
+               "interfaces": "Sys"
+            },
+            {
+               "package":    "*/text/transform",
+               "interfaces": "Transformer"
+            },
+            {
+               "package":    "*/text/transform",
+               "interfaces": "SpanningTransformer"
+            }
+         ]
+      }
+   ]
+}

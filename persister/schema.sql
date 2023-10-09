@@ -1,9 +1,25 @@
 
+CREATE TABLE IF NOT EXISTS project
+(
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    name TEXT COLLATE RTRIM NOT NULL,
+    about TEXT COLLATE RTRIM NOT NULL,
+    repo_url TEXT COLLATE RTRIM NOT NULL,
+    website TEXT COLLATE RTRIM NOT NULL,
+    UNIQUE (name) ON CONFLICT FAIL,
+    UNIQUE (about) ON CONFLICT FAIL,
+    UNIQUE (repo_url) ON CONFLICT FAIL,
+    UNIQUE (website) ON CONFLICT FAIL
+);
+
 CREATE TABLE IF NOT EXISTS codebase
 (
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-    repo_url TEXT COLLATE RTRIM NOT NULL,
-    UNIQUE (repo_url) ON CONFLICT FAIL
+    project_id INTEGER NOT NULL ON CONFLICT FAIL,
+    version_tag TEXT COLLATE RTRIM NOT NULL,
+    source_url TEXT COLLATE RTRIM NOT NULL,
+    UNIQUE (project_id,version_tag) ON CONFLICT FAIL,
+    UNIQUE (source_url) ON CONFLICT FAIL
 );
 
 CREATE TABLE IF NOT EXISTS survey
@@ -14,6 +30,23 @@ CREATE TABLE IF NOT EXISTS survey
     timestamp TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL ON CONFLICT FAIL,
     FOREIGN KEY (codebase_id) REFERENCES codebase(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
+
+DROP VIEW IF EXISTS survey_view;
+CREATE VIEW survey_view AS
+SELECT
+    sv.id,
+    p.name as project,
+    sv.codebase_id,
+    cb.project_id,
+    p.repo_url,
+    cb.version_tag,
+    cb.source_url,
+    sv.local_dir,
+    sv.timestamp
+FROM survey AS sv
+         JOIN codebase cb ON cb.id=sv.codebase_id
+         JOIN project p ON p.id=cb.project_id;
+
 
 CREATE TABLE IF NOT EXISTS file
 (
@@ -31,33 +64,71 @@ CREATE TABLE IF NOT EXISTS symbol_type
     name TEXT COLLATE RTRIM NOT NULL ON CONFLICT FAIL
 );
 
-
 CREATE TABLE IF NOT EXISTS type
 (
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL ON CONFLICT FAIL,
     file_id INTEGER NOT NULL ON CONFLICT FAIL,
+    survey_id INTEGER NOT NULL ON CONFLICT FAIL,
     symbol_type_id INTEGER NOT NULL ON CONFLICT FAIL,
     name TEXT COLLATE RTRIM NOT NULL ON CONFLICT FAIL,
     definition TEXT COLLATE RTRIM NOT NULL ON CONFLICT FAIL,
     FOREIGN KEY (file_id) REFERENCES file(id) ON DELETE CASCADE ON UPDATE NO ACTION,
+    FOREIGN KEY (survey_id) REFERENCES survey(id) ON DELETE CASCADE ON UPDATE NO ACTION,
     FOREIGN KEY (symbol_type_id) REFERENCES symbol_type(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+DROP VIEW IF EXISTS type_view;
+CREATE VIEW type_view AS
+SELECT t.id,
+       p.name AS project,
+       f.filepath,
+       t.name,
+       st.name AS symbol_name,
+       t.survey_id,
+       t.file_id,
+       t.symbol_type_id,
+       sv.codebase_id,
+       t.definition,
+       sv.timestamp,
+       cb.source_url,
+       p.repo_url,
+       p.about AS about_project,
+       sv.local_dir
+FROM type t
+    JOIN file f ON f.id=t.file_id
+    JOIN survey sv ON sv.id=t.survey_id
+    JOIN symbol_type st ON st.id=t.symbol_type_id
+    JOIN codebase cb ON cb.id=sv.codebase_id
+    JOIN project p ON p.id=cb.project_id
+WHERE 1=1
+ORDER BY t.survey_id,t.file_id,t.symbol_type_id,t.name;
+
+CREATE TABLE IF NOT EXISTS package
+(
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL ON CONFLICT FAIL,
+    path TEXT COLLATE RTRIM NOT NULL ON CONFLICT FAIL,
+    name AS (json_extract('["'||replace(path,'/','","')||'"]','$[#-1]')),
+    UNIQUE (path) ON CONFLICT FAIL
 );
 
 CREATE TABLE IF NOT EXISTS import
 (
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL ON CONFLICT FAIL,
     file_id INTEGER NOT NULL ON CONFLICT FAIL,
-    package TEXT COLLATE RTRIM NOT NULL ON CONFLICT FAIL,
+    survey_id INTEGER NOT NULL ON CONFLICT FAIL,
+    package_id TEXT COLLATE RTRIM NOT NULL ON CONFLICT FAIL,
     alias TEXT COLLATE RTRIM NOT NULL ON CONFLICT FAIL,
-    name AS (CASE WHEN IFNULL(alias,'')=='' THEN json_extract('["'||replace(package,'/','","')||'"]','$[#-1]') ELSE alias END),
-    UNIQUE (file_id,package,alias) ON CONFLICT FAIL,
-    FOREIGN KEY (file_id) REFERENCES file(id) ON DELETE CASCADE ON UPDATE NO ACTION
+    UNIQUE (file_id,package_id,alias) ON CONFLICT FAIL,
+    FOREIGN KEY (file_id) REFERENCES file(id) ON DELETE CASCADE ON UPDATE NO ACTION,
+    FOREIGN KEY (survey_id) REFERENCES survey(id) ON DELETE CASCADE ON UPDATE NO ACTION,
+    FOREIGN KEY (package_id) REFERENCES survey(id) ON DELETE CASCADE ON UPDATE NO ACTION
 );
 
 CREATE TABLE IF NOT EXISTS variable
 (
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL ON CONFLICT FAIL,
     name TEXT COLLATE RTRIM NOT NULL ON CONFLICT FAIL,
+    survey_id INTEGER NOT NULL ON CONFLICT FAIL,
     type_id INTEGER NOT NULL ON CONFLICT FAIL,
     usage INTEGER NOT NULL ON CONFLICT FAIL,
     is_param AS (CASE WHEN usage = 1 THEN 1 ELSE 0 END),
@@ -71,24 +142,33 @@ CREATE TABLE IF NOT EXISTS method
     name TEXT COLLATE RTRIM NOT NULL ON CONFLICT FAIL,
     params TEXT COLLATE RTRIM NOT NULL ON CONFLICT FAIL,
     results TEXT COLLATE RTRIM NOT NULL ON CONFLICT FAIL,
+    file_id INTEGER NOT NULL ON CONFLICT FAIL,
+    survey_id INTEGER NOT NULL ON CONFLICT FAIL,
     type_id INTEGER NOT NULL ON CONFLICT FAIL,
+    FOREIGN KEY (file_id) REFERENCES file(id) ON DELETE CASCADE ON UPDATE NO ACTION,
+    FOREIGN KEY (survey_id) REFERENCES survey(id) ON DELETE CASCADE ON UPDATE NO ACTION,
     FOREIGN KEY (type_id) REFERENCES type(id) ON DELETE CASCADE ON UPDATE NO ACTION
 );
 
 CREATE TABLE IF NOT EXISTS category
 (
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL ON CONFLICT FAIL,
-    name TEXT COLLATE RTRIM NOT NULL ON CONFLICT FAIL
+    survey_id INTEGER NOT NULL ON CONFLICT FAIL,
+    name TEXT COLLATE RTRIM NOT NULL ON CONFLICT FAIL,
+    UNIQUE (survey_id,name) ON CONFLICT FAIL,
+    FOREIGN KEY (survey_id) REFERENCES survey(id) ON DELETE CASCADE ON UPDATE NO ACTION
 );
 
 CREATE TABLE IF NOT EXISTS category_type
 (
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL ON CONFLICT FAIL,
     name TEXT COLLATE RTRIM NOT NULL ON CONFLICT FAIL,
-    type_id INTEGER NOT NULL ON CONFLICT FAIL,
     category_id INTEGER NOT NULL ON CONFLICT FAIL,
-    FOREIGN KEY (type_id) REFERENCES type(id) ON DELETE CASCADE ON UPDATE NO ACTION,
-    FOREIGN KEY (category_id) REFERENCES type(id) ON DELETE CASCADE ON UPDATE NO ACTION
+    survey_id INTEGER NOT NULL ON CONFLICT FAIL,
+    type_id INTEGER NOT NULL ON CONFLICT FAIL,
+    FOREIGN KEY (category_id) REFERENCES type(id) ON DELETE CASCADE ON UPDATE NO ACTION,
+    FOREIGN KEY (survey_id) REFERENCES survey(id) ON DELETE CASCADE ON UPDATE NO ACTION,
+    FOREIGN KEY (type_id) REFERENCES type(id) ON DELETE CASCADE ON UPDATE NO ACTION
 );
 
 
