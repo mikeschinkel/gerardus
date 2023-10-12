@@ -1,3 +1,4 @@
 package cli
 
-type ExecFunc func(...string) error
+type StringMap map[string]string
+type ExecFunc func(StringMap) error

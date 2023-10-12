@@ -12,7 +12,9 @@ import (
 
 func usage(msg string, args ...any) {
 	options.StdErr(msg+"\n\n", args...)
-	_ = cli.ExecHelp()
+	cmd, _ := cli.CommandByName("help")
+	sm, _ := cmd.ArgValuesMap()
+	_ = cli.ExecHelp(sm)
 	os.Exit(1)
 }
 

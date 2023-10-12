@@ -11,6 +11,10 @@ var options = struct {
 	excludeFilesByPathContains []string
 	sourceDir                  string
 	dataFile                   string
+	projectName                string
+	versionTag                 string
+	sourceURL                  string
+	repoURL                    string
 }{
 	includeFilesByExtensions:   []string{".go", ".mod"},
 	excludeFilesByPathContains: []string{"/internal/", "test"},
@@ -43,4 +47,36 @@ end:
 
 func DataFile() string {
 	return options.dataFile
+}
+
+func SetSourceURL(url string) {
+	options.sourceURL = url
+}
+
+func SourceURL() string {
+	return options.sourceURL
+}
+
+func SetProjectName(name string) {
+	options.projectName = name
+}
+
+func ProjectName() string {
+	return options.projectName
+}
+
+func SetRepoURL(url string) {
+	options.repoURL = url
+}
+
+func RepoURL() string {
+	return options.repoURL
+}
+
+func SetVersionTag(name string) {
+	options.versionTag = name
+}
+
+func VersionTag() string {
+	return options.versionTag
 }

@@ -20,17 +20,21 @@ const GoStdLibURL = "https://github.com/golang/go/tree/go1.21.1/src"
 
 //goland:noinspection GoUnusedGlobalVariable
 var CmdMap = cli.AddCommandWithFunc("map", ExecMap).
+	AddArg(projectArg).
+	AddArg(versionTagArg).
 	AddFlag(&cli.Flag{
-		Name:             "src",
-		VarName:          "source_dir",
-		Usage:            "Source directory",
-		Default:          defaultSourceDir(),
-		CheckFunc:        checkDir,
-		SetStringValFunc: options.SetSourceDir,
+		Switch: "src",
+		Arg: cli.Arg{
+			Name:             "source_dir",
+			Usage:            "Source directory",
+			Default:          defaultSourceDir(),
+			CheckFunc:        checkDir,
+			SetStringValFunc: options.SetSourceDir,
+		},
 	})
 
 //goland:noinspection GoUnusedParameter
-func ExecMap(args ...string) (err error) {
+func ExecMap(args cli.StringMap) (err error) {
 	var ma mapArgs
 	var cs *surveyor.CodeSurveyor
 	var cb *parser.Codebase
@@ -108,7 +112,7 @@ func mapWithChans(ctx context.Context, args mapArgs) (err error) {
 // checkDir validates source directory
 func checkDir(dir any) error {
 	var info os.FileInfo
-	absDir, err := makeAbs(*dir.(*string))
+	absDir, err := makeAbs(dir.(string))
 	if err != nil {
 		goto end
 	}
@@ -121,7 +125,7 @@ func checkDir(dir any) error {
 		err = fmt.Errorf("provided source dir is not a directory: %s", absDir)
 		goto end
 	}
-	*dir.(*string) = absDir
+	dir = absDir // TODO Verify this actually set the passed parameter
 end:
 	return err
 }

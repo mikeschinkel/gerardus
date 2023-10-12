@@ -9,10 +9,12 @@ import (
 	"gerardus/persister"
 )
 
+const AppName = "gerardus"
+
 func main() {
-	err := cli.Initialize()
+	err := cli.Initialize(AppName)
 	if err != nil {
-		usage("Failed to initialize; %s", err.Error())
+		usage("%s.", err.Error())
 	}
 	err = persister.Initialize(context.Background(),
 		options.DataFile(),
@@ -20,6 +22,10 @@ func main() {
 	)
 	if err != nil {
 		usage("Failed to initialize data store; %s", err.Error())
+	}
+	err = cli.ValidateInput()
+	if err != nil {
+		usage("%s.", err.Error())
 	}
 	err = cli.ExecInvokedCommand()
 	if err != nil {

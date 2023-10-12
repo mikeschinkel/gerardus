@@ -4,27 +4,32 @@ import (
 	"context"
 	"fmt"
 
+	"gerardus/cli"
+	"gerardus/options"
 	"gerardus/persister"
 )
 
 //goland:noinspection GoUnusedGlobalVariable
 var CmdAddCodebase = CmdAdd.
 	AddSubCommand("codebase", ExecAddCodebase).
-	AddArgs("project", "version_tag").
-	AddOptArgs("source_url")
+	AddArg(projectArg).
+	AddArg(versionTagArg).
+	AddArg(&cli.Arg{
+		Name:             "source_url",
+		Usage:            "URL for versioned source of a Project repo",
+		Optional:         true,
+		CheckFunc:        checkSourceURL,
+		SetStringValFunc: options.SetSourceURL,
+	})
 
-func ExecAddCodebase(args ...string) (err error) {
-	var sourceURL string
+func ExecAddCodebase(args cli.StringMap) (err error) {
 	var p persister.Project
 
 	ds := persister.GetDataStore()
 
-	project := args[0]
-	versionTag := args[1]
-	if len(args) > 2 {
-		// If passed as 3rd argument of `add codebase` then set sourceURL.
-		sourceURL = args[2]
-	}
+	project := options.ProjectName()
+	versionTag := options.VersionTag()
+	sourceURL := options.SourceURL()
 
 	ctx := context.Background()
 	p, err = ds.LoadProjectByName(ctx, project)
@@ -37,7 +42,7 @@ func ExecAddCodebase(args ...string) (err error) {
 		sourceURL, err = persister.CodebaseSourceURL(p.RepoUrl, versionTag)
 	}
 	if err != nil {
-		err = fmt.Errorf("invalid URL; %w. Potnentially bad repo url (%s) or bad version tag (%s)",
+		err = fmt.Errorf("invalid URL; %w. Potentially bad repo url (%s) or bad version tag (%s)",
 			err, p.RepoUrl, versionTag)
 		goto end
 	}
@@ -55,6 +60,16 @@ func ExecAddCodebase(args ...string) (err error) {
 		versionTag,
 		sourceURL,
 	)
+end:
+	return err
+}
+
+func checkSourceURL(url any) (err error) {
+	TODO
+	if err != nil {
+		goto end
+	}
+
 end:
 	return err
 }

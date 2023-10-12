@@ -7,7 +7,7 @@ import (
 )
 
 func TestSetExecFunc(t *testing.T) {
-	ef := func(...string) error { return nil }
+	ef := func(cli.StringMap) error { return nil }
 	tests := []struct {
 		name string
 		ef   cli.ExecFunc

@@ -15,42 +15,50 @@ In no particular order:
 ### Miscellaneous
 1. Ensure chans refactor works
 2. Get slices vs. chans working
-3. Break out Package from Import
-4. Break out Project from Codebase
-5. Add GitHub URL parser for Name, Version
-6. Add Web client to get About and Website
-    1. https://chat.openai.com/share/cb482a49-aad6-4f3b-abf9-201d60055054
+3. ~~Break out Package from Import~~
+4. ~~Break out Project from Codebase~~
+5. ~~Add GitHub URL parser for Name, Version~~
+6. ~~Add Web client to get About and Website~~
+    1. ~~https://chat.openai.com/share/cb482a49-aad6-4f3b-abf9-201d60055054~~
 
 ### CLI
-1. Add other commands besides `map`
-2. Add switch for local clone root directory
+1. ~~Add other commands besides `map`~~
+2. Add switch for local directory to clone repos to
 3. Add ability to clone a Git repo
 4. Use Cobra
 5. Try Kong
+
 ### SQL
-1. Add survey_id to all relevant tables
-2. Add Slug, Name, About, Version, Website fields to Codebase
-3. Populate interface methods
-4. Populate struct fields
+1. ~~Add survey_id to all relevant tables~~
+2. ~~Add Name, About to Project~~
+2. ~~Add VersionTag, Website fields to Codebase~~
+3. Populate interface methods(?)
+4. Populate struct fields(?)
 5. Add schema migration tool
 6. Write SQL for Category Interfaces
+
 ### Categories
 1. Implement categories
 2. Implement category types
 3. Implement type category
+4. 
 ### Config
 1. Create JSON config files
 2. Embed default config files
 3. Support YAML config files.
 4. Add local clone root directory config
+
 ### Store
 1. Support Postgres as an alternative
+
 ### Env
 1. Allow options to be set by env
 2. Especially Codebase Repo URL
+
 ### Templating
 1. Write Markdown template for interfaces for a category
 2. `text/template` or `html/template`?
+
 ### Web Service
 1. Serve Markdown for Obsidian
 2. Http server to serve Markdown snippets
@@ -58,6 +66,7 @@ In no particular order:
 4. Command to add serve to `at` command
 5. Command to add serve to `cron` command
 6. Configuration to serve via SystemD service
+
 ### O/Ses
 1. Mac
 2. Linux

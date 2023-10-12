@@ -2,69 +2,84 @@ package cli
 
 import (
 	"flag"
-	"fmt"
-	"os"
 	"regexp"
 	"slices"
 	"strings"
 )
 
 var MatchSpaces = regexp.MustCompile(`\s+`)
+var AppName string
 
-func Initialize() (err error) {
-	err = addFlags()
+func Initialize(appName string) (err error) {
+
+	AppName = appName
+
+	cmd, _, err := InvokedCommand()
+	if err != nil {
+		goto end
+	}
+
+	err = cmd.AddFlags()
 	if err != nil {
 		goto end
 	}
 	flag.Parse()
-	setValues()
-	if len(os.Args) >= 2 {
-		cmd := os.Args[1]
-		if _, ok := RootCmd.SubCommands[cmd]; ok {
-			goto end
-		}
-		err = fmt.Errorf("command '%s' is not a valid command", cmd)
-		goto end
-	}
-	err = checkFlags()
+	cmd.SetFlagValues()
+
 end:
 	return err
 }
 
-// AllFlags returns all the flags for this command, including all parent flags
-// including the root flags.
-func (c *Command) AllFlags() (flags Flags) {
-	cmd := c
-	flags = c.Flags
+// ValidateInput validates flags and args passed on the CLI
+func ValidateInput() (err error) {
+	var cmd *Command
+	var sm StringMap
+	var am ArgsMap
+
+	cmd, _, err = InvokedCommand()
+	if err != nil {
+		goto end
+	}
+	sm, am = cmd.ArgValuesMap()
+	err = am.validate(sm)
+	if err != nil {
+		goto end
+	}
+	err = cmd.InvokedFlags().validate()
+	if err != nil {
+		goto end
+	}
+end:
+	return err
+}
+
+// InvokedFlags returns all the flags for th invoked command, including all
+// parent flags including the root flags.
+func (c *Command) InvokedFlags() (flags Flags) {
+	var cmds []*Command
+	var cmd *Command
+
+	if c.invokedFlags != nil {
+		goto end
+	}
+	cmds = []*Command{c}
+	cmd = c
 	for cmd.Parent != nil {
+		cmds = append(cmds, cmd.Parent)
 		cmd = cmd.Parent
+	}
+	slices.Reverse(cmds)
+	for _, cmd = range cmds {
 		if len(cmd.Flags) == 0 {
 			continue
 		}
 		flags = append(flags, cmd.Flags...)
 	}
-	slices.Reverse(flags)
+end:
 	return flags
 }
 
-// Sets the value specified by
-func setValues() {
-	cmd, _ := InvokedCommand()
-	for _, f := range cmd.AllFlags() {
-		fv := flagValues[f.Unique()]
-		switch {
-		case f.SetStringValFunc != nil:
-			f.SetStringValFunc(fv.String)
-		case f.SetIntValFunc != nil:
-			f.SetIntValFunc(fv.Int)
-		default:
-			noSetFuncAssigned(f)
-		}
-	}
-
-}
-
-func noSetFuncAssigned(f *Flag) {
+func (f *Flag) noSetFuncAssigned() {
 	panicf("No func(<type>) assigned to property `Set*ValFunc` for flag '%s'", f.Unique())
 }
 

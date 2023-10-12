@@ -7,11 +7,13 @@ import (
 )
 
 func init() {
-	cli.RootCmd.AddFlag(&cli.Flag{
-		Name:             "data",
-		VarName:          "data_file",
-		Usage:            "Data file (sqlite3)",
-		Default:          persister.SqliteDB,
-		SetStringValFunc: options.SetDataFile,
-	})
+	cli.RootCmd.
+		AddFlag(&cli.Flag{
+			Switch: "data",
+			Arg: cli.Arg{
+				Name:             "data_file",
+				Usage:            "Data file (sqlite3)",
+				Default:          persister.SqliteDB,
+				SetStringValFunc: options.SetDataFile,
+			}})
 }

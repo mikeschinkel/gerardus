@@ -2,6 +2,8 @@
 SELECT * FROM project WHERE id = ? LIMIT 1;
 -- name: LoadProjectByName :one
 SELECT * FROM project WHERE name = ? LIMIT 1;
+-- name: LoadProjectByRepoURL :one
+SELECT * FROM project WHERE repo_url = ? LIMIT 1;
 -- name: LoadProjectRepoURL :one
 SELECT repo_url FROM project WHERE id = ? LIMIT 1;
 -- name: ListProjects :many
@@ -23,6 +25,8 @@ ON CONFLICT (name) DO UPDATE SET about=excluded.about, repo_url=excluded.repo_ur
 
 -- name: LoadCodebase :one
 SELECT * FROM codebase WHERE id = ? LIMIT 1;
+-- name: LoadCodebaseByProjectNameAndVersionTag :one
+SELECT c.id FROM codebase c JOIN project p ON p.id=c.project_id WHERE p.name = ? AND c.version_tag = ? LIMIT 1;
 -- name: LoadCodebaseIdByRepoURL :one
 SELECT c.id FROM codebase c JOIN project p ON p.id=c.project_id WHERE p.repo_url = ? LIMIT 1;
 -- name: ListCodebases :many
@@ -31,8 +35,8 @@ SELECT * FROM codebase ORDER BY project_id,version_tag;
 INSERT INTO codebase ( project_id,version_tag,source_url ) VALUES ( ?,?,? ) RETURNING *;
 -- name: DeleteCodebase :exec
 DELETE FROM codebase WHERE id = ?;
--- name: DeleteCodebaseByVersionTag :exec
-DELETE FROM codebase WHERE version_tag = ?;
+-- name: DeleteCodebaseByProjectIdAndVersionTag :exec
+DELETE FROM codebase WHERE project_id = ? AND version_tag = ?;
 -- name: UpdateCodebase :exec
 UPDATE codebase SET project_id = ?, version_tag = ?, source_url = ? WHERE id = ? RETURNING *;
 -- name: UpdateCodebaseByProjectIdAndVersionTag :exec

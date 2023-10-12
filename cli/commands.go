@@ -39,13 +39,11 @@ end:
 
 var argsCount *int
 
-func ArgsCount() int {
-	var n int
+func ArgsCount() (_ int, err error) {
+	var n, depth int
 	if argsCount != nil {
 		goto end
 	}
-	// Calling this ensures commandDepth is set
-	InvokedCommand()
 	argsCount = &n
 	for _, arg := range os.Args[1:] {
 		if arg[0] == '-' {
@@ -53,25 +51,39 @@ func ArgsCount() int {
 		}
 		*argsCount++
 	}
-	*argsCount -= commandDepth
+	_, depth, err = InvokedCommand()
+	if err != nil {
+		goto end
+	}
+	*argsCount -= depth
 end:
-	return *argsCount
+	return *argsCount, err
 }
 
 func ExecInvokedCommand() (err error) {
-	cmd, depth := InvokedCommand()
-	expected := len(cmd.Args)
-	got := ArgsCount()
+	var sm StringMap
+	var expected, got int
+
+	cmd, _, err := InvokedCommand()
+	if err != nil {
+		goto end
+	}
+	expected = cmd.RequiredArgsCount()
+	got, err = ArgsCount()
+	if err != nil {
+		goto end
+	}
 	if got < expected {
 		err = fmt.Errorf("not enough CLI args passed; expected at least %d, got %d", expected, got)
 		goto end
 	}
-	expected += len(cmd.OptArgs)
+	expected = cmd.ArgsCount()
 	if got > expected {
 		err = fmt.Errorf("too many CLI args passed; expected no more than %d, got %d", expected, got)
 		goto end
 	}
-	err = cmd.ExecuteFunc(os.Args[depth:]...)
+	sm, _ = cmd.ArgValuesMap()
+	err = cmd.ExecuteFunc(sm)
 end:
 	return err
 }
@@ -79,48 +91,59 @@ end:
 var invokedCommand *Command
 var commandDepth int
 
-func InvokedCommand() (*Command, int) {
+func InvokedCommand() (_ *Command, _ int, err error) {
 	var arg string
+	var cnt int
+
 	if invokedCommand != nil {
 		goto end
 	}
 
-	if CommandCount() == 0 {
+	arg, cnt, err = CommandString()
+	if err != nil {
+		goto end
+	}
+
+	if cnt == 0 {
 		invokedCommand = RootCmd.SubCommands["help"]
 		goto end
 	}
-	arg = CommandString()
 	invokedCommand, commandDepth = CommandByName(arg)
 	if invokedCommand != nil {
 		invokedCommand.Name = arg
 	}
 end:
-	return invokedCommand, commandDepth
+	return invokedCommand, commandDepth, err
 }
 
 var commandCount *int
 
 // CommandCount returns the number of commands minus the flags
-func CommandCount() int {
+func CommandCount() (cnt int, err error) {
 	if commandCount != nil {
 		goto end
 	}
-	CommandString()
+	_, cnt, err = CommandString()
+	if err != nil {
+		goto end
+	}
+	commandCount = &cnt
 end:
-	return *commandCount
+	return *commandCount, err
 }
 
 var commandString *string
 
 // CommandString returns the full list of commands minus the flags
-func CommandString() string {
+func CommandString() (cs string, _ int, err error) {
 	var sb strings.Builder
-	var cs string
 	var n int
 	var cmds CommandMap
+
 	if commandString != nil {
 		goto end
 	}
+	commandString = &cs
 	cmds = RootCmd.SubCommands
 	commandCount = &n
 	sb = strings.Builder{}
@@ -129,7 +152,8 @@ func CommandString() string {
 			continue
 		}
 		if _, ok := cmds[arg]; !ok {
-			break
+			err = fmt.Errorf("command '%s' is not valid", arg)
+			goto end
 		}
 		sb.WriteString(arg)
 		sb.WriteByte(' ')
@@ -137,10 +161,13 @@ func CommandString() string {
 		cmds = cmds[arg].SubCommands
 	}
 	cs = sb.String()
+	if len(cs) == 0 {
+		goto end
+	}
 	cs = cs[:len(cs)-1]
 	commandString = &cs
 end:
-	return *commandString
+	return *commandString, *commandCount, err
 }
 
 func AddCommand(name string) (cmd *Command) {
