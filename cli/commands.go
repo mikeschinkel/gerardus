@@ -82,7 +82,7 @@ func ExecInvokedCommand() (err error) {
 		err = fmt.Errorf("too many CLI args passed; expected no more than %d, got %d", expected, got)
 		goto end
 	}
-	am, err = cmd.ArgValuesMap()
+	am, err = cmd.ArgsMap()
 	err = cmd.ExecuteFunc(am)
 end:
 	return err
@@ -146,6 +146,9 @@ func CommandString() (cs string, _ int, err error) {
 		sb.WriteByte(' ')
 		*commandCount++
 		cmds = cmds[arg].SubCommands
+		if len(cmds) == 0 {
+			break
+		}
 	}
 	cs = sb.String()
 	if len(cs) == 0 {

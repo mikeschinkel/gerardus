@@ -25,6 +25,10 @@ func Initialize(appName string) (err error) {
 	}
 	flag.Parse()
 	cmd.SetFlagValues()
+	err = cmd.SetArgValues()
+	if err != nil {
+		goto end
+	}
 
 end:
 	return err
@@ -39,7 +43,7 @@ func ValidateInput() (err error) {
 	if err != nil {
 		goto end
 	}
-	am, err = cmd.ArgValuesMap()
+	am, err = cmd.ArgsMap()
 	err = am.Validate()
 	if err != nil {
 		goto end

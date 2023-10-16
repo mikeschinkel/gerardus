@@ -12,7 +12,7 @@ import (
 func usage(msg string, args ...any) {
 	cli.StdErr(msg+"\n\n", args...)
 	cmd, _ := cli.CommandByName("help")
-	am, err := cmd.ArgValuesMap()
+	am, err := cmd.ArgsMap()
 	if err != nil {
 		cli.StdErr(err.Error())
 	}

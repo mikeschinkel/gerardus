@@ -134,7 +134,7 @@ func (c *Command) depth() (n int) {
 	return n
 }
 
-func (c *Command) ArgValuesMap() (_ ArgsMap, err error) {
+func (c *Command) ArgsMap() (_ ArgsMap, err error) {
 	var depth, index int
 	var args Args
 
@@ -176,7 +176,27 @@ end:
 	return c.argsMap, err
 }
 
-// SetFlagValues the flag value specified by
+// SetArgValues sets the ValueUnion values
+func (c *Command) SetArgValues() error {
+	am, err := c.ArgsMap()
+	if err != nil {
+		goto end
+	}
+	for _, arg := range am {
+		switch {
+		case arg.SetStringValFunc != nil:
+			arg.SetStringValFunc(arg.String())
+		case arg.SetIntValFunc != nil:
+			arg.SetIntValFunc(arg.Value.Int)
+			//default:
+			//	arg.noSetFuncAssigned()
+		}
+	}
+end:
+	return err
+}
+
+// SetFlagValues sets the ValueUnion values
 func (c *Command) SetFlagValues() {
 	for _, f := range c.InvokedFlags() {
 		fv := flagValuesMap[f.Unique()]
