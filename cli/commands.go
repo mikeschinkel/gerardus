@@ -116,23 +116,10 @@ end:
 	return invokedCommand, commandDepth, err
 }
 
-var commandCount *int
-
-// CommandCount returns the number of commands minus the flags
-func CommandCount() (cnt int, err error) {
-	if commandCount != nil {
-		goto end
-	}
-	_, cnt, err = CommandString()
-	if err != nil {
-		goto end
-	}
-	commandCount = &cnt
-end:
-	return *commandCount, err
-}
-
-var commandString *string
+var (
+	commandString *string
+	commandCount  *int
+)
 
 // CommandString returns the full list of commands minus the flags
 func CommandString() (cs string, _ int, err error) {
