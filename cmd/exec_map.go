@@ -34,7 +34,7 @@ var CmdMap = cli.AddCommandWithFunc("map", ExecMap).
 	})
 
 //goland:noinspection GoUnusedParameter
-func ExecMap(args cli.StringMap) (err error) {
+func ExecMap(args cli.ArgsMap) (err error) {
 	var ma mapArgs
 	var cs *surveyor.CodeSurveyor
 	var cb *parser.Codebase

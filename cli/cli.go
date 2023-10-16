@@ -33,15 +33,14 @@ end:
 // ValidateInput validates flags and args passed on the CLI
 func ValidateInput() (err error) {
 	var cmd *Command
-	var sm StringMap
 	var am ArgsMap
 
 	cmd, _, err = InvokedCommand()
 	if err != nil {
 		goto end
 	}
-	sm, am = cmd.ArgValuesMap()
-	err = am.validate(sm)
+	am, err = cmd.ArgValuesMap()
+	err = am.Validate()
 	if err != nil {
 		goto end
 	}

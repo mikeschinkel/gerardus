@@ -4,12 +4,7 @@ import (
 	"fmt"
 )
 
-type FlagUnion struct {
-	String string
-	Int    int
-}
-
-type FlagValuesMap map[string]*FlagUnion
+type FlagValuesMap map[string]*ValueUnion
 
 var flagValuesMap = make(FlagValuesMap, 32)
 

@@ -4,6 +4,7 @@ import (
 	"flag"
 	"os"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -15,8 +16,7 @@ type Command struct {
 	Args          Args
 	SubCommands   CommandMap
 	invokedFlags  Flags
-	argValues     StringMap
-	argMap        ArgsMap
+	argsMap       ArgsMap
 	flagValuesMap FlagValuesMap
 }
 
@@ -31,7 +31,7 @@ func NewCommand(name string, ef ExecFunc) *Command {
 	}
 }
 
-func (c *Command) ExecuteFunc(args StringMap) error {
+func (c *Command) ExecuteFunc(args ArgsMap) error {
 	return c.ExecFunc(args)
 }
 
@@ -134,18 +134,17 @@ func (c *Command) depth() (n int) {
 	return n
 }
 
-func (c *Command) ArgValuesMap() (StringMap, ArgsMap) {
+func (c *Command) ArgValuesMap() (_ ArgsMap, err error) {
 	var depth, index int
 	var args Args
 
-	if c.argValues != nil {
+	if c.argsMap != nil {
 		goto end
 	}
 	depth = c.depth()
 	args = c.Args
 
-	c.argValues = make(StringMap)
-	c.argMap = make(ArgsMap)
+	c.argsMap = make(ArgsMap)
 	depth--
 	index = len(os.Args) - 1
 	for depth >= 0 {
@@ -159,12 +158,22 @@ func (c *Command) ArgValuesMap() (StringMap, ArgsMap) {
 		}
 		arg := args[depth]
 		name := arg.Name
-		c.argValues[name] = value
-		c.argMap[name] = arg
+		switch {
+		case arg.SetStringValFunc != nil:
+			arg.Value.String = value
+		case arg.SetIntValFunc != nil:
+			var n int
+			n, err = strconv.Atoi(value)
+			if err != nil {
+				goto end
+			}
+			arg.Value.Int = n
+		}
+		c.argsMap[name] = arg
 		depth--
 	}
 end:
-	return c.argValues, c.argMap
+	return c.argsMap, err
 }
 
 // SetFlagValues the flag value specified by
@@ -186,7 +195,7 @@ func (c *Command) SetFlagValues() {
 // AddFlags initializes the flag package flags
 func (c *Command) AddFlags() (err error) {
 	for _, f := range c.InvokedFlags() {
-		fu := FlagUnion{}
+		fu := ValueUnion{}
 		flagValuesMap[f.Unique()] = &fu
 		switch {
 		case f.SetStringValFunc != nil:

@@ -61,7 +61,7 @@ end:
 }
 
 func ExecInvokedCommand() (err error) {
-	var sm StringMap
+	var am ArgsMap
 	var expected, got int
 
 	cmd, _, err := InvokedCommand()
@@ -82,8 +82,8 @@ func ExecInvokedCommand() (err error) {
 		err = fmt.Errorf("too many CLI args passed; expected no more than %d, got %d", expected, got)
 		goto end
 	}
-	sm, _ = cmd.ArgValuesMap()
-	err = cmd.ExecuteFunc(sm)
+	am, err = cmd.ArgValuesMap()
+	err = cmd.ExecuteFunc(am)
 end:
 	return err
 }

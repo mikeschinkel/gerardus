@@ -22,20 +22,20 @@ var CmdAddProject = CmdAdd.
 		Optional: true,
 	})
 
-func ExecAddProject(args cli.StringMap) (err error) {
+func ExecAddProject(args cli.ArgsMap) (err error) {
 	var about, website string
 	var ok bool
 	var ctx context.Context
 
-	name := args["name"]
+	name := args["name"].String()
 
-	repoURL := args["repo_url"]
+	repoURL := args["repo_url"].String()
 
-	if len(args["about"]) != 0 {
-		about = args["about"]
+	if args["about"].IsZero() {
+		about = args["about"].String()
 	}
-	if len(args["website"]) != 0 {
-		website = args["website"]
+	if args["website"].IsZero() {
+		website = args["website"].String()
 	}
 	if len(about) == 0 {
 		var info *persister.GitHubRepoInfo

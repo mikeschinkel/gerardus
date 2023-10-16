@@ -6,15 +6,17 @@ import (
 	"path/filepath"
 
 	"gerardus/cli"
-	"gerardus/options"
 	"gerardus/paths"
 )
 
 func usage(msg string, args ...any) {
-	options.StdErr(msg+"\n\n", args...)
+	cli.StdErr(msg+"\n\n", args...)
 	cmd, _ := cli.CommandByName("help")
-	sm, _ := cmd.ArgValuesMap()
-	_ = cli.ExecHelp(sm)
+	am, err := cmd.ArgValuesMap()
+	if err != nil {
+		cli.StdErr(err.Error())
+	}
+	_ = cli.ExecHelp(am)
 	os.Exit(1)
 }
 

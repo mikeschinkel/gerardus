@@ -14,7 +14,7 @@ var CmdHelp = AddCommandWithFunc("help", ExecHelp).
 		Optional: true,
 	})
 
-func ExecHelp(args StringMap) error {
+func ExecHelp(args ArgsMap) error {
 	var output func(*Command, string) []string
 
 	output = func(cmd *Command, prefix string) (out []string) {

@@ -22,7 +22,7 @@ var CmdAddCodebase = CmdAdd.
 		SetStringValFunc: options.SetSourceURL,
 	})
 
-func ExecAddCodebase(args cli.StringMap) (err error) {
+func ExecAddCodebase(args cli.ArgsMap) (err error) {
 	var p persister.Project
 
 	ds := persister.GetDataStore()
@@ -65,11 +65,12 @@ end:
 }
 
 func checkSourceURL(url any) (err error) {
-	TODO
+	sourceURL := url.(string)
+	err = cli.CheckURL(sourceURL)
 	if err != nil {
+		err = fmt.Errorf("source URL does not appear to be valid; %w", err)
 		goto end
 	}
-
 end:
 	return err
 }
