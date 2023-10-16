@@ -15,7 +15,7 @@ type checker struct{}
 var check = checker{}
 
 var projectArg = &cli.Arg{
-	Name:             "project",
+	Name:             ProjectArg,
 	Usage:            "Project name, e.g. 'golang'",
 	CheckFunc:        check.projectName,
 	SetStringValFunc: options.SetProjectName,
@@ -35,7 +35,7 @@ end:
 }
 
 var versionTagArg = &cli.Arg{
-	Name:             "version_tag",
+	Name:             VersionTagArg,
 	Usage:            "Git version tag",
 	CheckFunc:        check.versionTag,
 	SetStringValFunc: options.SetVersionTag,
@@ -67,7 +67,7 @@ end:
 }
 
 var repoURLArg = &cli.Arg{
-	Name:             "repo_url",
+	Name:             RepoURLArg,
 	Usage:            "The full GitHub repository URL for the project, e.g. https://github.com/golang/go",
 	CheckFunc:        check.repoURL,
 	SetStringValFunc: options.SetRepoURL,
@@ -81,8 +81,8 @@ func (checker) repoURL(url any) (err error) {
 		err = fmt.Errorf("repo URL %s not a valid Github repo URL", repoURL)
 		goto end
 	}
-	if strings.Join(parts[:2], "/") != "https://github.com" {
-		err = fmt.Errorf("repo URL %s not a valid Github URL", repoURL)
+	if strings.Join(parts[:3], "/") != "https://github.com" {
+		err = fmt.Errorf("repo URL %s not a https://github.com URL", repoURL)
 		goto end
 	}
 	err = cli.CheckURL(repoURL)

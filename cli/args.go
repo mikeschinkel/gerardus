@@ -7,7 +7,8 @@ import (
 )
 
 type Args []*Arg
-type ArgsMap map[string]*Arg
+type ArgName = string
+type ArgsMap map[ArgName]*Arg
 
 type Arg struct {
 	Name             string

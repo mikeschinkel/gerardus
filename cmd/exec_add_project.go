@@ -14,33 +14,36 @@ var CmdAddProject = CmdAdd.
 	AddArg(projectArg).
 	AddArg(repoURLArg).
 	AddArg(&cli.Arg{
-		Name:     "about",
+		Name:     AboutArg,
 		Optional: true,
 	}).
 	AddArg(&cli.Arg{
-		Name:     "website",
+		Name:     RepoURLArg,
+		Optional: true,
+	}).
+	AddArg(&cli.Arg{
+		Name:     WebsiteArg,
 		Optional: true,
 	})
 
 func ExecAddProject(args cli.ArgsMap) (err error) {
 	var about, website string
-	var ok bool
 	var ctx context.Context
 
-	name := args["name"].String()
+	name := args[ProjectArg].String()
 
-	repoURL := args["repo_url"].String()
+	repoURL := args[RepoURLArg].String()
 
-	if args["about"].IsZero() {
-		about = args["about"].String()
+	if !args[AboutArg].IsZero() {
+		about = args[AboutArg].String()
 	}
-	if args["website"].IsZero() {
-		website = args["website"].String()
+	if !args[WebsiteArg].IsZero() {
+		website = args[WebsiteArg].String()
 	}
 	if len(about) == 0 {
 		var info *persister.GitHubRepoInfo
 		info, err = persister.RequestGitHubRepoInfo(repoURL)
-		if !ok {
+		if err != nil {
 			goto end
 		}
 		about = info.Description

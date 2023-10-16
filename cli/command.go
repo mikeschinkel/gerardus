@@ -141,10 +141,14 @@ func (c *Command) ArgsMap() (_ ArgsMap, err error) {
 	if c.argsMap != nil {
 		goto end
 	}
-	depth = c.depth()
-	args = c.Args
-
 	c.argsMap = make(ArgsMap)
+	args = c.Args
+	for _, arg := range args {
+		c.argsMap[arg.Name] = arg
+	}
+
+	depth = c.depth()
+
 	depth--
 	index = len(os.Args) - 1
 	for depth >= 0 {
