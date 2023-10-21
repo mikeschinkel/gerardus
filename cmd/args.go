@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"gerardus/cli"
 	"gerardus/options"
 	"gerardus/persister"
+	"gerardus/serr"
 )
 
 type checker struct{}
@@ -21,14 +21,20 @@ var projectArg = &cli.Arg{
 	SetStringValFunc: options.SetProjectName,
 }
 
-func (checker) projectName(project any) (err error) {
+func (checker) projectName(mode cli.ArgCheckMode, project any) (err error) {
 	projName := project.(string)
 	ds := persister.GetDataStore()
 	ctx := context.Background()
-	_, err = ds.LoadProjectByName(ctx, projName)
-	if err != nil {
-		err = fmt.Errorf("project '%s' has not been added; %w", project, err)
-		goto end
+	switch mode {
+	case cli.MustExist:
+		_, err = ds.LoadProjectByName(ctx, projName)
+		if err != nil {
+			err = errProjectNotFound.Err(err, "project", project)
+			goto end
+		}
+	case cli.OkToExist:
+	case cli.MustNotExist:
+		panic("Need to implement")
 	}
 end:
 	return err
@@ -41,26 +47,37 @@ var versionTagArg = &cli.Arg{
 	SetStringValFunc: options.SetVersionTag,
 }
 
-func (checker) versionTag(tag any) (err error) {
+func (checker) versionTag(mode cli.ArgCheckMode, tag any) (err error) {
 	var ds *persister.DataStore
 	var ctx context.Context
 	var verTag string
 
 	projName := options.ProjectName()
 	if len(projName) == 0 {
-		err = fmt.Errorf("no project has been specified. Use the `-prj=<project_name>` switch to specify the option")
+		err = errNoProjectSpecified
 		goto end
 	}
 	verTag = tag.(string)
+	if len(verTag) == 0 {
+		err = errNoVersionTagSpecified.Args("project", projName)
+		goto end
+	}
 	ds = persister.GetDataStore()
 	ctx = context.Background()
-	_, err = ds.LoadCodebaseByProjectNameAndVersionTag(ctx, persister.LoadCodebaseByProjectNameAndVersionTagParams{
-		Name:       projName,
-		VersionTag: verTag,
-	})
-	if err != nil {
-		err = fmt.Errorf("codebase for project '%s' and version tag '%s' has not been added; %w", projName, verTag, err)
-		goto end
+
+	switch mode {
+	case cli.MustExist:
+		_, err = ds.LoadCodebaseByProjectNameAndVersionTag(ctx, persister.LoadCodebaseByProjectNameAndVersionTagParams{
+			Name:       projName,
+			VersionTag: verTag,
+		})
+		if err != nil {
+			err = errCodebaseNotAdded.Err(err, "project", projName, "version_tag", verTag)
+			goto end
+		}
+	case cli.OkToExist:
+	case cli.MustNotExist:
+		panic("Need to implement")
 	}
 end:
 	return err
@@ -73,10 +90,16 @@ var repoURLArg = &cli.Arg{
 	SetStringValFunc: options.SetRepoURL,
 }
 
-func (checker) repoURL(url any) (err error) {
+func (checker) repoURL(mode cli.ArgCheckMode, url any) (err error) {
+	var parts []string
+	var numParts int
 	repoURL := url.(string)
-	parts := strings.Split(strings.TrimRight(repoURL, "/"), "/")
-	numParts := len(parts)
+	if len(repoURL) == 0 {
+		err = errNoRepoURLSpecified
+		goto end
+	}
+	parts = strings.Split(strings.TrimRight(repoURL, "/"), "/")
+	numParts = len(parts)
 	if numParts != 5 {
 		err = errInvalidGitHubRepoURL
 		goto end
@@ -85,10 +108,19 @@ func (checker) repoURL(url any) (err error) {
 		err = errInvalidGitHubRepoRootURL
 		goto end
 	}
-	err = cli.CheckURL(repoURL)
-	if err != nil {
-		goto end
+	switch mode {
+	case cli.MustExist:
+		err = cli.CheckURL(repoURL)
+		if err != nil {
+			err = errURLCouldNotBeDereferenced
+		}
+	case cli.OkToExist:
+	case cli.MustNotExist:
+		panic("Need to implement")
 	}
 end:
+	if err != nil && len(repoURL) > 0 {
+		err = err.(serr.SError).Args("repo_url", repoURL)
+	}
 	return err
 }

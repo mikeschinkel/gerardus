@@ -8,7 +8,7 @@ import (
 
 //goland:noinspection ALL
 var CmdHelp = AddCommandWithFunc("help", ExecHelp).
-	AddArg(&Arg{
+	AddArg(Arg{
 		Name:     "command",
 		Usage:    "Specifies the command to show help for",
 		Optional: true,

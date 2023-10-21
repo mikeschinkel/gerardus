@@ -8,18 +8,18 @@ type FlagValuesMap map[string]*ValueUnion
 
 var flagValuesMap = make(FlagValuesMap, 32)
 
-type Flags []*Flag
+type Flags []Flag
 type Flag struct {
 	Switch string
 	Arg
 }
 
-func (f *Flag) String() string {
+func (f Flag) String() string {
 	return fmt.Sprintf(" [-%s=<%s>]", f.Switch, f.Name)
 }
 
 // Unique returns a string that uniquely identifies a flag for its command
-func (f *Flag) Unique() string {
+func (f Flag) Unique() string {
 	return fmt.Sprintf("%s:%s", f.Parent.Unique(), f.Name)
 }
 
@@ -34,9 +34,9 @@ func (flgs Flags) validate() (err error) {
 		}
 		switch {
 		case f.SetStringValFunc != nil:
-			err = f.CheckFunc(flagValuesMap[f.Unique()].String)
+			err = f.CheckFunc(f.CheckMode, flagValuesMap[f.Unique()].String)
 		case f.SetIntValFunc != nil:
-			err = f.CheckFunc(flagValuesMap[f.Unique()].Int)
+			err = f.CheckFunc(f.CheckMode, flagValuesMap[f.Unique()].Int)
 		default:
 			f.noSetFuncAssigned()
 		}
@@ -49,7 +49,7 @@ end:
 }
 
 // InvokedFlagValuesMap returns a map of the invoked flags
-func (f *Flag) InvokedFlagValuesMap() (m FlagValuesMap, err error) {
+func (f Flag) InvokedFlagValuesMap() (m FlagValuesMap, err error) {
 	var flags Flags
 
 	cmd, _, err := InvokedCommand()

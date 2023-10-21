@@ -6,9 +6,17 @@ import (
 	"strings"
 )
 
-type Args []*Arg
+type Args []Arg
 type ArgName = string
-type ArgsMap map[ArgName]*Arg
+type ArgsMap map[ArgName]Arg
+
+type ArgCheckMode int
+
+const (
+	MustExist = iota
+	OkToExist
+	MustNotExist
+)
 
 type Arg struct {
 	Name             string
@@ -16,10 +24,11 @@ type Arg struct {
 	Usage            string
 	Default          interface{}
 	Optional         bool
-	CheckFunc        func(any) error
+	CheckFunc        func(ArgCheckMode, any) error
 	SetStringValFunc func(string)
 	SetIntValFunc    func(int)
 	Value            ValueUnion
+	CheckMode        ArgCheckMode
 }
 
 func (arg Arg) IsZero() bool {
@@ -32,6 +41,23 @@ func (arg Arg) IsZero() bool {
 		panicf("Unhandled type for arg '%s'", arg.Unique())
 	}
 	return false
+}
+
+func (arg Arg) MustExist() Arg {
+	arg.CheckMode = MustExist
+	return arg
+}
+func (arg Arg) OkToExist() Arg {
+	arg.CheckMode = OkToExist
+	return arg
+}
+func (arg Arg) MustNotExist() Arg {
+	arg.CheckMode = MustNotExist
+	return arg
+}
+func (arg Arg) ClearCheck() Arg {
+	arg.CheckFunc = nil
+	return arg
 }
 
 func (arg Arg) String() string {
@@ -76,9 +102,9 @@ func (m ArgsMap) Validate() (err error) {
 		}
 		switch {
 		case arg.SetStringValFunc != nil:
-			err = arg.CheckFunc(arg.Value.String)
+			err = arg.CheckFunc(arg.CheckMode, arg.Value.String)
 		case arg.SetIntValFunc != nil:
-			err = arg.CheckFunc(arg.Value.Int)
+			err = arg.CheckFunc(arg.CheckMode, arg.Value.Int)
 			//default:
 			//	arg.noSetFuncAssigned()
 		}

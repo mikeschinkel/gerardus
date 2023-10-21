@@ -11,17 +11,13 @@ import (
 //goland:noinspection GoUnusedGlobalVariable
 var CmdAddProject = CmdAdd.
 	AddSubCommand("project", ExecAddProject).
-	AddArg(projectArg).
-	AddArg(repoURLArg).
-	AddArg(&cli.Arg{
+	AddArg(projectArg.OkToExist()).
+	AddArg(repoURLArg.MustExist()).
+	AddArg(cli.Arg{
 		Name:     AboutArg,
 		Optional: true,
 	}).
-	AddArg(&cli.Arg{
-		Name:     RepoURLArg,
-		Optional: true,
-	}).
-	AddArg(&cli.Arg{
+	AddArg(cli.Arg{
 		Name:     WebsiteArg,
 		Optional: true,
 	})

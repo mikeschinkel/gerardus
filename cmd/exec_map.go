@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 
 	"gerardus/cli"
@@ -20,9 +21,9 @@ const GoStdLibURL = "https://github.com/golang/go/tree/go1.21.1/src"
 
 //goland:noinspection GoUnusedGlobalVariable
 var CmdMap = cli.AddCommandWithFunc("map", ExecMap).
-	AddArg(projectArg).
-	AddArg(versionTagArg).
-	AddFlag(&cli.Flag{
+	AddArg(projectArg.MustExist()).
+	AddArg(versionTagArg.MustExist()).
+	AddFlag(cli.Flag{
 		Switch: "src",
 		Arg: cli.Arg{
 			Name:             "source_dir",
@@ -110,22 +111,38 @@ func mapWithChans(ctx context.Context, args mapArgs) (err error) {
 }
 
 // checkDir validates source directory
-func checkDir(dir any) error {
+func checkDir(mode cli.ArgCheckMode, dir any) (err error) {
 	var info os.FileInfo
-	absDir, err := makeAbs(dir.(string))
+	var absDir string
+
+	sDir := dir.(string)
+	if len(sDir) == 0 {
+		err = errDirIsEmpty
+		goto end
+	}
+
+	absDir, err = makeAbs(sDir)
 	if err != nil {
 		goto end
 	}
-	info, err = os.Stat(absDir)
-	if err != nil {
-		err = errReadingSourceDir.Err(err, "source_dir", absDir)
-		goto end
+
+	switch mode {
+	case cli.MustExist:
+		info, err = os.Stat(absDir)
+		if err != nil {
+			err = errReadingSourceDir.Err(err, "source_dir", absDir)
+			goto end
+		}
+		if !info.IsDir() {
+			err = errPathNotADir.Err(err, "source_dir", absDir)
+			goto end
+		}
+		dir = absDir // TODO Verify this actually sets the passed parameter
+	case cli.OkToExist:
+	case cli.MustNotExist:
+		panic("Need to implement")
 	}
-	if !info.IsDir() {
-		err = errPathNotADir.Err(err, "source_dir", absDir)
-		goto end
-	}
-	dir = absDir // TODO Verify this actually set the passed parameter
+
 end:
 	return err
 }

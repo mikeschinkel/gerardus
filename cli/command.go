@@ -42,7 +42,7 @@ func (c *Command) AddSubCommand(name string, ef ExecFunc) (cmd *Command) {
 	return cmd
 }
 
-func (c *Command) AddFlag(flg *Flag) (cmd *Command) {
+func (c *Command) AddFlag(flg Flag) (cmd *Command) {
 	flg.Parent = c
 	if flg.Default == nil {
 		switch {
@@ -124,9 +124,9 @@ func (c *Command) String() string {
 	return sb.String()
 }
 
-// depth returns how deep the command is.
-// e.g. `cliapp -a 10 -b hello foo bar baz` would be depth 3
-func (c *Command) depth() (n int) {
+// commandDepth returns how deep the command is.
+// e.g. `myapp -a 10 -b hello foo bar baz` would be commandDepth 3 for `foo bar baz`
+func (c *Command) commandDepth() (n int) {
 	for c.Parent != nil {
 		c = c.Parent
 		n++
@@ -135,46 +135,36 @@ func (c *Command) depth() (n int) {
 }
 
 func (c *Command) ArgsMap() (_ ArgsMap, err error) {
-	var depth, index int
-	var args Args
+	var index int
+	var args []string
 
-	if c.argsMap != nil {
+	if len(c.argsMap) > 0 {
 		goto end
 	}
+
+	args = os.Args[1+c.commandDepth():]
+
 	c.argsMap = make(ArgsMap)
-	args = c.Args
-	for _, arg := range args {
-		c.argsMap[arg.Name] = arg
-	}
-
-	depth = c.depth()
-
-	depth--
-	index = len(os.Args) - 1
-	for depth >= 0 {
-		if index <= 1 {
-			goto end
-		}
-		value := os.Args[index]
-		index--
-		if value[0] == '-' {
-			continue
-		}
-		arg := args[depth]
-		name := arg.Name
-		switch {
-		case arg.SetStringValFunc != nil:
-			arg.Value.String = value
-		case arg.SetIntValFunc != nil:
-			var n int
-			n, err = strconv.Atoi(value)
-			if err != nil {
-				goto end
+	for _, arg := range c.Args {
+		if index < len(args) {
+			value := args[index]
+			index++
+			if value[0] == '-' {
+				continue
 			}
-			arg.Value.Int = n
+			switch {
+			case arg.SetStringValFunc != nil:
+				arg.Value.String = value
+			case arg.SetIntValFunc != nil:
+				var n int
+				n, err = strconv.Atoi(value)
+				if err != nil {
+					goto end
+				}
+				arg.Value.Int = n
+			}
 		}
-		c.argsMap[name] = arg
-		depth--
+		c.argsMap[arg.Name] = arg
 	}
 end:
 	return c.argsMap, err
@@ -254,7 +244,7 @@ func (c *Command) ArgsCount() (cnt int) {
 	return len(c.Args)
 }
 
-func (c *Command) AddArg(arg *Arg) (cmd *Command) {
+func (c *Command) AddArg(arg Arg) (cmd *Command) {
 	arg.Parent = c
 
 	if arg.SetStringValFunc == nil && arg.SetIntValFunc == nil {

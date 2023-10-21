@@ -12,15 +12,16 @@ import (
 //goland:noinspection GoUnusedGlobalVariable
 var CmdAddCodebase = CmdAdd.
 	AddSubCommand("codebase", ExecAddCodebase).
-	AddArg(projectArg).
-	AddArg(versionTagArg).
-	AddArg(&cli.Arg{
-		Name:             "source_url",
-		Usage:            "URL for versioned source of a Project repo",
-		Optional:         true,
-		CheckFunc:        checkSourceURL,
-		SetStringValFunc: options.SetSourceURL,
-	})
+	AddArg(projectArg.MustExist()).
+	AddArg(versionTagArg.OkToExist()).
+
+//AddArg(cli.Arg{
+//	Name:             "source_url",
+//	Usage:            "URL for versioned source of a Project repo",
+//	Optional:         true,
+//	CheckFunc:        checkSourceURL,
+//	SetStringValFunc: options.SetSourceURL,
+//})
 
 func ExecAddCodebase(args cli.ArgsMap) (err error) {
 	var p persister.Project
