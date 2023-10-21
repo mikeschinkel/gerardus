@@ -20,8 +20,12 @@ type CodeSurveyor struct {
 	facetChan chan collector.CodeFacet
 }
 
-func (cs *CodeSurveyor) RepoURL() string {
-	return cs.Codebase.RepoURL
+func (cs *CodeSurveyor) ProjectName() string {
+	return cs.Codebase.Project
+}
+
+func (cs *CodeSurveyor) VersionTag() string {
+	return cs.Codebase.VersionTag
 }
 
 func (cs *CodeSurveyor) LocalDir() string {

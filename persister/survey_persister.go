@@ -10,7 +10,8 @@ import (
 )
 
 type SurveyAttrs interface {
-	RepoURL() string
+	ProjectName() string
+	VersionTag() string
 	LocalDir() string
 }
 
@@ -22,9 +23,9 @@ type SurveyPersister struct {
 	dataStore *DataStore
 }
 
-func NewSurveyPersister(survey SurveyAttrs, ds *DataStore) *SurveyPersister {
+func NewSurveyPersister(attrs SurveyAttrs, ds *DataStore) *SurveyPersister {
 	return &SurveyPersister{
-		survey:    survey,
+		survey:    attrs,
 		dataStore: ds,
 	}
 }
@@ -40,7 +41,10 @@ func (sp *SurveyPersister) PersistChan(ctx context.Context, facetChan chan colle
 	var survey Survey
 	ds := sp.dataStore
 
-	codebaseID, err = ds.LoadCodebaseIdByRepoURL(ctx, sp.survey.RepoURL())
+	codebaseID, err = ds.LoadCodebaseByProjectNameAndVersionTag(ctx, LoadCodebaseByProjectNameAndVersionTagParams{
+		Name:       sp.survey.ProjectName(),
+		VersionTag: sp.survey.VersionTag(),
+	})
 	if err != nil {
 		goto end
 	}

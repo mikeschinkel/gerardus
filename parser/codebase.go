@@ -1,14 +1,14 @@
 package parser
 
 type Codebase struct {
-	DBId    int64
-	Project string
-	RepoURL string
+	Id         int64
+	Project    string
+	VersionTag string
 }
 
-func NewCodebase(project, repoURL string) *Codebase {
+func NewCodebase(project, tag string) *Codebase {
 	return &Codebase{
-		Project: project,
-		RepoURL: repoURL,
+		Project:    project,
+		VersionTag: tag,
 	}
 }

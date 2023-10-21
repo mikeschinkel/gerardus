@@ -42,7 +42,10 @@ func ExecMap(args cli.ArgsMap) (err error) {
 
 	fmt.Printf("Scanning Go source at %s...\n", options.SourceDir())
 
-	cb = parser.NewCodebase(GoProject, GoStdLibURL)
+	project := options.ProjectName()
+	versionTag := options.VersionTag()
+
+	cb = parser.NewCodebase(project, versionTag)
 	cs = surveyor.NewCodeSurveyor(cb, options.SourceDir())
 	ma = mapArgs{
 		scanner:   scanner.NewScanner(options.SourceDir()),
