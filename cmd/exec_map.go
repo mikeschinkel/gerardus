@@ -16,7 +16,6 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-const GoProject = "golang"
 const GoStdLibURL = "https://github.com/golang/go/tree/go1.21.1/src"
 
 //goland:noinspection GoUnusedGlobalVariable

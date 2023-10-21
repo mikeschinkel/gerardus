@@ -13,7 +13,7 @@ import (
 var CmdAddCodebase = CmdAdd.
 	AddSubCommand("codebase", ExecAddCodebase).
 	AddArg(projectArg.MustExist()).
-	AddArg(versionTagArg.OkToExist()).
+	AddArg(versionTagArg.OkToExist())
 
 //AddArg(cli.Arg{
 //	Name:             "source_url",
@@ -40,7 +40,7 @@ func ExecAddCodebase(args cli.ArgsMap) (err error) {
 	}
 	if len(sourceURL) == 0 {
 		// If not yet set, compose the URL for GitHub
-		sourceURL, err = persister.CodebaseSourceURL(p.RepoUrl, versionTag)
+		sourceURL, err = persister.ComposeCodebaseSourceURL(p.RepoUrl, versionTag)
 	}
 	if err != nil {
 		err = errInvalidCodebaseSourceURL.Err(err,
@@ -75,13 +75,19 @@ end:
 	return err
 }
 
-func checkSourceURL(url any) (err error) {
-	sourceURL := url.(string)
-	err = cli.CheckURL(sourceURL)
-	if err != nil {
-		err = fmt.Errorf("source URL does not appear to be valid; %w", err)
-		goto end
-	}
-end:
-	return err
-}
+//func checkSourceURL(mode cli.ArgCheckMode, url any) (err error) {
+//	sourceURL := url.(string)
+//	switch mode {
+//	case cli.MustExist:
+//		err = cli.CheckURL(sourceURL)
+//		if err != nil {
+//			err = errSourceURLAppearsInvalid.Err(err, "source_url", sourceURL)
+//			goto end
+//		}
+//	case cli.OkToExist:
+//	case cli.MustNotExist:
+//		// TODO: Implement
+//	}
+//end:
+//	return err
+//}

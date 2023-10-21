@@ -37,8 +37,8 @@ end:
 	return err
 }
 
-// ValidateInput validates flags and args passed on the CLI
-func ValidateInput() (err error) {
+// ValidateCLIArgs validates flags and args passed on the CLI
+func ValidateCLIArgs() (err error) {
 	var cmd *Command
 	var am ArgsMap
 

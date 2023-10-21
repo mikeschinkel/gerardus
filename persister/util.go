@@ -16,7 +16,7 @@ func debugBreakpointHere(...any) {
 	// just a function for debugging
 }
 
-func CodebaseSourceURL(repoURL, versionTag string) (url string, err error) {
+func ComposeCodebaseSourceURL(repoURL, versionTag string) (url string, err error) {
 	url = fmt.Sprintf(`%s/tree/%s/src`, repoURL, versionTag)
 	_, err = checkURL(url)
 	if err != nil {

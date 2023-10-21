@@ -23,7 +23,7 @@ func main() {
 	if err != nil {
 		usage("Failed to initialize data store; %s", err.Error())
 	}
-	err = cli.ValidateInput()
+	err = cli.ValidateCLIArgs()
 	if err != nil {
 		usage("%s.", err.Error())
 	}
