@@ -4,7 +4,11 @@ import (
 	"context"
 	"fmt"
 	"go/ast"
+
+	"gerardus/channels"
 )
+
+var _ CodeFacet = (*FuncDecl)(nil)
 
 type FuncDecl struct {
 	File     File
@@ -43,7 +47,12 @@ func (c *Collector) CollectFuncDecl(ctx context.Context, fd *ast.FuncDecl) (err 
 	if err != nil {
 		goto end
 	}
-	c.FacetChan <- f
+
+	err = channels.WriteTo(ctx, c.FacetChan, CodeFacet(f))
+	if err != nil {
+		goto end
+	}
+
 end:
 	return err
 }

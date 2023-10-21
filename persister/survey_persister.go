@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 
+	"gerardus/channels"
 	"gerardus/collector"
 	"gerardus/scanner"
 	"golang.org/x/sync/errgroup"
@@ -69,7 +70,7 @@ end:
 	return err
 }
 
-func (sp *SurveyPersister) persistFacet(ctx context.Context, facetChan chan collector.CodeFacet) (err error) {
+func (sp *SurveyPersister) persistFacetChan(ctx context.Context, facetChan chan collector.CodeFacet) (err error) {
 	var group *errgroup.Group
 	var cancel context.CancelFunc
 	var insert = func(typ string, f collector.CodeFacet, insert func(context.Context, collector.CodeFacet) error) (err error) {
@@ -82,36 +83,30 @@ func (sp *SurveyPersister) persistFacet(ctx context.Context, facetChan chan coll
 		return err
 	}
 	group, ctx = errgroup.WithContext(ctx)
+	ctx, cancel = context.WithCancel(ctx)
 	group.Go(func() (err error) {
-		for {
-			select {
-			case <-ctx.Done():
-				err = ctx.Err() // Return the error to terminate this goroutine
-				goto end
-			case facet, ok := <-facetChan:
-				if !ok {
-					// Channel is closed, so we're done
-					goto end
-				}
-				switch ft := facet.(type) {
-				case collector.FuncDecl:
-					print()
-				case collector.ImportSpec:
-					err = sp.importSpecInsertFunc(ctx, ft)
-				case collector.TypeSpec:
-					err = sp.typeSpecInsertFunc(ctx, ft)
-				case collector.ValueSpec:
-					print()
-				default:
-					panicf("Unhandled CodeFacet type '%T'", ft)
-				}
-				if err != nil {
-					goto end
-				}
+		return channels.ReadFrom(ctx, facetChan, func(facet collector.CodeFacet) error {
+			switch ft := facet.(type) {
+			case collector.ImportSpec:
+				err = insert("import", ft, func(ctx context.Context, facet collector.CodeFacet) error {
+					return sp.insertImportSpec(ctx, ft)
+				})
+			case collector.TypeSpec:
+				err = insert("type", ft, func(ctx context.Context, facet collector.CodeFacet) error {
+					return sp.insertTypeSpec(ctx, ft)
+				})
+			case collector.ValueSpec:
+				print()
+			case collector.FuncDecl:
+				print()
+			default:
+				panicf("Unhandled CodeFacet type '%T'", ft)
 			}
-		}
-	end:
-		return err
+			if err != nil {
+				cancel()
+			}
+			return err
+		})
 	})
 	err = group.Wait()
 	if err != nil {
@@ -120,7 +115,7 @@ func (sp *SurveyPersister) persistFacet(ctx context.Context, facetChan chan coll
 	return err
 }
 
-func (sp *SurveyPersister) typeSpecInsertFunc(ctx context.Context, ts collector.TypeSpec) (err error) {
+func (sp *SurveyPersister) insertTypeSpec(ctx context.Context, ts collector.TypeSpec) (err error) {
 	var fileId int64
 
 	fileId, err = sp.getFileId(ctx, ts.File)
@@ -140,7 +135,7 @@ end:
 	return err
 }
 
-func (sp *SurveyPersister) importSpecInsertFunc(ctx context.Context, is collector.ImportSpec) (err error) {
+func (sp *SurveyPersister) insertImportSpec(ctx context.Context, is collector.ImportSpec) (err error) {
 	var fileId int64
 	fileId, err = sp.getFileId(ctx, is.File)
 	if err != nil {

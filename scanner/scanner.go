@@ -1,6 +1,8 @@
 package scanner
 
 import (
+	"context"
+	"io/fs"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -44,19 +46,20 @@ func NewScannerWithFunc(srcDir string, f DoScanFunc) *Scanner {
 	}
 }
 
-func (s *Scanner) Scan() (_ Files, err error) {
+func (s *Scanner) Scan(ctx context.Context) (_ Files, err error) {
 	s.ScanMode = scanToSlice
-	err = s.scan()
+	err = s.scan(ctx)
 	return s.files, err
 }
-func (s *Scanner) ScanChan(ch chan<- File) (err error) {
+func (s *Scanner) ScanChan(ctx context.Context, ch chan<- File) (err error) {
 	s.filesChan = ch
+	defer close(s.filesChan)
 	s.ScanMode = scanToChan
-	err = s.scan()
+	err = s.scan(ctx)
 	return err
 }
 
-func (s *Scanner) scan() (err error) {
+func (s *Scanner) scan(ctx context.Context) (err error) {
 	var dir string
 
 	dir, err = paths.Absolute(s.sourceDir)
@@ -65,7 +68,9 @@ func (s *Scanner) scan() (err error) {
 	}
 	s.sourceDir = paths.EnsureTrailingSlash(dir)
 
-	err = filepath.Walk(s.sourceDir, s.scanFile)
+	err = filepath.Walk(s.sourceDir, func(path string, info fs.FileInfo, err error) error {
+		return s.scanFile(ctx, path, info, err)
+	})
 	if err != nil {
 		goto end
 	}
@@ -78,7 +83,7 @@ func (s *Scanner) AddFile(file File) {
 	s.files = append(s.files, file)
 }
 
-func (s *Scanner) scanFile(path string, info os.FileInfo, err error) error {
+func (s *Scanner) scanFile(ctx context.Context, path string, info os.FileInfo, err error) error {
 	var f File
 
 	if err != nil {
@@ -113,9 +118,12 @@ func (s *Scanner) scanFile(path string, info os.FileInfo, err error) error {
 	case scanToSlice:
 		s.AddFile(f)
 	case scanToChan:
-		s.filesChan <- f
+		err = channels.WriteTo(ctx, s.filesChan, f)
+		if err != nil {
+			goto end
+		}
 	}
 
 end:
-	return nil
+	return err
 }

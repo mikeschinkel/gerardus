@@ -8,6 +8,7 @@ func WriteTo[T any](ctx context.Context, ch chan<- T, value T) (err error) {
 	for {
 		select {
 		case ch <- value:
+			goto end
 		case <-ctx.Done():
 			err = ctx.Err()
 			goto end

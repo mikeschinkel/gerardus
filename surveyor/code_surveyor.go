@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 
+	"gerardus/channels"
 	"gerardus/collector"
 	"gerardus/parser"
 	"gerardus/persister"
@@ -39,28 +40,10 @@ func NewCodeSurveyor(cb *parser.Codebase, dir string) *CodeSurveyor {
 	}
 }
 
-func (cs *CodeSurveyor) SurveyChan(ctx context.Context, filesChan chan scanner.File, facetChan chan collector.CodeFacet) (err error) {
-	var group *errgroup.Group
-	cs.facetChan = facetChan
-	defer close(filesChan)
-
-	group, ctx = errgroup.WithContext(ctx)
-	for f := range filesChan {
-		err = cs.SurveyFile(ctx, f, group)
-		if err != nil {
-			goto end
-		}
-	}
-	err = group.Wait()
-end:
-	return err
-}
-
 func (cs *CodeSurveyor) Survey(ctx context.Context, files scanner.Files) (outFiles scanner.Files, err error) {
 	var group *errgroup.Group
 	group, ctx = errgroup.WithContext(ctx)
 	for _, f := range files {
-		slog.Info("Surveying file", "filepath", f.RelPath())
 		err = cs.SurveyFile(ctx, f, group)
 		if err != nil {
 			goto end
@@ -69,6 +52,23 @@ func (cs *CodeSurveyor) Survey(ctx context.Context, files scanner.Files) (outFil
 	err = group.Wait()
 end:
 	return cs.Files, err
+}
+
+func (cs *CodeSurveyor) SurveyChan(ctx context.Context, filesChan chan scanner.File, facetChan chan collector.CodeFacet) (err error) {
+	var group *errgroup.Group
+	var cancel context.CancelFunc
+
+	cs.facetChan = facetChan
+	defer close(cs.facetChan)
+	ctx, cancel = context.WithCancel(ctx)
+	return channels.ReadFrom(ctx, filesChan, func(f scanner.File) (err error) {
+		slog.Info("Surveying file", "filepath", f.RelPath())
+		err = cs.SurveyFile(ctx, f, group)
+		if err != nil {
+			cancel()
+		}
+		return err
+	})
 }
 
 //goland:noinspection GoUnusedParameter

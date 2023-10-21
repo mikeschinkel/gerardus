@@ -71,7 +71,7 @@ type mapArgs struct {
 }
 
 func mapWithSlices(ctx context.Context, args mapArgs) (err error) {
-	files, err := args.scanner.Scan()
+	files, err := args.scanner.Scan(ctx)
 	files, err = args.parser.Parse(ctx, files)
 	files, err = args.surveyor.Survey(ctx, files)
 	err = args.persister.Persist(ctx, files)
@@ -85,6 +85,7 @@ func mapWithChans(ctx context.Context, args mapArgs) (err error) {
 	slog.Info("Mapping project files")
 
 	group, ctx = errgroup.WithContext(ctx)
+	ctx, cancel = context.WithCancel(ctx)
 
 	scanFilesChan := make(chan scanner.File, 10)
 	parseFilesChan := make(chan scanner.File, 10)
@@ -92,16 +93,32 @@ func mapWithChans(ctx context.Context, args mapArgs) (err error) {
 
 	funcs := []func() error{
 		func() error {
-			return args.scanner.ScanChan(scanFilesChan)
+			err := args.scanner.ScanChan(ctx, scanFilesChan)
+			if err != nil {
+				cancel()
+			}
+			return err
 		},
 		func() error {
-			return args.parser.ParseChan(ctx, scanFilesChan, parseFilesChan)
+			err := args.parser.ParseChan(ctx, scanFilesChan, parseFilesChan)
+			if err != nil {
+				cancel()
+			}
+			return err
 		},
 		func() error {
-			return args.surveyor.SurveyChan(ctx, parseFilesChan, facetChan)
+			err := args.surveyor.SurveyChan(ctx, parseFilesChan, facetChan)
+			if err != nil {
+				cancel()
+			}
+			return err
 		},
 		func() error {
-			return args.persister.PersistChan(ctx, facetChan)
+			err := args.persister.PersistChan(ctx, facetChan)
+			if err != nil {
+				cancel()
+			}
+			return err
 		},
 	}
 	for i := len(funcs) - 1; i >= 0; i-- {

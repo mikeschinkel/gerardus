@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"os"
 
+	"gerardus/channels"
 	"gerardus/scanner"
 )
 
@@ -28,10 +29,13 @@ func (p *GoFileParser) ParseChan(ctx context.Context, inFilesChan, outFilesChan 
 		if err != nil {
 			goto end
 		}
-		outFilesChan <- outFile
-	}
-end:
-	return err
+		err = channels.WriteTo(ctx, outFilesChan, outFile)
+		if err != nil {
+			goto end
+		}
+	end:
+		return err
+	})
 }
 
 func (p *GoFileParser) Parse(ctx context.Context, files scanner.Files) (outFiles scanner.Files, err error) {

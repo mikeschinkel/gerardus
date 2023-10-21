@@ -4,6 +4,8 @@ import (
 	"context"
 	"go/ast"
 	"go/token"
+
+	"gerardus/channels"
 )
 
 func (c *Collector) CollectGenDecl(ctx context.Context, d *ast.GenDecl) (err error) {
@@ -58,24 +60,36 @@ func (c *Collector) CollectConst(ctx context.Context, d *ast.GenDecl) (err error
 func (c *Collector) CollectSpec(ctx context.Context, spec ast.Spec, typ *Expr) (err error) {
 	switch t := spec.(type) {
 	case *ast.ImportSpec:
-		c.FacetChan <- c.CollectImportSpec(ctx, t)
-
-	case *ast.TypeSpec:
-		ts, err := c.CollectTypeSpec(ctx, t)
+		err = channels.WriteTo(ctx, c.FacetChan, CodeFacet(c.CollectImportSpec(ctx, t)))
 		if err != nil {
 			goto end
 		}
-		if ts != nil {
-			c.FacetChan <- *ts
+
+	case *ast.TypeSpec:
+		var ts *TypeSpec
+		ts, err = c.CollectTypeSpec(ctx, t)
+		if err != nil {
+			goto end
+		}
+		if ts == nil {
+			goto end
+		}
+		err = channels.WriteTo(ctx, c.FacetChan, CodeFacet(*ts))
+		if err != nil {
+			goto end
 		}
 
 	case *ast.ValueSpec:
-		vss, err := c.CollectValueSpec(ctx, t, typ)
+		var vss ValueSpecs
+		vss, err = c.CollectValueSpec(ctx, t, typ)
 		if err != nil {
 			goto end
 		}
 		for _, vs := range vss {
-			c.FacetChan <- vs
+			err = channels.WriteTo(ctx, c.FacetChan, CodeFacet(vs))
+			if err != nil {
+				goto end
+			}
 		}
 
 	default:
