@@ -7,7 +7,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/newclarity/wpfr/serr"
+	"gerardus/serr"
 )
 
 var Xs = strings.Repeat("-", 256)
@@ -162,7 +162,7 @@ func TestDiff(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			got1, got2 := serr.Diff(test.source1, test.source2, test.n)
+			got1, got2, _, _ := serr.Diff(test.source1, test.source2, test.n)
 			verifyDiffResult(t, 1, test.source1, test.want1, got1)
 			verifyDiffResult(t, 2, test.source2, test.want2, got2)
 		})
