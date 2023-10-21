@@ -5,6 +5,7 @@ import (
 
 	"gerardus/cli"
 	"gerardus/collector"
+	"gerardus/logger"
 	"gerardus/options"
 	"gerardus/persister"
 )
@@ -12,7 +13,13 @@ import (
 const AppName = "gerardus"
 
 func main() {
-	err := cli.Initialize(AppName)
+	var err error
+
+	err = logger.Initialize(AppName)
+	if err != nil {
+		usage("%s.", err.Error())
+	}
+	err = cli.Initialize(AppName)
 	if err != nil {
 		usage("%s.", err.Error())
 	}

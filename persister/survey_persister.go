@@ -72,6 +72,7 @@ end:
 func (sp *SurveyPersister) persistFacet(ctx context.Context, facetChan chan collector.CodeFacet) (err error) {
 	var group *errgroup.Group
 
+		slog.Info("Inserting", args...)
 	group, ctx = errgroup.WithContext(ctx)
 	group.Go(func() (err error) {
 		for {

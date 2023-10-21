@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"log/slog"
 	"os"
 
 	"gerardus/scanner"
@@ -22,6 +23,7 @@ func (p *GoFileParser) ParseChan(ctx context.Context, inFilesChan, outFilesChan 
 	var outFile scanner.File
 	defer close(inFilesChan)
 	for inFile := range inFilesChan {
+		slog.Info("Parsing file", "file", inFile.RelPath())
 		outFile, err = p.parseFile(ctx, inFile)
 		if err != nil {
 			goto end
