@@ -82,6 +82,8 @@ func mapWithSlices(ctx context.Context, args mapArgs) (err error) {
 
 func mapWithChans(ctx context.Context, args mapArgs) (err error) {
 	var group *errgroup.Group
+	var cancel context.CancelFunc
+
 	slog.Info("Mapping project files")
 
 	group, ctx = errgroup.WithContext(ctx)

@@ -71,8 +71,16 @@ end:
 
 func (sp *SurveyPersister) persistFacet(ctx context.Context, facetChan chan collector.CodeFacet) (err error) {
 	var group *errgroup.Group
-
+	var cancel context.CancelFunc
+	var insert = func(typ string, f collector.CodeFacet, insert func(context.Context, collector.CodeFacet) error) (err error) {
+		args := []any{"spec_type", typ, "spec", f.String()}
 		slog.Info("Inserting", args...)
+		err = insert(ctx, f)
+		if err != nil {
+			err = errFailedToInsertSpec.Err(err, args...)
+		}
+		return err
+	}
 	group, ctx = errgroup.WithContext(ctx)
 	group.Go(func() (err error) {
 		for {
