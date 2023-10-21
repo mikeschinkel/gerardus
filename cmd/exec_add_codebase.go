@@ -34,7 +34,7 @@ func ExecAddCodebase(args cli.ArgsMap) (err error) {
 	ctx := context.Background()
 	p, err = ds.LoadProjectByName(ctx, project)
 	if err != nil {
-		err = fmt.Errorf("project '%s' does not exist; %w", project, err)
+		err = errProjectNotFound.Err(err, "project", project)
 		goto end
 	}
 	if len(sourceURL) == 0 {
@@ -42,8 +42,12 @@ func ExecAddCodebase(args cli.ArgsMap) (err error) {
 		sourceURL, err = persister.CodebaseSourceURL(p.RepoUrl, versionTag)
 	}
 	if err != nil {
-		err = fmt.Errorf("invalid URL; %w. Potentially bad repo url (%s) or bad version tag (%s)",
-			err, p.RepoUrl, versionTag)
+		err = errInvalidCodebaseSourceURL.Err(err,
+			"project", project,
+			"version_tag", versionTag,
+			"repo_url", p.RepoUrl,
+			"help", "Potentially bad project name, version tag, or repo URL.",
+		)
 		goto end
 	}
 	_, err = ds.UpsertCodebase(ctx, persister.UpsertCodebaseParams{
@@ -52,7 +56,13 @@ func ExecAddCodebase(args cli.ArgsMap) (err error) {
 		SourceUrl:  sourceURL,
 	})
 	if err != nil {
-		err = fmt.Errorf("fail to add new project for %#v; %w", args, err)
+		err = errAddingCodebase.Err(err,
+			"project_id", p.ID,
+			"version_tag", versionTag,
+			"project", project,
+			"repo_url", p.RepoUrl,
+			"source_url", sourceURL,
+		)
 		goto end
 	}
 	fmt.Printf("\nSuccessfully added codebase for '%s' version '%s' with source URL %s.\n",

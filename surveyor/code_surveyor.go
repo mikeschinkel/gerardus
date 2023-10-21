@@ -2,6 +2,7 @@ package surveyor
 
 import (
 	"context"
+	"log/slog"
 
 	"gerardus/collector"
 	"gerardus/parser"
@@ -55,6 +56,7 @@ func (cs *CodeSurveyor) Survey(ctx context.Context, files scanner.Files) (outFil
 	var group *errgroup.Group
 	group, ctx = errgroup.WithContext(ctx)
 	for _, f := range files {
+		slog.Info("Surveying file", "filepath", f.RelPath())
 		err = cs.SurveyFile(ctx, f, group)
 		if err != nil {
 			goto end

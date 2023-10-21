@@ -2,6 +2,7 @@ package persister
 
 import (
 	"context"
+	"log/slog"
 
 	"gerardus/collector"
 	"gerardus/scanner"
@@ -53,7 +54,11 @@ func (sp *SurveyPersister) PersistChan(ctx context.Context, facetChan chan colle
 	sp.surveyId = survey.ID
 	group, ctx = errgroup.WithContext(ctx)
 	group.Go(func() (err error) {
-		return sp.persistFacet(ctx, facetChan)
+		err = sp.persistFacetChan(ctx, facetChan)
+		if err != nil {
+			err = errFailedWhilePersisting.Err(err)
+		}
+		return
 	})
 	err = group.Wait()
 end:

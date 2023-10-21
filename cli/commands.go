@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 )
@@ -68,6 +69,9 @@ func ExecInvokedCommand() (err error) {
 	if err != nil {
 		goto end
 	}
+
+	slog.Info("Invoking command", "command", cmd.String())
+
 	expected = cmd.RequiredArgsCount()
 	got, err = ArgsCount()
 	if err != nil {

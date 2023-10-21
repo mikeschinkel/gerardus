@@ -78,11 +78,11 @@ func (checker) repoURL(url any) (err error) {
 	parts := strings.Split(strings.TrimRight(repoURL, "/"), "/")
 	numParts := len(parts)
 	if numParts != 5 {
-		err = fmt.Errorf("repo URL %s not a valid Github repo URL", repoURL)
+		err = errInvalidGitHubRepoURL
 		goto end
 	}
 	if strings.Join(parts[:3], "/") != "https://github.com" {
-		err = fmt.Errorf("repo URL %s not a https://github.com URL", repoURL)
+		err = errInvalidGitHubRepoRootURL
 		goto end
 	}
 	err = cli.CheckURL(repoURL)

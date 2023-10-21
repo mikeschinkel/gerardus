@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	_ "embed"
 	"fmt"
+	"log/slog"
 
 	"gerardus/paths"
 	_ "github.com/mattn/go-sqlite3"
@@ -40,6 +41,7 @@ func (db *DataStore) Query(ctx context.Context, sql string) (err error) {
 }
 
 func (db *DataStore) InitializeDataStore(ctx context.Context) (err error) {
+	slog.Info("Initializing data store")
 	err = db.Open()
 	if err != nil {
 		goto end

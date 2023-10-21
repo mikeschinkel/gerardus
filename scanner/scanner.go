@@ -1,11 +1,13 @@
 package scanner
 
 import (
+	"log/slog"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
 
+	"gerardus/channels"
 	"gerardus/options"
 	"gerardus/paths"
 )
@@ -84,6 +86,7 @@ func (s *Scanner) scanFile(path string, info os.FileInfo, err error) error {
 	}
 
 	path = paths.Relative(s.sourceDir, path)
+	slog.Info("Scanning file", "filepath", path)
 
 	if info.IsDir() {
 		goto end

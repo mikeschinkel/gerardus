@@ -118,11 +118,11 @@ func checkDir(dir any) error {
 	}
 	info, err = os.Stat(absDir)
 	if err != nil {
-		err = fmt.Errorf("error reading source dir: %s; %w", absDir, err)
+		err = errReadingSourceDir.Err(err, "source_dir", absDir)
 		goto end
 	}
 	if !info.IsDir() {
-		err = fmt.Errorf("provided source dir is not a directory: %s", absDir)
+		err = errPathNotADir.Err(err, "source_dir", absDir)
 		goto end
 	}
 	dir = absDir // TODO Verify this actually set the passed parameter

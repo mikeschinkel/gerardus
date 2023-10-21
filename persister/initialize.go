@@ -2,9 +2,11 @@ package persister
 
 import (
 	"context"
+	"log/slog"
 )
 
 func Initialize[STS []ST, ST symbolType](ctx context.Context, fp string, sts STS) (err error) {
+	slog.Info("Initializing persister")
 	dataStore, err = getDataStore(fp)
 	if err != nil {
 		goto end

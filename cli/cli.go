@@ -2,6 +2,7 @@ package cli
 
 import (
 	"flag"
+	"log/slog"
 	"regexp"
 	"slices"
 	"strings"
@@ -11,6 +12,8 @@ var MatchSpaces = regexp.MustCompile(`\s+`)
 var AppName string
 
 func Initialize(appName string) (err error) {
+
+	slog.Info("Initializing commands")
 
 	AppName = appName
 
@@ -38,6 +41,8 @@ end:
 func ValidateInput() (err error) {
 	var cmd *Command
 	var am ArgsMap
+
+	slog.Info("Validating CLI Args and Flags")
 
 	cmd, _, err = InvokedCommand()
 	if err != nil {
