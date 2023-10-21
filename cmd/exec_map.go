@@ -16,8 +16,6 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-const GoStdLibURL = "https://github.com/golang/go/tree/go1.21.1/src"
-
 //goland:noinspection GoUnusedGlobalVariable
 var CmdMap = cli.AddCommandWithFunc("map", ExecMap).
 	AddArg(projectArg.MustExist()).
