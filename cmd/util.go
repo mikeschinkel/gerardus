@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -23,8 +22,7 @@ func usage(msg string, args ...any) {
 func makeAbs(path string) (string, error) {
 	absDir, err := paths.Absolute(path)
 	if err != nil {
-		err = fmt.Errorf("error converting to absolute path: %s; %w",
-			path, err)
+		err = errFailedConvertingToAbsPath.Err(err, "path", path)
 	}
 	return absDir, err
 }

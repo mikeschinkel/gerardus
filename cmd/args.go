@@ -72,7 +72,7 @@ func (checker) versionTag(mode cli.ArgCheckMode, tag any) (err error) {
 			VersionTag: verTag,
 		})
 		if err != nil {
-			err = errCodebaseNotAdded.Err(err, "project", projName, "version_tag", verTag)
+			err = errFailedToAddCodebase.Err(err, "project", projName, "version_tag", verTag)
 			goto end
 		}
 	case cli.OkToExist:

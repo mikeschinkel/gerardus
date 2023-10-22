@@ -56,9 +56,10 @@ func ExecMap(args cli.ArgsMap) (err error) {
 	//err = mapWithSlices(ctx,ma)
 	err = mapWithChans(ctx, ma)
 	if err != nil {
-		err = fmt.Errorf("failed for %s; %w", options.SourceDir(), err)
+		err = errMapCommandFailed.Err(err, "source_dir", options.SourceDir())
 		goto end
 	}
+	fmt.Println("Scanning completed successfully.")
 end:
 	return err
 }

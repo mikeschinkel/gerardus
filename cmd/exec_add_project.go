@@ -54,7 +54,7 @@ func ExecAddProject(args cli.ArgsMap) (err error) {
 		Website: website,
 	})
 	if err != nil {
-		err = fmt.Errorf("fail to add new project for %#v; %w", args, err)
+		err = errFailedToAddProject.Err(err, "project", name, "repo_url", repoURL)
 		goto end
 	}
 	fmt.Printf("\nSuccessfully added project '%s' with repo URL %s.\n",
