@@ -98,6 +98,10 @@ func (checker) repoURL(mode cli.ArgCheckMode, url any) (err error) {
 		err = errNoRepoURLSpecified
 		goto end
 	}
+	if len(repoURL) == 1 && repoURL == "." {
+		// A dot/period means ignore the repo
+		goto end
+	}
 	parts = strings.Split(strings.TrimRight(repoURL, "/"), "/")
 	numParts = len(parts)
 	if numParts != 5 {

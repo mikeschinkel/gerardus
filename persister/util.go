@@ -64,15 +64,23 @@ type GitHubRepoInfo struct {
 
 func RequestGitHubRepoInfo(repoURL string) (info *GitHubRepoInfo, err error) {
 	var body []byte
+	var parts []string
+	var owner, repo, apiURL string
+	var resp *http.Response
 
-	parts := strings.Split(repoURL, "/")
-	owner := parts[3]
-	repo := parts[4]
+	info = &GitHubRepoInfo{}
 
-	apiURL := fmt.Sprintf("https://api.github.com/repos/%s/%s", owner, repo)
+	if repoURL == "." {
+		goto end
+	}
+	parts = strings.Split(repoURL, "/")
+	owner = parts[3]
+	repo = parts[4]
+
+	apiURL = fmt.Sprintf("https://api.github.com/repos/%s/%s", owner, repo)
 
 	// Make the HTTP GET request
-	resp, err := http.Get(apiURL)
+	resp, err = http.Get(apiURL)
 	if err != nil {
 		err = fmt.Errorf("failed to make the HTTP request: %w", err)
 		goto end
@@ -87,7 +95,6 @@ func RequestGitHubRepoInfo(repoURL string) (info *GitHubRepoInfo, err error) {
 	}
 
 	// Parse the JSON response
-	info = &GitHubRepoInfo{}
 	err = json.Unmarshal(body, &info)
 	if err != nil {
 		err = fmt.Errorf("failed to unmarshal the JSON response; %w", err)

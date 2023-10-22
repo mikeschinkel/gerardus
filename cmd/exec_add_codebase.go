@@ -38,7 +38,7 @@ func ExecAddCodebase(args cli.ArgsMap) (err error) {
 		err = errProjectNotFound.Err(err, "project", project)
 		goto end
 	}
-	if len(sourceURL) == 0 {
+	if versionTag != "." && len(sourceURL) == 0 {
 		// If not yet set, compose the URL for GitHub
 		sourceURL, err = persister.ComposeCodebaseSourceURL(p.RepoUrl, versionTag)
 	}
