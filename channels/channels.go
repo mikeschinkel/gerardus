@@ -4,6 +4,37 @@ import (
 	"context"
 )
 
+// WriteTo writes an item to a channel of that items type while allowing for cancellation.
+// e.g.
+//
+//			// See https://goplay.tools/snippet/bBq3PpAeMa0
+//			intChan := chan int
+//			ctx,cancel := context.WithCancel(context.Background())
+//			err := channels.WriteTo(ctx,intChan,10)
+//		  if err != nil {
+//	       cancel()
+//					return err
+//			}
+//	   close(intChan)
+//
+// In the case of a channel of an interface, e
+//
+//	//See https://goplay.tools/snippet/m6M8-GwfyUq
+//	type Suiter interface {
+//		Suit()
+//	}
+//	type Hearts struct{}
+//	func (Hearts) Suit() {}
+//	func Example() {
+//		suitChan := make(chan Suiter, 10)
+//		ctx := context.Background()
+//		err = WriteTo[Suiter](ctx, suitChan, Hearts{})
+//		if err != nil {
+//				cancel()
+//				return err
+//		}
+//		close(suitChan)
+//	}
 func WriteTo[T any](ctx context.Context, ch chan<- T, value T) (err error) {
 	for {
 		select {
@@ -18,7 +49,25 @@ end:
 	return err
 }
 
-func ReadFrom[T any](ctx context.Context, ch <-chan T, f func(value T) error) (err error) {
+// ReadAllFrom reads all items from a channel and calls the closure for each item.
+// e.g.
+//
+//	intChan := make(chan int, 10)
+//	// Do something to fill intChan
+//	ctx, cancel := context.WithCancel(context.Background())
+//	err := ReadFrom(ctx, intChan, func(i int) error {
+//		if i%2 == 0 { // Simulate an error
+//			return fmt.Errorf("Oops! We can't do even: %d", i)
+//			cancel()
+//		}
+//		fmt.Println(i)
+//		return nil
+//	})
+//	if err != nil {
+//			cancel()
+//			return err
+//	}
+func ReadAllFrom[T any](ctx context.Context, ch <-chan T, f func(value T) error) (err error) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -37,8 +86,4 @@ func ReadFrom[T any](ctx context.Context, ch <-chan T, f func(value T) error) (e
 	}
 end:
 	return err
-}
-
-func Close[T any](ch chan T) {
-	close(ch)
 }

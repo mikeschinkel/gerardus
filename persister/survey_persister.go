@@ -85,7 +85,7 @@ func (sp *SurveyPersister) persistFacetChan(ctx context.Context, facetChan chan 
 	group, ctx = errgroup.WithContext(ctx)
 	ctx, cancel = context.WithCancel(ctx)
 	group.Go(func() (err error) {
-		return channels.ReadFrom(ctx, facetChan, func(facet collector.CodeFacet) error {
+		return channels.ReadAllFrom(ctx, facetChan, func(facet collector.CodeFacet) error {
 			switch ft := facet.(type) {
 			case collector.ImportSpec:
 				err = insert("import", ft, func(ctx context.Context, facet collector.CodeFacet) error {

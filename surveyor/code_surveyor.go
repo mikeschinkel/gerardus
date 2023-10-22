@@ -62,7 +62,7 @@ func (cs *CodeSurveyor) SurveyChan(ctx context.Context, filesChan chan scanner.F
 	defer close(facetChan)
 	group, ctx = errgroup.WithContext(ctx)
 	ctx, cancel = context.WithCancel(ctx)
-	err = channels.ReadFrom(ctx, filesChan, func(f scanner.File) (err error) {
+	err = channels.ReadAllFrom(ctx, filesChan, func(f scanner.File) (err error) {
 		slog.Info("Surveying file", "filepath", f.RelPath())
 		err = cs.SurveyFile(ctx, f, group)
 		if err != nil {

@@ -22,8 +22,8 @@ func NewGoFileParser() *GoFileParser {
 
 func (p *GoFileParser) ParseChan(ctx context.Context, inFilesChan, outFilesChan chan scanner.File) (err error) {
 	var outFile scanner.File
-	defer channels.Close(outFilesChan)
-	return channels.ReadFrom(ctx, inFilesChan, func(inFile scanner.File) (err error) {
+	defer close(outFilesChan)
+	return channels.ReadAllFrom(ctx, inFilesChan, func(inFile scanner.File) (err error) {
 		slog.Info("Parsing file", "file", inFile.RelPath())
 		outFile, err = p.parseFile(ctx, inFile)
 		if err != nil {
