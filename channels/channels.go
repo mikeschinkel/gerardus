@@ -87,3 +87,15 @@ func ReadAllFrom[T any](ctx context.Context, ch <-chan T, f func(value T) error)
 end:
 	return err
 }
+
+// CancelOnErr allows calling a closure that may return an error, and if it does
+// call the cancel function passed in. Useful when used repeatedly in the same func.
+func CancelOnErr(cancel context.CancelFunc, f func() error) func() error {
+	return func() error {
+		err := f()
+		if err != nil {
+			cancel()
+		}
+		return err
+	}
+}

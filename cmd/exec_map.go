@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 
+	"gerardus/channels"
 	"gerardus/cli"
 	"gerardus/collector"
 	"gerardus/options"
@@ -93,34 +94,18 @@ func mapWithChans(ctx context.Context, args mapArgs) (err error) {
 	facetChan := make(chan collector.CodeFacet, 10)
 
 	funcs := []func() error{
-		func() error {
-			err := args.scanner.ScanChan(ctx, scanFilesChan)
-			if err != nil {
-				cancel()
-			}
-			return err
-		},
-		func() error {
-			err := args.parser.ParseChan(ctx, scanFilesChan, parseFilesChan)
-			if err != nil {
-				cancel()
-			}
-			return err
-		},
-		func() error {
-			err := args.surveyor.SurveyChan(ctx, parseFilesChan, facetChan)
-			if err != nil {
-				cancel()
-			}
-			return err
-		},
-		func() error {
-			err := args.persister.PersistChan(ctx, facetChan)
-			if err != nil {
-				cancel()
-			}
-			return err
-		},
+		channels.CancelOnErr(cancel, func() error {
+			return args.scanner.ScanChan(ctx, scanFilesChan)
+		}),
+		channels.CancelOnErr(cancel, func() error {
+			return args.parser.ParseChan(ctx, scanFilesChan, parseFilesChan)
+		}),
+		channels.CancelOnErr(cancel, func() error {
+			return args.surveyor.SurveyChan(ctx, parseFilesChan, facetChan)
+		}),
+		channels.CancelOnErr(cancel, func() error {
+			return args.persister.PersistChan(ctx, facetChan)
+		}),
 	}
 	for i := len(funcs) - 1; i >= 0; i-- {
 		// Call in reverse order do the dowstream function will be ready before the
