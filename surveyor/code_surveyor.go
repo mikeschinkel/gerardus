@@ -99,7 +99,7 @@ func (cs *CodeSurveyor) SurveyGoFile(ctx context.Context, gf *parser.GoFile, gro
 	// TODO Make this work with Survey() in addition to SurveyChan().
 	c := collector.New(gf, cs.facetChan)
 	group.Go(func() (err error) {
-		return c.CollectFiles(ctx)
+		return c.CollectFacets(ctx)
 	})
 	return err
 }

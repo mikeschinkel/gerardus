@@ -17,7 +17,7 @@ func New(file File, facetChan chan CodeFacet) *Collector {
 	}
 }
 
-func (c *Collector) CollectFiles(ctx context.Context) (err error) {
+func (c *Collector) CollectFacets(ctx context.Context) (err error) {
 	for _, decl := range c.File.AST().Decls {
 		switch dt := decl.(type) {
 		case *ast.FuncDecl:
