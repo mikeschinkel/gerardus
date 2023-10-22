@@ -3,7 +3,6 @@ package persister
 import (
 	"context"
 	"log/slog"
-	"strconv"
 
 	"gerardus/channels"
 	"gerardus/collector"
@@ -150,7 +149,7 @@ func (sp *SurveyPersister) insertImportSpec(ctx context.Context, is collector.Im
 	_, err = sp.dataStore.UpsertImport(ctx, UpsertImportParams{
 		FileID:    fileId,
 		SurveyID:  sp.surveyId,
-		PackageID: strconv.FormatInt(p.ID, 10),
+		PackageID: p.ID,
 		Alias:     is.Alias,
 	})
 	if err != nil {
