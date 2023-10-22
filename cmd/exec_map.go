@@ -72,14 +72,6 @@ type mapArgs struct {
 	persister *persister.SurveyPersister
 }
 
-func mapWithSlices(ctx context.Context, args mapArgs) (err error) {
-	files, err := args.scanner.Scan(ctx)
-	files, err = args.parser.Parse(ctx, files)
-	files, err = args.surveyor.Survey(ctx, files)
-	err = args.persister.Persist(ctx, files)
-	return err
-}
-
 func mapWithChans(ctx context.Context, args mapArgs) (err error) {
 	var group *errgroup.Group
 	var cancel context.CancelFunc
@@ -152,3 +144,11 @@ func checkDir(mode cli.ArgCheckMode, dir any) (err error) {
 end:
 	return err
 }
+
+//func mapWithSlices(ctx context.Context, args mapArgs) (err error) {
+//	files, err := args.scanner.Scan(ctx)
+//	files, err = args.parser.Parse(ctx, files)
+//	files, err = args.surveyor.Survey(ctx, files)
+//	err = args.persister.Persist(ctx, files)
+//	return err
+//}
