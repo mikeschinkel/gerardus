@@ -4,7 +4,16 @@ import (
 	"os"
 )
 
-const EnvDBVarName = "GERARDUS_DB"
+type Opts interface {
+	EnvPrefix() string
+}
+
+var opts Opts
+
+func Initialize(o Opts) error {
+	opts = o
+	return nil
+}
 
 var options = struct {
 	includeFilesByExtensions   []string
@@ -36,7 +45,7 @@ func SourceDir() string {
 }
 
 func SetDataFile(f string) {
-	envDB := os.Getenv(EnvDBVarName)
+	envDB := os.Getenv(opts.EnvPrefix() + "DB")
 	if envDB != "" {
 		options.dataFile = envDB
 		goto end

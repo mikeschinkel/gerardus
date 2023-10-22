@@ -11,11 +11,15 @@ import (
 var MatchSpaces = regexp.MustCompile(`\s+`)
 var AppName string
 
-func Initialize(appName string) (err error) {
+type Opts interface {
+	AppName() string
+}
+
+func Initialize(opts Opts) (err error) {
 
 	slog.Info("Initializing commands")
 
-	AppName = appName
+	AppName = opts.AppName()
 
 	cmd, _, err := InvokedCommand()
 	if err != nil {

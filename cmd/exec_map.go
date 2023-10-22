@@ -26,7 +26,7 @@ var CmdMap = cli.AddCommandWithFunc("map", ExecMap).
 		Arg: cli.Arg{
 			Name:             "source_dir",
 			Usage:            "Source directory",
-			Default:          defaultSourceDir(),
+			Default:          defaultSourceDir(opts),
 			CheckFunc:        checkDir,
 			SetStringValFunc: options.SetSourceDir,
 		},

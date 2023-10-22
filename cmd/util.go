@@ -27,11 +27,18 @@ func makeAbs(path string) (string, error) {
 	return absDir, err
 }
 
-func defaultSourceDir() string {
-	dir := os.Getenv("GOROOT")
+func defaultSourceDir(opts Opts) string {
+	dir := os.Getenv(opts.EnvPrefix() + "SOURCE_DIR")
+	if len(dir) > 0 {
+		goto end
+	}
+	dir = os.Getenv("GOROOT")
 	if len(dir) > 0 {
 		dir = filepath.Join(dir, "src")
+		goto end
 	}
+	dir = "."
+end:
 	return dir
 }
 

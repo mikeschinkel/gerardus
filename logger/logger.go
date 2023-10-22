@@ -29,11 +29,18 @@ func AddReplacer(r ReplacerFunc) {
 
 var _ slog.Handler = (*NullSLogHandler)(nil)
 
-func Initialize(appName string) (err error) {
+type Opts interface {
+	AppName() string
+	EnvPrefix() string
+}
+
+func Initialize(opts Opts) (err error) {
 	var h slog.Handler
 	var w io.Writer
 
-	LogFilename = strings.ToLower(appName + ".log")
+	options.initArgOpts = opts
+
+	LogFilename = strings.ToLower(opts.AppName() + ".log")
 
 	if options.LogLevel() == LogLevelNone {
 		slog.SetDefault(slog.New(NullSLogHandler{}))
@@ -170,10 +177,11 @@ func (n NullSLogHandler) WithGroup(_ string) slog.Handler {
 }
 
 type Options struct {
-	logDir    string
-	logLevel  string
-	sLogLevel slog.Leveler
-	showLog   bool
+	logDir      string
+	logLevel    string
+	sLogLevel   slog.Leveler
+	showLog     bool
+	initArgOpts Opts
 	// Additional fields as required
 }
 
@@ -182,7 +190,7 @@ func (o *Options) LogDir() string {
 }
 
 func (o *Options) LogLevel() LogLevelName {
-	level := os.Getenv("GERARDUS_LOG_LEVEL")
+	level := os.Getenv(o.initArgOpts.EnvPrefix() + "LOG_LEVEL")
 	if len(level) > 0 {
 		o.logLevel = level
 	}
@@ -195,7 +203,7 @@ func (o *Options) LogLevel() LogLevelName {
 func (o *Options) SLogLevel() (level slog.Level) {
 	err := level.UnmarshalText([]byte(o.logLevel))
 	if err != nil {
-		slog.Warn("Invalid value for loglevel", "loglevel", o.LogLevel, "error", err.Error())
+		slog.Warn("Invalid value for loglevel", "loglevel", o.logLevel, "error", err.Error())
 		level = slog.LevelInfo
 	}
 	return level

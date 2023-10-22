@@ -5,6 +5,11 @@ import (
 )
 
 const (
+	AppName   = "gerardus"
+	EnvPrefix = "GERARDUS_"
+)
+
+const (
 	ProjectArg    cli.ArgName = "project"
 	VersionTagArg cli.ArgName = "version_tag"
 	RepoURLArg    cli.ArgName = "repo_url"

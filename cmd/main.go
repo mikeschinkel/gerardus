@@ -10,16 +10,17 @@ import (
 	"gerardus/persister"
 )
 
-const AppName = "gerardus"
-
 func main() {
 	var err error
-
-	err = logger.Initialize(AppName)
+	err = logger.Initialize(opts)
 	if err != nil {
 		usage("%s.", err.Error())
 	}
-	err = cli.Initialize(AppName)
+	err = options.Initialize(opts)
+	if err != nil {
+		usage("%s.", err.Error())
+	}
+	err = cli.Initialize(opts)
 	if err != nil {
 		usage("%s.", err.Error())
 	}
