@@ -28,18 +28,18 @@ func NewFile(path string, sourceDir *string) File {
 	}
 }
 
-func (file *file) RelPath() string {
-	return file.relPath
+func (f *file) RelPath() string {
+	return f.relPath
 }
 
-func (file *file) SourceDir() string {
-	return *file.sourceDir
+func (f *file) SourceDir() string {
+	return *f.sourceDir
 }
 
-func (file *file) Fullpath() string {
-	return filepath.Join(*file.sourceDir, file.relPath)
+func (f *file) Fullpath() string {
+	return filepath.Join(*f.sourceDir, f.relPath)
 }
 
-func (file *file) Filename() string {
-	return filepath.Base(file.relPath)
+func (f *file) Filename() string {
+	return filepath.Base(f.relPath)
 }

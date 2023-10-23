@@ -7,6 +7,6 @@ func init() {
 	f := &file{sourceDir: &s}
 	f.DebugString()
 }
-func (file *file) DebugString() string {
-	return file.relPath
+func (f *file) DebugString() string {
+	return f.relPath
 }
