@@ -10,7 +10,9 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-type SurveyAttrs interface {
+var _ survey = (*surveyor.CodeSurveyor)(nil)
+
+type survey interface {
 	ProjectName() string
 	VersionTag() string
 	LocalDir() string
@@ -18,16 +20,16 @@ type SurveyAttrs interface {
 }
 
 type SurveyPersister struct {
-	survey    SurveyAttrs
+	survey    survey
 	surveyId  int64
 	fileId    int64
 	filepath  string
 	dataStore *DataStore
 }
 
-func NewSurveyPersister(attrs SurveyAttrs, ds *DataStore) *SurveyPersister {
+func NewSurveyPersister(survey survey, ds *DataStore) *SurveyPersister {
 	return &SurveyPersister{
-		survey:    attrs,
+		survey:    survey,
 		dataStore: ds,
 	}
 }
