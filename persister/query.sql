@@ -185,7 +185,60 @@ UPDATE category SET name = ? WHERE id = ? RETURNING *;
 INSERT INTO category ( survey_id,name ) VALUES ( ?,? )
 ON CONFLICT (survey_id,name) DO UPDATE SET name=excluded.name RETURNING *;
 
+-- name: LoadModule :one
+SELECT * FROM module WHERE id = ? LIMIT 1;
+-- name: ListModules :many
+SELECT * FROM module ORDER BY name;
+-- name: InsertModule :one
+INSERT INTO module ( name ) VALUES ( ? ) RETURNING *;
+-- name: DeleteModule :exec
+DELETE FROM module WHERE id = ?;
+-- name: UpdateModule :exec
+UPDATE module SET name = ? WHERE id = ? RETURNING *;
+-- name: UpsertModule :one
+INSERT INTO module ( name ) VALUES ( ? )
+ON CONFLICT (name) DO UPDATE SET name=excluded.name RETURNING *;
 
 
+-- name: LoadModuleVersion :one
+SELECT * FROM module_version WHERE id = ? LIMIT 1;
+-- name: ListModuleVersions :many
+SELECT * FROM module_version ORDER BY name;
+-- name: InsertModuleVersion :one
+INSERT INTO module_version ( module_id, version ) VALUES ( ?,? ) RETURNING *;
+-- name: DeleteModuleVersion :exec
+DELETE FROM module_version WHERE id = ?;
+-- name: UpdateModuleVersion :exec
+UPDATE module_version SET module_id = ?, version = ? WHERE id = ? RETURNING *;
+-- name: UpsertModuleVersion :one
+INSERT INTO module_version ( module_id, version ) VALUES ( ?,? )
+ON CONFLICT (module_id,version) DO UPDATE SET version=excluded.version RETURNING *;
+
+-- name: LoadSurveyModule :one
+SELECT * FROM survey_module WHERE id = ? LIMIT 1;
+-- name: ListSurveyModules :many
+SELECT * FROM survey_module ORDER BY name;
+-- name: InsertSurveyModule :one
+INSERT INTO survey_module ( survey_id, module_id, module_version_id, file_id,origin_id ) VALUES ( ?,?,?,?,? ) RETURNING *;
+-- name: DeleteSurveyModule :exec
+DELETE FROM survey_module WHERE id = ?;
+-- name: UpdateSurveyModule :exec
+UPDATE survey_module SET survey_id = ?, module_id = ?, module_version_id = ?, file_id = ?, origin_id = ? WHERE id = ? RETURNING *;
+-- name: UpsertSurveyModule :one
+INSERT INTO survey_module ( survey_id, module_id, module_version_id, file_id,origin_id ) VALUES ( ?,?,?,?,? )
+ON CONFLICT (survey_id,module_version_id,file_id) DO UPDATE SET survey_id=excluded.survey_id, module_id=excluded.module_id, module_version_id=excluded.module_version_id, file_id=excluded.file_id RETURNING *;
 
 
+-- name: LoadOrigin :one
+SELECT * FROM origin WHERE id = ? LIMIT 1;
+-- name: ListOrigins :many
+SELECT * FROM origin ORDER BY path;
+-- name: InsertOrigin :one
+INSERT INTO origin ( path ) VALUES ( ? ) RETURNING *;
+-- name: DeleteOrigin :exec
+DELETE FROM origin WHERE id = ?;
+-- name: UpdateOrigin :exec
+UPDATE origin SET path = ? WHERE id = ? RETURNING *;
+-- name: UpsertOrigin :one
+INSERT INTO origin ( path ) VALUES ( ? )
+ON CONFLICT (path) DO UPDATE SET path=excluded.path RETURNING *;

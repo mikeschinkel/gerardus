@@ -6,7 +6,9 @@ import (
 
 	"gerardus/channels"
 	"gerardus/collector"
+	"gerardus/parser"
 	"gerardus/scanner"
+	"gerardus/surveyor"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -98,6 +100,10 @@ func (sp *SurveyPersister) persistFacetChan(ctx context.Context, facetChan chan 
 				err = insert("type", ft, func(ctx context.Context, facet collector.CodeFacet) error {
 					return sp.insertTypeSpec(ctx, ft)
 				})
+			case *parser.ModFile:
+				err = insert("mod_file", ft, func(ctx context.Context, facet collector.CodeFacet) error {
+					return sp.insertModFile(ctx, ft)
+				})
 			case collector.ValueSpec:
 				print()
 			case collector.FuncDecl:
@@ -115,6 +121,55 @@ func (sp *SurveyPersister) persistFacetChan(ctx context.Context, facetChan chan 
 	if err != nil {
 		debugBreakpointHere()
 	}
+	return err
+}
+
+func (sp *SurveyPersister) insertModFile(ctx context.Context, mf *parser.ModFile) (err error) {
+	var m Module
+	var mv ModuleVersion
+	var fileId int64
+	var origin Origin
+	var path string
+
+	fileId, err = sp.getFileId(ctx, mf)
+	if err != nil {
+		goto end
+	}
+	for _, module := range mf.Modules() {
+		path = module.OriginPath()
+		//if i == 0 {
+		//	// Get the source for the go.mod file
+		//	path = mf.Fullpath()
+		//} else {
+		//	// Get the source for the go.mod file's dependencies
+		//}
+		origin, err = sp.dataStore.UpsertOrigin(ctx, path)
+		if err != nil {
+			goto end
+		}
+		m, err = sp.dataStore.UpsertModule(ctx, path)
+		if err != nil {
+			goto end
+		}
+		mv, err = sp.dataStore.UpsertModuleVersion(ctx, UpsertModuleVersionParams{
+			ModuleID: m.ID,
+			Version:  module.Version,
+		})
+		if err != nil {
+			goto end
+		}
+		_, err = sp.dataStore.UpsertSurveyModule(ctx, UpsertSurveyModuleParams{
+			SurveyID:        sp.surveyId,
+			ModuleID:        m.ID,
+			ModuleVersionID: mv.ID,
+			FileID:          fileId,
+			OriginID:        origin.ID,
+		})
+		if err != nil {
+			goto end
+		}
+	}
+end:
 	return err
 }
 

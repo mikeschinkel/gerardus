@@ -13,13 +13,13 @@ Still very much pre-alpha.
 In no particular order:
 
 ### Miscellaneous
-1. Ensure chans refactor works
-2. Get slices vs. chans working
-3. ~~Break out Package from Import~~
-4. ~~Break out Project from Codebase~~
-5. ~~Add GitHub URL parser for Name, Version~~
-6. ~~Add Web client to get About and Website~~
+1. ~~Ensure chans refactor works~~
+2. ~~Break out Package from Import~~
+3. ~~Break out Project from Codebase~~
+4. ~~Add GitHub URL parser for Name, Version~~
+5. ~~Add Web client to get About and Website~~
     1. ~~https://chat.openai.com/share/cb482a49-aad6-4f3b-abf9-201d60055054~~
+6. Get slices vs. chans working
 
 ### CLI
 1. ~~Add other commands besides `map`~~
@@ -28,14 +28,18 @@ In no particular order:
 4. Use Cobra
 5. Try Kong
 
-### SQL
+### SQL/Store
 1. ~~Add survey_id to all relevant tables~~
 2. ~~Add Name, About to Project~~
-2. ~~Add VersionTag, Website fields to Codebase~~
-3. Populate interface methods(?)
-4. Populate struct fields(?)
+3. ~~Add VersionTag, Website fields to Codebase~~
+4. ~~Capture package data~~
 5. Add schema migration tool
 6. Write SQL for Category Interfaces
+7. Capture constraint interfaces
+8. Capture interface methods
+9. Capture struct fields
+10. Break out `survey_file` from `file`
+11. Support Postgres as an alternative
 
 ### Categories
 1. Implement categories
@@ -47,9 +51,6 @@ In no particular order:
 2. Embed default config files
 3. Support YAML config files.
 4. Add local clone root directory config
-
-### Store
-1. Support Postgres as an alternative
 
 ### Env
 1. Allow options to be set by env

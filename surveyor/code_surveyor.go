@@ -3,12 +3,14 @@ package surveyor
 import (
 	"context"
 	"log/slog"
+	"sync"
 
 	"gerardus/channels"
 	"gerardus/collector"
 	"gerardus/parser"
-	"gerardus/persister"
 	"gerardus/scanner"
+	"golang.org/x/mod/modfile"
+
 	"golang.org/x/sync/errgroup"
 )
 
@@ -108,8 +110,32 @@ func (cs *CodeSurveyor) SurveyFile(ctx context.Context, f scanner.File, group *e
 	return err
 }
 
+var mutex sync.Mutex
+
 //goland:noinspection GoUnusedParameter
 func (cs *CodeSurveyor) SurveyModFile(ctx context.Context, mf *parser.ModFile) (err error) {
+	null := struct{}{}
+
+	mf.ModFile, err = modfile.Parse("go.mod", mf.Content, nil)
+	if err != nil {
+		err = errFailedToParseFile.Err(err, "filename", mf.Fullpath())
+		goto end
+	}
+
+	// Make Modules available w/o having to look up via database to speed insert of imports
+	mutex.Lock()
+	parser.Modules[mf.Name()] = null
+	for _, r := range mf.Require() {
+		parser.Modules[r.Mod.Path] = null
+	}
+	mutex.Unlock()
+
+	err = channels.WriteTo(ctx, cs.facetChan, collector.CodeFacet(mf))
+	if err != nil {
+		goto end
+	}
+
+end:
 	return err
 }
 
