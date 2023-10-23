@@ -14,6 +14,7 @@ type SurveyAttrs interface {
 	ProjectName() string
 	VersionTag() string
 	LocalDir() string
+	Source() string
 }
 
 type SurveyPersister struct {
@@ -138,11 +139,15 @@ end:
 func (sp *SurveyPersister) insertImportSpec(ctx context.Context, is collector.ImportSpec) (err error) {
 	var fileId int64
 	var p Package
+
 	fileId, err = sp.getFileId(ctx, is.File)
 	if err != nil {
 		goto end
 	}
-	p, err = sp.dataStore.UpsertPackage(ctx, is.Package)
+	p, err = sp.dataStore.UpsertPackage(ctx, UpsertPackageParams{
+		Path:   is.Package,
+		Source: sp.survey.Source(),
+	})
 	if err != nil {
 		goto end
 	}
@@ -159,7 +164,11 @@ end:
 	return err
 }
 
-func (sp *SurveyPersister) getFileId(ctx context.Context, f collector.File) (fid int64, err error) {
+type relPathGetter interface {
+	RelPath() string
+}
+
+func (sp *SurveyPersister) getFileId(ctx context.Context, f relPathGetter) (fid int64, err error) {
 	var mf File
 
 	if f.RelPath() == sp.filepath {

@@ -10,7 +10,9 @@ import (
 	"gerardus/serr"
 )
 
-type checker struct{}
+type checker struct {
+	project *persister.Project
+}
 
 var check = checker{}
 
@@ -22,16 +24,22 @@ var projectArg = &cli.Arg{
 }
 
 func (checker) projectName(mode cli.ArgCheckMode, project any) (err error) {
+	var p persister.Project
+
 	projName := project.(string)
 	ds := persister.GetDataStore()
 	ctx := context.Background()
 	switch mode {
 	case cli.MustExist:
-		_, err = ds.LoadProjectByName(ctx, projName)
+		if check.project != nil {
+			goto end
+		}
+		p, err = ds.LoadProjectByName(ctx, projName)
 		if err != nil {
 			err = errProjectNotFound.Err(err, "project", project)
 			goto end
 		}
+		check.project = &p
 	case cli.OkToExist:
 	case cli.MustNotExist:
 		panic("Need to implement")

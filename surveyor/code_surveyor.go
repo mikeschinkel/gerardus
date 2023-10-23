@@ -12,12 +12,12 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-var _ persister.SurveyAttrs = (*CodeSurveyor)(nil)
-
 type CodeSurveyor struct {
 	Codebase  *parser.Codebase
+	Project   *parser.Project
 	Files     scanner.Files
 	localDir  string
+	source    string
 	facetChan chan collector.CodeFacet
 }
 
@@ -33,9 +33,27 @@ func (cs *CodeSurveyor) LocalDir() string {
 	return cs.localDir
 }
 
-func NewCodeSurveyor(cb *parser.Codebase, dir string) *CodeSurveyor {
+func (cs *CodeSurveyor) Source() string {
+	if len(cs.source) > 0 {
+		goto end
+	}
+	if cs.VersionTag() == "." {
+		cs.source = cs.localDir
+		goto end
+	}
+	cs.source = cs.Project.RepoURL
+end:
+	return cs.source
+}
+
+type Project interface {
+	RepoURL() string
+}
+
+func NewCodeSurveyor(cb *parser.Codebase, p *parser.Project, dir string) *CodeSurveyor {
 	return &CodeSurveyor{
 		Codebase: cb,
+		Project:  p,
 		localDir: dir,
 	}
 }

@@ -122,14 +122,14 @@ SELECT * FROM package WHERE id = ? LIMIT 1;
 -- name: ListPackages :many
 SELECT * FROM package ORDER BY path;
 -- name: InsertPackage :one
-INSERT INTO package ( path ) VALUES ( ? ) RETURNING *;
+INSERT INTO package ( path,source ) VALUES ( ?,? ) RETURNING *;
 -- name: DeletePackage :exec
 DELETE FROM package WHERE id = ?;
 -- name: UpdatePackage :exec
-UPDATE package SET path = ? WHERE id = ? RETURNING *;
+UPDATE package SET path = ?, source = ? WHERE id = ? RETURNING *;
 -- name: UpsertPackage :one
-INSERT INTO package ( path ) VALUES ( ? )
-ON CONFLICT (path) DO UPDATE SET path=excluded.path RETURNING *;
+INSERT INTO package ( path, source ) VALUES ( ?,? )
+ON CONFLICT (path, source) DO UPDATE SET path=excluded.path, source=excluded.source RETURNING *;
 
 
 -- name: LoadImport :one
