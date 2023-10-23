@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -30,6 +31,7 @@ type Scanner struct {
 	filesChan  chan<- File
 	DoScanFunc DoScanFunc
 	ScanMode   ScanMode
+	match      *regexp.Regexp
 }
 
 func NewScanner(srcDir string) *Scanner {
@@ -46,14 +48,16 @@ func NewScannerWithFunc(srcDir string, f DoScanFunc) *Scanner {
 	}
 }
 
-func (s *Scanner) Scan(ctx context.Context) (_ Files, err error) {
+func (s *Scanner) Scan(ctx context.Context, match *regexp.Regexp) (_ Files, err error) {
 	s.ScanMode = scanToSlice
+	s.match = match
 	err = s.scan(ctx)
 	return s.files, err
 }
-func (s *Scanner) ScanChan(ctx context.Context, ch chan<- File) (err error) {
+func (s *Scanner) ScanChan(ctx context.Context, match *regexp.Regexp, ch chan<- File) (err error) {
 	s.filesChan = ch
 	defer close(s.filesChan)
+	s.match = match
 	s.ScanMode = scanToChan
 	err = s.scan(ctx)
 	return err
@@ -66,9 +70,8 @@ func (s *Scanner) scan(ctx context.Context) (err error) {
 	if err != nil {
 		goto end
 	}
-	s.sourceDir = paths.EnsureTrailingSlash(dir)
-
-	err = filepath.Walk(s.sourceDir, func(path string, info fs.FileInfo, err error) error {
+	dir = paths.EnsureTrailingSlash(dir)
+	err = filepath.Walk(dir, func(path string, info fs.FileInfo, err error) error {
 		return s.scanFile(ctx, path, info, err)
 	})
 	if err != nil {
@@ -94,6 +97,10 @@ func (s *Scanner) scanFile(ctx context.Context, path string, info os.FileInfo, e
 	slog.Info("Scanning file", "filepath", path)
 
 	if info.IsDir() {
+		goto end
+	}
+
+	if s.match != nil && !s.match.MatchString(path) {
 		goto end
 	}
 

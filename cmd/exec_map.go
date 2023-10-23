@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"regexp"
 
 	"gerardus/channels"
 	"gerardus/cli"
@@ -14,7 +15,6 @@ import (
 	"gerardus/persister"
 	"gerardus/scanner"
 	"gerardus/surveyor"
-	"golang.org/x/sync/errgroup"
 )
 
 //goland:noinspection GoUnusedGlobalVariable
@@ -74,39 +74,36 @@ type mapArgs struct {
 	persister *persister.SurveyPersister
 }
 
+var (
+	modFiles = regexp.MustCompile(`^go\.mod$`)
+	goFiles  = regexp.MustCompile(`\.go$`)
+)
+
 func mapWithChans(ctx context.Context, args mapArgs) (err error) {
-	var group *errgroup.Group
-	var cancel context.CancelFunc
 
 	slog.Info("Mapping project files")
 
-	group, ctx = errgroup.WithContext(ctx)
-	ctx, cancel = context.WithCancel(ctx)
+	for _, fileType := range []*regexp.Regexp{modFiles, goFiles} {
 
-	scanFilesChan := make(chan scanner.File, 10)
-	parseFilesChan := make(chan scanner.File, 10)
-	facetChan := make(chan collector.CodeFacet, 10)
+		slog.Info("Mapping files", "file_type", fileType.String())
 
-	funcs := []func() error{
-		channels.CancelOnErr(cancel, func() error {
-			return args.scanner.ScanChan(ctx, scanFilesChan)
-		}),
-		channels.CancelOnErr(cancel, func() error {
-			return args.parser.ParseChan(ctx, scanFilesChan, parseFilesChan)
-		}),
-		channels.CancelOnErr(cancel, func() error {
-			return args.surveyor.SurveyChan(ctx, parseFilesChan, facetChan)
-		}),
-		channels.CancelOnErr(cancel, func() error {
-			return args.persister.PersistChan(ctx, facetChan)
-		}),
+		scanFilesChan := make(chan scanner.File, 10)
+		parseFilesChan := make(chan scanner.File, 10)
+		facetChan := make(chan collector.CodeFacet, 10)
+
+		// Process all the files of fileType
+		pipeline := channels.NewPipeline(ctx)
+		pipeline.AddStage(func() error { return args.scanner.ScanChan(ctx, fileType, scanFilesChan) })
+		pipeline.AddStage(func() error { return args.parser.ParseChan(ctx, scanFilesChan, parseFilesChan) })
+		pipeline.AddStage(func() error { return args.surveyor.SurveyChan(ctx, parseFilesChan, facetChan) })
+		pipeline.AddStage(func() error { return args.persister.PersistChan(ctx, facetChan) })
+		err = pipeline.Go()
+		if err != nil {
+			goto end
+		}
 	}
-	for i := len(funcs) - 1; i >= 0; i-- {
-		// Call in reverse order do the dowstream function will be ready before the
-		// upstream function starts.
-		group.Go(funcs[i])
-	}
-	err = group.Wait()
+
+end:
 	return err
 }
 
