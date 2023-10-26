@@ -6,7 +6,15 @@ import (
 	"golang.org/x/mod/modfile"
 )
 
-var Modules = make(map[string]struct{})
+type ModuleSource int
+
+const (
+	InvalidModuleSource ModuleSource = iota
+	ModuleFile
+	ModuleDependency
+)
+
+var Modules = make(map[string]ModuleSource)
 
 var _ collector.CodeFacet = (*ModFile)(nil)
 
@@ -54,19 +62,17 @@ func NewModFile(file scanner.File, content []byte) *ModFile {
 func (mf *ModFile) Modules() []*Module {
 	modFile := mf.ModFile
 	modules := make([]*Module, 0, len(modFile.Require)+1)
-
-	m := &Module{
+	modules = append(modules, &Module{
 		Name:      mf.Name(),
 		Version:   mf.Version(),
 		GoVersion: mf.GoVersion(),
-	}
-	modules = append(modules, m)
+		Filepath:  mf.Fullpath(),
+	})
 	for _, r := range modFile.Require {
 		modules = append(modules, &Module{
 			Name:      r.Mod.Path,
 			Version:   r.Mod.Version,
 			GoVersion: modFile.Go.Version,
-			Parent:    m,
 		})
 	}
 	return modules

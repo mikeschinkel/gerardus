@@ -129,25 +129,23 @@ func (sp *SurveyPersister) insertModFile(ctx context.Context, mf *parser.ModFile
 	var mv ModuleVersion
 	var fileId int64
 	var origin Origin
-	var path string
 
 	fileId, err = sp.getFileId(ctx, mf)
 	if err != nil {
 		goto end
 	}
 	for _, module := range mf.Modules() {
-		path = module.OriginPath()
 		//if i == 0 {
 		//	// Get the source for the go.mod file
 		//	path = mf.Fullpath()
 		//} else {
 		//	// Get the source for the go.mod file's dependencies
 		//}
-		origin, err = sp.dataStore.UpsertOrigin(ctx, path)
+		origin, err = sp.dataStore.UpsertOrigin(ctx, module.OriginPath())
 		if err != nil {
 			goto end
 		}
-		m, err = sp.dataStore.UpsertModule(ctx, path)
+		m, err = sp.dataStore.UpsertModule(ctx, module.Name)
 		if err != nil {
 			goto end
 		}

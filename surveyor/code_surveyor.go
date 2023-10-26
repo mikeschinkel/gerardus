@@ -114,7 +114,6 @@ var mutex sync.Mutex
 
 //goland:noinspection GoUnusedParameter
 func (cs *CodeSurveyor) SurveyModFile(ctx context.Context, mf *parser.ModFile) (err error) {
-	null := struct{}{}
 
 	mf.ModFile, err = modfile.Parse("go.mod", mf.Content, nil)
 	if err != nil {
@@ -124,9 +123,11 @@ func (cs *CodeSurveyor) SurveyModFile(ctx context.Context, mf *parser.ModFile) (
 
 	// Make Modules available w/o having to look up via database to speed insert of imports
 	mutex.Lock()
-	parser.Modules[mf.Name()] = null
+	parser.Modules[mf.Name()] = parser.ModuleFile
 	for _, r := range mf.Require() {
-		parser.Modules[r.Mod.Path] = null
+		if _, ok := parser.Modules[r.Mod.Path]; !ok {
+			parser.Modules[r.Mod.Path] = parser.ModuleDependency
+		}
 	}
 	mutex.Unlock()
 
