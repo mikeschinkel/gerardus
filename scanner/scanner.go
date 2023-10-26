@@ -4,7 +4,6 @@ import (
 	"context"
 	"io/fs"
 	"log/slog"
-	"os"
 	"path/filepath"
 	"regexp"
 	"slices"
@@ -71,9 +70,11 @@ func (s *Scanner) scan(ctx context.Context) (err error) {
 		goto end
 	}
 	dir = paths.EnsureTrailingSlash(dir)
-	err = filepath.Walk(dir, func(path string, info fs.FileInfo, err error) error {
-		return s.scanFile(ctx, path, info, err)
+	err = WalkFiles(dir, func(path string, d fs.DirEntry) (err error) {
+		path = filepath.Join(path, d.Name())
+		return s.scanFile(ctx, path, d)
 	})
+
 	if err != nil {
 		goto end
 	}
@@ -86,19 +87,11 @@ func (s *Scanner) AddFile(file File) {
 	s.files = append(s.files, file)
 }
 
-func (s *Scanner) scanFile(ctx context.Context, path string, info os.FileInfo, err error) error {
+func (s *Scanner) scanFile(ctx context.Context, path string, d fs.DirEntry) (err error) {
 	var f File
-
-	if err != nil {
-		goto end
-	}
 
 	path = paths.Relative(s.sourceDir, path)
 	slog.Info("Scanning file", "filepath", path)
-
-	if info.IsDir() {
-		goto end
-	}
 
 	if s.match != nil && !s.match.MatchString(path) {
 		goto end
