@@ -72,7 +72,7 @@ func (s *Scanner) scan(ctx context.Context) (err error) {
 	dir = paths.EnsureTrailingSlash(dir)
 	err = WalkFiles(dir, func(path string, d fs.DirEntry) (err error) {
 		path = filepath.Join(path, d.Name())
-		return s.scanFile(ctx, path, d)
+		return s.scanFile(ctx, path)
 	})
 
 	if err != nil {
@@ -87,7 +87,7 @@ func (s *Scanner) AddFile(file File) {
 	s.files = append(s.files, file)
 }
 
-func (s *Scanner) scanFile(ctx context.Context, path string, d fs.DirEntry) (err error) {
+func (s *Scanner) scanFile(ctx context.Context, path string) (err error) {
 	var f File
 
 	path = paths.Relative(s.sourceDir, path)
