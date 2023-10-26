@@ -75,7 +75,7 @@ type mapArgs struct {
 }
 
 var (
-	modFiles = regexp.MustCompile(`^go\.mod$`)
+	modFiles = regexp.MustCompile(`^.*/?go\.mod`)
 	goFiles  = regexp.MustCompile(`\.go$`)
 )
 
