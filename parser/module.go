@@ -2,14 +2,12 @@ package parser
 
 import (
 	"fmt"
-	"path/filepath"
 )
 
 type Module struct {
 	Name      string
 	Version   string
 	GoVersion string
-	Filepath  string
 }
 
 var goPackageURLFormat = "https://github.com/golang/go/tree/go%s/src/%s"
@@ -22,12 +20,15 @@ func (m Module) OriginPath() (path string) {
 		path = fmt.Sprintf(goPackageURLFormat, m.GoVersion, m.Name)
 		goto end
 	}
-	switch source {
-	case ModuleFile:
-		path = filepath.Dir(m.Filepath)
-	case ModuleDependency:
+
+	if len(source) == 0 {
+		// Dependency
 		path = m.Name
+		goto end
 	}
+
+	// Internal dependency, e.g. name of ./go.mod referenced in ./cmd/go.mod
+	path = source
 end:
 	return path
 }

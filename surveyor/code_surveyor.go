@@ -123,10 +123,10 @@ func (cs *CodeSurveyor) SurveyModFile(ctx context.Context, mf *parser.ModFile) (
 
 	// Make Modules available w/o having to look up via database to speed insert of imports
 	mutex.Lock()
-	parser.Modules[mf.Name()] = parser.ModuleFile
+	parser.Modules[mf.Name()] = mf.Fullpath()
 	for _, r := range mf.Require() {
 		if _, ok := parser.Modules[r.Mod.Path]; !ok {
-			parser.Modules[r.Mod.Path] = parser.ModuleDependency
+			parser.Modules[r.Mod.Path] = ""
 		}
 	}
 	mutex.Unlock()

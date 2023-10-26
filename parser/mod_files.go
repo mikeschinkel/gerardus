@@ -58,7 +58,6 @@ func (mf *ModFile) Modules() []*Module {
 		Name:      mf.Name(),
 		Version:   mf.Version(),
 		GoVersion: mf.GoVersion(),
-		Filepath:  mf.Fullpath(),
 	})
 	for _, r := range modFile.Require {
 		modules = append(modules, &Module{
