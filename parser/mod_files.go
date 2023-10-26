@@ -6,15 +6,7 @@ import (
 	"golang.org/x/mod/modfile"
 )
 
-type ModuleSource int
-
-const (
-	InvalidModuleSource ModuleSource = iota
-	ModuleFile
-	ModuleDependency
-)
-
-var Modules = make(map[string]ModuleSource)
+var Modules = make(map[string]string)
 
 var _ collector.CodeFacet = (*ModFile)(nil)
 
