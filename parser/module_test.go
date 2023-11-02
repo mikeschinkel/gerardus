@@ -15,12 +15,10 @@ type newModuleWant struct {
 	PackageType parser.PackageType
 }
 
-var moduleGraph = parser.NewModuleGraph()
-
-func init() {
-
-	pm := moduleGraph.AddProjectModule(&parser.ModuleArgs{
-		ModuleGraph: moduleGraph,
+func getModuleGraph() *parser.ModuleGraph {
+	mg := parser.NewModuleGraph()
+	pm := mg.AddProjectModule(&parser.ModuleArgs{
+		ModuleGraph: mg,
 		Name:        "gerardus",
 		PackageType: parser.GoModPackage,
 		GoVersion:   "1.21",
@@ -29,23 +27,23 @@ func init() {
 		Path:        rootPath("go.mod"),
 	})
 
-	moduleGraph.AddDependentModule(pm, &parser.ModuleArgs{
+	mg.AddDependentModule(pm, &parser.ModuleArgs{
 		Name:    "github.com/mattn/go-sqlite3",
 		Version: "v1.14.17",
 	})
 
-	moduleGraph.AddDependentModule(pm, &parser.ModuleArgs{
+	mg.AddDependentModule(pm, &parser.ModuleArgs{
 		Name:    "golang.org/x/mod",
 		Version: "v0.13.0",
 	})
 
-	moduleGraph.AddDependentModule(pm, &parser.ModuleArgs{
+	mg.AddDependentModule(pm, &parser.ModuleArgs{
 		Name:    "golang.org/x/sync",
 		Version: "v0.3.0",
 	})
 
-	pm = moduleGraph.AddProjectModule(&parser.ModuleArgs{
-		ModuleGraph: moduleGraph,
+	pm = mg.AddProjectModule(&parser.ModuleArgs{
+		ModuleGraph: mg,
 		Name:        "gerardus/cmd",
 		PackageType: parser.GoModPackage,
 		GoVersion:   "1.20",
@@ -54,22 +52,24 @@ func init() {
 		Path:        rootPath("cmd/go.mod"),
 	})
 
-	moduleGraph.AddDependentModule(pm, &parser.ModuleArgs{
+	mg.AddDependentModule(pm, &parser.ModuleArgs{
 		Name:    "github.com/mattn/go-sqlite3",
 		Version: "v1.14.17",
 	})
 
-	moduleGraph.AddDependentModule(pm, &parser.ModuleArgs{
+	mg.AddDependentModule(pm, &parser.ModuleArgs{
 		Name:    "golang.org/x/mod",
 		Version: "v0.13.0",
 	})
 
-	moduleGraph.AddDependentModule(pm, &parser.ModuleArgs{
+	mg.AddDependentModule(pm, &parser.ModuleArgs{
 		Name:    "golang.org/x/sync",
 		Version: "v0.3.0",
 	})
+	return mg
 }
 func TestNewModule(t *testing.T) {
+	var moduleGraph = getModuleGraph()
 	tests := []struct {
 		args *parser.ModuleArgs
 		want newModuleWant
