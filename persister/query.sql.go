@@ -906,7 +906,7 @@ func (q *Queries) ListPackageVersions(ctx context.Context) ([]PackageVersion, er
 }
 
 const listPackages = `-- name: ListPackages :many
-SELECT id, path, source, type_id, name FROM package ORDER BY import_path
+SELECT id, import_path, source, type_id, name FROM package ORDER BY import_path
 `
 
 func (q *Queries) ListPackages(ctx context.Context) ([]Package, error) {
@@ -2065,14 +2065,14 @@ func (q *Queries) UpsertModuleVersion(ctx context.Context, arg UpsertModuleVersi
 }
 
 const upsertPackage = `-- name: UpsertPackage :one
-INSERT INTO package ( path, source, type_id ) VALUES ( ?,?,? )
-ON CONFLICT (path, source) DO UPDATE SET path=excluded.path, source=excluded.source, type_id=excluded.type_id RETURNING id, path, source, type_id, name
+INSERT INTO package ( import_path, source, type_id ) VALUES ( ?,?,? )
+ON CONFLICT (import_path, source) DO UPDATE SET import_path=excluded.import_path, source=excluded.source, type_id=excluded.type_id RETURNING id, import_path, source, type_id, name
 `
 
 type UpsertPackageParams struct {
-	Path   string
-	Source string
-	TypeID int64
+	ImportPath string
+	Source     string
+	TypeID     int64
 }
 
 func (q *Queries) UpsertPackage(ctx context.Context, arg UpsertPackageParams) (Package, error) {
