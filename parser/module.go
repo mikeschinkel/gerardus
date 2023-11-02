@@ -97,7 +97,7 @@ func (m *Module) GoModDir() string {
 // GoModPath returns the path to the go.mod file for the module, WITH the suffix "/go.mod".
 func (m *Module) GoModPath() string {
 	if m.GoMod == nil {
-		return "~go_mod_not_set~"
+		return "$GOMODPATH"
 	}
 	return m.GoMod.Path
 }

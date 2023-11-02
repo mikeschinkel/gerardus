@@ -97,7 +97,13 @@ func TestNewModule(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.args.Name, func(t *testing.T) {
 			got := parser.NewModule(tt.args)
-			equals(t, "ModuleName", got.Name(), tt.want.ModuleName)
+			equals(t, "Name", got.Name(), tt.want.ModuleName)
+			equals(t, "Version", got.Version().Name, tt.want.Version)
+			equals(t, "Version", got.GoModPath(), tt.want.Path)
+			equals(t, "Package Type", got.Package.Type, tt.want.PackageType)
+			strPtrEquals(t, "Package Dir", got.Package.Directory, tt.want.PackageDir)
+			equals(t, "GoVersion", got.GoMod.Version, tt.want.GoVersion)
+			equals(t, "GoVersion", got.GoVersion(), tt.want.GoVersion)
 		})
 	}
 }
