@@ -13,7 +13,7 @@ import (
 type GoFile struct {
 	scanner.File
 	Package   *Package
-	Imports   ImportsMap
+	ImportMap ImportMap
 	Functions Functions
 	//Types      _archive.Types
 	References  map[string]struct{}
@@ -44,15 +44,15 @@ func (gf *GoFile) AddReference(ref string) {
 
 //func (gf *GoFile) ReduceImports() {
 //	if len(gf.Types) == 0 {
-//		gf.Imports = make(gerardus.ImportsMap)
+//		gf.ImportMap = make(gerardus.ImportMap)
 //		return
 //	}
-//	for i, imp := range gf.Imports {
+//	for i, imp := range gf.ImportMap {
 //		_, ok := gf.References[imp.Package.Name()]
 //		if ok {
 //			continue
 //		}
-//		delete(gf.Imports, i)
+//		delete(gf.ImportMap, i)
 //	}
 //}
 
@@ -64,24 +64,12 @@ func (gf *GoFile) PackageName() string {
 	return gf.Package.Name()
 }
 
-func (gf *GoFile) HasImports() bool {
-	return len(gf.Imports) > 0
-}
-
 //func (gf *GoFile) HasTypes() bool {
 //	return len(gf.Types) > 0
 //}
 
 func (gf *GoFile) HasFunctions() bool {
 	return len(gf.Functions) > 0
-}
-
-func AsGoFile(file scanner.File) *GoFile {
-	goFile, ok := file.(*GoFile)
-	if !ok {
-		panicf("Attempting to generate package on '%T'; %v", file, file)
-	}
-	return goFile
 }
 
 var matchPackage = regexp.MustCompile(`^\s*package\s+(.+)\s*$`)

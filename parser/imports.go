@@ -5,7 +5,7 @@ import (
 )
 
 type Imports []*Import
-type ImportsMap map[string]*Import
+type ImportMap map[string]*Import
 type Import struct {
 	Package *Package
 	Alias   string
@@ -18,7 +18,7 @@ func NewImport(pkg *Package, alias string) *Import {
 	}
 }
 
-func (ii ImportsMap) Sorted() Imports {
+func (ii ImportMap) Sorted() Imports {
 	var sorted = make(Imports, len(ii))
 	var n int
 	if len(ii) == 0 {

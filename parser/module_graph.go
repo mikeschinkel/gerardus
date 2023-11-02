@@ -191,6 +191,9 @@ end:
 	return m
 }
 
+// DispenseLocalPackage will return a newly instantiated Package of Local or
+// GoMod type, or will return a pointer to one if previously instantiated and
+// stored in mg.modulePackageMap.
 func (mg *ModuleGraph) DispenseLocalPackage(importPath, source string) (pkg *Package) {
 	var gm *Module
 	var mp *ModulePackage
@@ -225,7 +228,7 @@ func (mg *ModuleGraph) DispenseLocalPackage(importPath, source string) (pkg *Pac
 	}
 
 	// Now create a package based on the above.
-	pkg = newPackage(&PackageArgs{
+	pkg = dispensePackage(&PackageArgs{
 		ImportPath: importPath,
 		Type:       pt,
 		Version:    ".",
@@ -238,7 +241,7 @@ end:
 	return pkg
 }
 
-// DispensePackage returns a *Module given a package name (w/o alias) and source file where imported
+// dispensePackage returns a *Module given a package name (w/o alias) and source file where imported
 func (mg *ModuleGraph) DispensePackage(importPath, source string) (pkg *Package) {
 	var m *Module
 

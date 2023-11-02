@@ -41,7 +41,7 @@ func newModule(args *ModuleArgs) *Module {
 	if args.PackageDir == "" {
 		args.PackageDir = filepath.Dir(args.Path)
 	}
-	pkg := newPackage(&PackageArgs{
+	pkg := dispensePackage(&PackageArgs{
 		ImportPath:  args.Name,
 		Directory:   args.PackageDir,
 		Type:        args.PackageType,

@@ -10,7 +10,6 @@ type Method struct {
 	Name    string
 	GoFile  *GoFile
 	field   *ast.Field
-	imports ImportsMap
 	params  Variables
 	results Variables
 }
@@ -20,7 +19,6 @@ func NewMethod(name string, field *ast.Field, file *GoFile) *Method {
 		Name:    name,
 		GoFile:  file,
 		field:   field,
-		imports: make(ImportsMap),
 		params:  make(Variables, 0),
 		results: make(Variables, 0),
 	}
