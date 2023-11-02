@@ -16,6 +16,7 @@ type ASTGetter interface {
 type File interface {
 	ASTGetter
 	RelPath() string
+	Fullpath() string
 }
 
 var _ CodeFacet = (*FuncDecl)(nil)
