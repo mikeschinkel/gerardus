@@ -113,6 +113,24 @@ func (q *Queries) DeletePackage(ctx context.Context, id int64) error {
 	return err
 }
 
+const deletePackageType = `-- name: DeletePackageType :exec
+DELETE FROM package_type WHERE id = ?
+`
+
+func (q *Queries) DeletePackageType(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deletePackageType, id)
+	return err
+}
+
+const deletePackageVersion = `-- name: DeletePackageVersion :exec
+DELETE FROM package_version WHERE id = ?
+`
+
+func (q *Queries) DeletePackageVersion(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deletePackageVersion, id)
+	return err
+}
+
 const deleteProject = `-- name: DeleteProject :exec
 DELETE FROM project WHERE id = ?
 `
@@ -791,7 +809,7 @@ func (q *Queries) ListOrigins(ctx context.Context) ([]Origin, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Origin
+	var items []PackageType
 	for rows.Next() {
 		var i Origin
 		if err := rows.Scan(&i.ID, &i.Path); err != nil {
@@ -809,7 +827,7 @@ func (q *Queries) ListOrigins(ctx context.Context) ([]Origin, error) {
 }
 
 const listPackages = `-- name: ListPackages :many
-SELECT id, path, source, name FROM package ORDER BY path
+SELECT id, path, source, type_id, name FROM package ORDER BY import_path
 `
 
 func (q *Queries) ListPackages(ctx context.Context) ([]Package, error) {
@@ -825,6 +843,7 @@ func (q *Queries) ListPackages(ctx context.Context) ([]Package, error) {
 			&i.ID,
 			&i.Path,
 			&i.Source,
+			&i.TypeID,
 			&i.Name,
 		); err != nil {
 			return nil, err
@@ -1322,6 +1341,17 @@ func (q *Queries) LoadPackage(ctx context.Context, id int64) (Package, error) {
 	return i, err
 }
 
+const loadPackageType = `-- name: LoadPackageType :one
+SELECT id, name FROM package_type WHERE id = ? LIMIT 1
+`
+
+func (q *Queries) LoadPackageType(ctx context.Context, id int64) (PackageType, error) {
+	row := q.db.QueryRowContext(ctx, loadPackageType, id)
+	var i PackageType
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
 const loadProject = `-- name: LoadProject :one
 SELECT id, name, repo_url, about, website FROM project WHERE id = ? LIMIT 1
 `
@@ -1674,6 +1704,19 @@ type UpdatePackageParams struct {
 
 func (q *Queries) UpdatePackage(ctx context.Context, arg UpdatePackageParams) error {
 	_, err := q.db.ExecContext(ctx, updatePackage, arg.Path, arg.Source, arg.ID)
+const updatePackageType = `-- name: UpdatePackageType :exec
+UPDATE package_type SET name = ? WHERE id = ? RETURNING id, name
+`
+type UpdatePackageTypeParams struct {
+	Name string
+	ID   int64
+}
+
+func (q *Queries) UpdatePackageType(ctx context.Context, arg UpdatePackageTypeParams) error {
+	_, err := q.db.ExecContext(ctx, updatePackageType, arg.Name, arg.ID)
+	return err
+}
+
 	return err
 }
 
@@ -1942,6 +1985,7 @@ ON CONFLICT (path, source) DO UPDATE SET path=excluded.path, source=excluded.sou
 type UpsertPackageParams struct {
 	Path   string
 	Source string
+	TypeID int64
 }
 
 func (q *Queries) UpsertPackage(ctx context.Context, arg UpsertPackageParams) (Package, error) {
@@ -1951,10 +1995,28 @@ func (q *Queries) UpsertPackage(ctx context.Context, arg UpsertPackageParams) (P
 		&i.ID,
 		&i.Path,
 		&i.Source,
+		&i.TypeID,
 		&i.Name,
 	)
 	return i, err
 }
+
+const upsertPackageType = `-- name: UpsertPackageType :one
+INSERT INTO package_type ( id,name ) VALUES ( ?,? )
+ON CONFLICT (id) DO UPDATE SET name=excluded.name RETURNING id, name
+`
+type UpsertPackageTypeParams struct {
+	ID   int64
+	Name string
+}
+
+func (q *Queries) UpsertPackageType(ctx context.Context, arg UpsertPackageTypeParams) (PackageType, error) {
+	row := q.db.QueryRowContext(ctx, upsertPackageType, arg.ID, arg.Name)
+	var i PackageType
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
 
 const upsertProject = `-- name: UpsertProject :one
 INSERT INTO project ( name,about,repo_url,website ) VALUES ( ?,?,?,? )

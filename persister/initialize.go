@@ -3,9 +3,12 @@ package persister
 import (
 	"context"
 	"log/slog"
+
+	"gerardus/collector"
+	"gerardus/parser"
 )
 
-func Initialize[STS []ST, ST symbolType](ctx context.Context, fp string, sts STS) (err error) {
+func Initialize(ctx context.Context, fp string, etss ...any) (err error) {
 	slog.Info("Initializing persister")
 	dataStore, err = getDataStore(fp)
 	if err != nil {
@@ -15,13 +18,30 @@ func Initialize[STS []ST, ST symbolType](ctx context.Context, fp string, sts STS
 	if err != nil {
 		goto end
 	}
-	for _, st := range sts {
-		_, err = dataStore.UpsertSymbolType(ctx, UpsertSymbolTypeParams{
-			ID:   int64(st.ID()),
-			Name: st.Name(),
-		})
-		if err != nil {
-			break
+	for _, ets := range etss {
+		switch t := ets.(type) {
+		case []collector.SymbolType:
+			for _, st := range t {
+				_, err = dataStore.UpsertSymbolType(ctx, UpsertSymbolTypeParams{
+					ID:   int64(st.ID()),
+					Name: st.Name(),
+				})
+				if err != nil {
+					goto end
+				}
+			}
+		case []parser.PackageType:
+			for _, pt := range t {
+				_, err = dataStore.UpsertPackageType(ctx, UpsertPackageTypeParams{
+					ID:   int64(pt.ID()),
+					Name: pt.Name(),
+				})
+				if err != nil {
+					goto end
+				}
+			}
+		default:
+			panicf("Unexpected invalid EnumTypes: %#v.", ets)
 		}
 	}
 end:

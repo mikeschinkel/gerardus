@@ -1,6 +1,6 @@
 package persister
 
-type symbolType interface {
+type EnumType interface {
 	ID() int
 	Name() string
 }

@@ -103,6 +103,13 @@ FROM type t
 WHERE 1=1
 ORDER BY t.survey_id,t.file_id,t.symbol_type_id,t.name;
 
+CREATE TABLE IF NOT EXISTS package_type
+(
+    id INTEGER PRIMARY KEY NOT NULL ON CONFLICT FAIL,
+    name TEXT COLLATE RTRIM NOT NULL ON CONFLICT FAIL
+);
+
+
 CREATE TABLE IF NOT EXISTS package
 (
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL ON CONFLICT FAIL,
@@ -110,6 +117,8 @@ CREATE TABLE IF NOT EXISTS package
     source TEXT COLLATE RTRIM NOT NULL ON CONFLICT FAIL,
     name AS (json_extract('["'||replace(path,'/','","')||'"]','$[#-1]')),
     UNIQUE (path,source) ON CONFLICT FAIL
+    type_id INTEGER COLLATE RTRIM NOT NULL ON CONFLICT FAIL,
+    FOREIGN KEY (type_id) REFERENCES package_type(id) ON DELETE CASCADE ON UPDATE NO ACTION,
 );
 
 CREATE TABLE IF NOT EXISTS import

@@ -117,6 +117,24 @@ DELETE FROM type WHERE id = ?;
 -- name: UpdateType :exec
 UPDATE type SET file_id= ?, symbol_type_id= ?, name= ?,definition= ? WHERE id = ? RETURNING *;
 
+
+-- name: LoadPackageType :one
+SELECT * FROM package_type WHERE id = ? LIMIT 1;
+-- name: ListPackageTypes :many
+SELECT * FROM package_type ORDER BY id;
+-- name: ListPackageTypesByName :many
+SELECT * FROM package_type ORDER BY name;
+-- name: InsertPackageType :one
+INSERT INTO package_type ( id,name ) VALUES ( ?,? ) RETURNING *;
+-- name: DeletePackageType :exec
+DELETE FROM package_type WHERE id = ?;
+-- name: UpdatePackageType :exec
+UPDATE package_type SET name = ? WHERE id = ? RETURNING *;
+-- name: UpsertPackageType :one
+INSERT INTO package_type ( id,name ) VALUES ( ?,? )
+ON CONFLICT (id) DO UPDATE SET name=excluded.name RETURNING *;
+
+
 -- name: LoadPackage :one
 SELECT * FROM package WHERE id = ? LIMIT 1;
 -- name: ListPackages :many

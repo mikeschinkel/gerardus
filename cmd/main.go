@@ -7,6 +7,7 @@ import (
 	"gerardus/collector"
 	"gerardus/logger"
 	"gerardus/options"
+	"gerardus/parser"
 	"gerardus/persister"
 )
 
@@ -27,6 +28,7 @@ func main() {
 	err = persister.Initialize(context.Background(),
 		options.DataFile(),
 		collector.SymbolTypes,
+		parser.PackageTypes,
 	)
 	if err != nil {
 		usage("Failed to initialize data store; %s", err.Error())
