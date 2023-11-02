@@ -13,21 +13,21 @@ type ImportSpec struct {
 	Alias   string
 }
 
-func (spec ImportSpec) CodeFacet() {}
+func (is ImportSpec) CodeFacet() {}
 
-func (spec ImportSpec) String() (s string) {
-	if spec.Alias == "" {
-		return fmt.Sprintf(`import "%s"`, spec.Package)
+func (is ImportSpec) String() (s string) {
+	if is.Alias == "" {
+		return fmt.Sprintf(`import "%s"`, is.Package)
 	}
-	return fmt.Sprintf(`import %s "%s"`, spec.Alias, spec.Package)
+	return fmt.Sprintf(`import %s "%s"`, is.Alias, is.Package)
 }
 
-func (spec ImportSpec) Name() string {
-	pos := strings.LastIndexByte(spec.Package, '/')
+func (is ImportSpec) Name() string {
+	pos := strings.LastIndexByte(is.Package, '/')
 	if pos == -1 {
-		return spec.Package
+		return is.Package
 	}
-	return spec.Package[pos+1:]
+	return is.Package[pos+1:]
 }
 
 //goland:noinspection GoUnusedParameter
