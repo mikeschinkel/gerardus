@@ -32,6 +32,15 @@ func NewModuleGraph() *ModuleGraph {
 	}
 }
 
+func (mg *ModuleGraph) GetPackageByImportPath(importPath string) (pkg *Package) {
+	if mg == nil {
+		goto end
+	}
+	pkg = mg.ModuleMap.GetPackageByImportPath(importPath)
+end:
+	return pkg
+}
+
 func (mg *ModuleGraph) AddProjectModule(args *ModuleArgs) *Module {
 	m := mg.addModule(args)
 	mg.ModuleMap[m.Name()].GoMod = true

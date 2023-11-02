@@ -114,7 +114,7 @@ func TestNewPackage(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.args.ImportPath+" — New()", func(t *testing.T) {
-			got := parser.NewPackage(tt.args)
+			got := parser.DispensePackage(tt.args)
 			equals(t, "Source", got.Source(), tt.want.Sources.Source)
 			equals(t, "Source Version", got.PackageVersion.Source(), tt.want.Sources.SourceVersion)
 			equals(t, "ImportPath", got.ImportPath, tt.want.ImportPath)

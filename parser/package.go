@@ -41,19 +41,8 @@ func NewFlyweightPackage(importPath string) *Package {
 }
 
 func dispensePackage(args *PackageArgs) (pkg *Package) {
-	var mv *ModuleVersions
-	var ok bool
-	if args.ModuleGraph == nil {
-		goto end
-	}
-	if args.ModuleGraph.ModuleMap == nil {
-		goto end
-	}
-	mv, ok = args.ModuleGraph.ModuleMap[args.ImportPath]
-	if ok {
-		// TODO: Can we share rather than clone the objects?
-		// Clone, except maintain pointers for Module and ModuleGraph.
-		pkg = mv.Module.Package.PartialClone()
+	pkg = args.ModuleGraph.GetPackageByImportPath(args.ImportPath)
+	if pkg != nil {
 		goto end
 	}
 	pkg = newPackage(args)
