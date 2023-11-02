@@ -85,7 +85,7 @@ func TestNewModule(t *testing.T) {
 				PackageType: parser.GoModPackage,
 			},
 			want: newModuleWant{
-				ModuleName:  "geradus",
+				ModuleName:  "gerardus",
 				PackageDir:  rootPath(""),
 				Version:     ".",
 				Path:        rootPath("go.mod"),
@@ -97,7 +97,7 @@ func TestNewModule(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.args.Name, func(t *testing.T) {
 			got := parser.NewModule(tt.args)
-			equals(t, "ModuleName", got.Name, tt.want.ModuleName)
+			equals(t, "ModuleName", got.Name(), tt.want.ModuleName)
 		})
 	}
 }
