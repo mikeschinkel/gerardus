@@ -95,15 +95,6 @@ func (q *Queries) DeleteModuleVersion(ctx context.Context, id int64) error {
 	return err
 }
 
-const deleteOrigin = `-- name: DeleteOrigin :exec
-DELETE FROM origin WHERE id = ?
-`
-
-func (q *Queries) DeleteOrigin(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, deleteOrigin, id)
-	return err
-}
-
 const deletePackage = `-- name: DeletePackage :exec
 DELETE FROM package WHERE id = ?
 `
@@ -339,34 +330,63 @@ func (q *Queries) InsertModuleVersion(ctx context.Context, arg InsertModuleVersi
 	return i, err
 }
 
-const insertOrigin = `-- name: InsertOrigin :one
-INSERT INTO origin ( path ) VALUES ( ? ) RETURNING id, path
-`
-
-func (q *Queries) InsertOrigin(ctx context.Context, path string) (Origin, error) {
-	row := q.db.QueryRowContext(ctx, insertOrigin, path)
-	var i Origin
-	err := row.Scan(&i.ID, &i.Path)
-	return i, err
-}
-
 const insertPackage = `-- name: InsertPackage :one
-INSERT INTO package ( path,source ) VALUES ( ?,? ) RETURNING id, path, source, name
+INSERT INTO package ( import_path, source, type_id ) VALUES ( ?,?,? ) RETURNING id, import_path, source, type_id, name
 `
 
 type InsertPackageParams struct {
-	Path   string
-	Source string
+	ImportPath string
+	Source     string
+	TypeID     int64
 }
 
 func (q *Queries) InsertPackage(ctx context.Context, arg InsertPackageParams) (Package, error) {
-	row := q.db.QueryRowContext(ctx, insertPackage, arg.Path, arg.Source)
+	row := q.db.QueryRowContext(ctx, insertPackage, arg.ImportPath, arg.Source, arg.TypeID)
 	var i Package
 	err := row.Scan(
 		&i.ID,
-		&i.Path,
+		&i.ImportPath,
 		&i.Source,
+		&i.TypeID,
 		&i.Name,
+	)
+	return i, err
+}
+
+const insertPackageType = `-- name: InsertPackageType :one
+INSERT INTO package_type ( id,name ) VALUES ( ?,? ) RETURNING id, name
+`
+
+type InsertPackageTypeParams struct {
+	ID   int64
+	Name string
+}
+
+func (q *Queries) InsertPackageType(ctx context.Context, arg InsertPackageTypeParams) (PackageType, error) {
+	row := q.db.QueryRowContext(ctx, insertPackageType, arg.ID, arg.Name)
+	var i PackageType
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
+const insertPackageVersion = `-- name: InsertPackageVersion :one
+INSERT INTO package_version ( package_id,version,source_url ) VALUES ( ?,?,? ) RETURNING id, package_id, version, source_url
+`
+
+type InsertPackageVersionParams struct {
+	PackageID int64
+	Version   string
+	SourceUrl string
+}
+
+func (q *Queries) InsertPackageVersion(ctx context.Context, arg InsertPackageVersionParams) (PackageVersion, error) {
+	row := q.db.QueryRowContext(ctx, insertPackageVersion, arg.PackageID, arg.Version, arg.SourceUrl)
+	var i PackageVersion
+	err := row.Scan(
+		&i.ID,
+		&i.PackageID,
+		&i.Version,
+		&i.SourceUrl,
 	)
 	return i, err
 }
@@ -422,15 +442,15 @@ func (q *Queries) InsertSurvey(ctx context.Context, arg InsertSurveyParams) (Sur
 }
 
 const insertSurveyModule = `-- name: InsertSurveyModule :one
-INSERT INTO survey_module ( survey_id, module_id, module_version_id, file_id,origin_id ) VALUES ( ?,?,?,?,? ) RETURNING id, survey_id, module_id, module_version_id, file_id, origin_id
+INSERT INTO survey_module ( survey_id, module_id, module_version_id,package_id, file_id ) VALUES ( ?,?,?,?,? ) RETURNING id, survey_id, module_id, module_version_id, package_id, file_id
 `
 
 type InsertSurveyModuleParams struct {
 	SurveyID        int64
 	ModuleID        int64
 	ModuleVersionID int64
+	PackageID       int64
 	FileID          int64
-	OriginID        int64
 }
 
 func (q *Queries) InsertSurveyModule(ctx context.Context, arg InsertSurveyModuleParams) (SurveyModule, error) {
@@ -438,8 +458,8 @@ func (q *Queries) InsertSurveyModule(ctx context.Context, arg InsertSurveyModule
 		arg.SurveyID,
 		arg.ModuleID,
 		arg.ModuleVersionID,
+		arg.PackageID,
 		arg.FileID,
-		arg.OriginID,
 	)
 	var i SurveyModule
 	err := row.Scan(
@@ -447,8 +467,8 @@ func (q *Queries) InsertSurveyModule(ctx context.Context, arg InsertSurveyModule
 		&i.SurveyID,
 		&i.ModuleID,
 		&i.ModuleVersionID,
+		&i.PackageID,
 		&i.FileID,
-		&i.OriginID,
 	)
 	return i, err
 }
@@ -746,7 +766,7 @@ func (q *Queries) ListMethods(ctx context.Context) ([]Method, error) {
 }
 
 const listModuleVersions = `-- name: ListModuleVersions :many
-SELECT id, module_id, version FROM module_version ORDER BY name
+SELECT id, module_id, version FROM module_version ORDER BY module_id,version
 `
 
 func (q *Queries) ListModuleVersions(ctx context.Context) ([]ModuleVersion, error) {
@@ -799,20 +819,79 @@ func (q *Queries) ListModules(ctx context.Context) ([]Module, error) {
 	return items, nil
 }
 
-const listOrigins = `-- name: ListOrigins :many
-SELECT id, path FROM origin ORDER BY path
+const listPackageTypes = `-- name: ListPackageTypes :many
+SELECT id, name FROM package_type ORDER BY id
 `
 
-func (q *Queries) ListOrigins(ctx context.Context) ([]Origin, error) {
-	rows, err := q.db.QueryContext(ctx, listOrigins)
+func (q *Queries) ListPackageTypes(ctx context.Context) ([]PackageType, error) {
+	rows, err := q.db.QueryContext(ctx, listPackageTypes)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	var items []PackageType
 	for rows.Next() {
-		var i Origin
-		if err := rows.Scan(&i.ID, &i.Path); err != nil {
+		var i PackageType
+		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listPackageTypesByName = `-- name: ListPackageTypesByName :many
+SELECT id, name FROM package_type ORDER BY name
+`
+
+func (q *Queries) ListPackageTypesByName(ctx context.Context) ([]PackageType, error) {
+	rows, err := q.db.QueryContext(ctx, listPackageTypesByName)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []PackageType
+	for rows.Next() {
+		var i PackageType
+		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listPackageVersions = `-- name: ListPackageVersions :many
+SELECT id, package_id, version, source_url FROM package_version ORDER BY package_id,version
+`
+
+func (q *Queries) ListPackageVersions(ctx context.Context) ([]PackageVersion, error) {
+	rows, err := q.db.QueryContext(ctx, listPackageVersions)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []PackageVersion
+	for rows.Next() {
+		var i PackageVersion
+		if err := rows.Scan(
+			&i.ID,
+			&i.PackageID,
+			&i.Version,
+			&i.SourceUrl,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -841,7 +920,7 @@ func (q *Queries) ListPackages(ctx context.Context) ([]Package, error) {
 		var i Package
 		if err := rows.Scan(
 			&i.ID,
-			&i.Path,
+			&i.ImportPath,
 			&i.Source,
 			&i.TypeID,
 			&i.Name,
@@ -893,7 +972,7 @@ func (q *Queries) ListProjects(ctx context.Context) ([]Project, error) {
 }
 
 const listSurveyModules = `-- name: ListSurveyModules :many
-SELECT id, survey_id, module_id, module_version_id, file_id, origin_id FROM survey_module ORDER BY name
+SELECT id, survey_id, module_id, module_version_id, package_id, file_id FROM survey_module ORDER BY survey_id,module_id,module_version_id,package_id
 `
 
 func (q *Queries) ListSurveyModules(ctx context.Context) ([]SurveyModule, error) {
@@ -910,8 +989,8 @@ func (q *Queries) ListSurveyModules(ctx context.Context) ([]SurveyModule, error)
 			&i.SurveyID,
 			&i.ModuleID,
 			&i.ModuleVersionID,
+			&i.PackageID,
 			&i.FileID,
-			&i.OriginID,
 		); err != nil {
 			return nil, err
 		}
@@ -1314,19 +1393,8 @@ func (q *Queries) LoadModuleVersion(ctx context.Context, id int64) (ModuleVersio
 	return i, err
 }
 
-const loadOrigin = `-- name: LoadOrigin :one
-SELECT id, path FROM origin WHERE id = ? LIMIT 1
-`
-
-func (q *Queries) LoadOrigin(ctx context.Context, id int64) (Origin, error) {
-	row := q.db.QueryRowContext(ctx, loadOrigin, id)
-	var i Origin
-	err := row.Scan(&i.ID, &i.Path)
-	return i, err
-}
-
 const loadPackage = `-- name: LoadPackage :one
-SELECT id, path, source, name FROM package WHERE id = ? LIMIT 1
+SELECT id, import_path, source, type_id, name FROM package WHERE id = ? LIMIT 1
 `
 
 func (q *Queries) LoadPackage(ctx context.Context, id int64) (Package, error) {
@@ -1334,8 +1402,9 @@ func (q *Queries) LoadPackage(ctx context.Context, id int64) (Package, error) {
 	var i Package
 	err := row.Scan(
 		&i.ID,
-		&i.Path,
+		&i.ImportPath,
 		&i.Source,
+		&i.TypeID,
 		&i.Name,
 	)
 	return i, err
@@ -1349,6 +1418,22 @@ func (q *Queries) LoadPackageType(ctx context.Context, id int64) (PackageType, e
 	row := q.db.QueryRowContext(ctx, loadPackageType, id)
 	var i PackageType
 	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
+const loadPackageVersion = `-- name: LoadPackageVersion :one
+SELECT id, package_id, version, source_url FROM package_version WHERE id = ? LIMIT 1
+`
+
+func (q *Queries) LoadPackageVersion(ctx context.Context, id int64) (PackageVersion, error) {
+	row := q.db.QueryRowContext(ctx, loadPackageVersion, id)
+	var i PackageVersion
+	err := row.Scan(
+		&i.ID,
+		&i.PackageID,
+		&i.Version,
+		&i.SourceUrl,
+	)
 	return i, err
 }
 
@@ -1472,7 +1557,7 @@ func (q *Queries) LoadSurveyByRepoURL(ctx context.Context, repoUrl string) (Load
 }
 
 const loadSurveyModule = `-- name: LoadSurveyModule :one
-SELECT id, survey_id, module_id, module_version_id, file_id, origin_id FROM survey_module WHERE id = ? LIMIT 1
+SELECT id, survey_id, module_id, module_version_id, package_id, file_id FROM survey_module WHERE id = ? LIMIT 1
 `
 
 func (q *Queries) LoadSurveyModule(ctx context.Context, id int64) (SurveyModule, error) {
@@ -1483,8 +1568,8 @@ func (q *Queries) LoadSurveyModule(ctx context.Context, id int64) (SurveyModule,
 		&i.SurveyID,
 		&i.ModuleID,
 		&i.ModuleVersionID,
+		&i.PackageID,
 		&i.FileID,
-		&i.OriginID,
 	)
 	return i, err
 }
@@ -1678,35 +1763,31 @@ func (q *Queries) UpdateModuleVersion(ctx context.Context, arg UpdateModuleVersi
 	return err
 }
 
-const updateOrigin = `-- name: UpdateOrigin :exec
-UPDATE origin SET path = ? WHERE id = ? RETURNING id, path
-`
-
-type UpdateOriginParams struct {
-	Path string
-	ID   int64
-}
-
-func (q *Queries) UpdateOrigin(ctx context.Context, arg UpdateOriginParams) error {
-	_, err := q.db.ExecContext(ctx, updateOrigin, arg.Path, arg.ID)
-	return err
-}
-
 const updatePackage = `-- name: UpdatePackage :exec
-UPDATE package SET path = ?, source = ? WHERE id = ? RETURNING id, path, source, name
+UPDATE package SET import_path = ?, source = ?, type_id = ? WHERE id = ? RETURNING id, import_path, source, type_id, name
 `
 
 type UpdatePackageParams struct {
-	Path   string
-	Source string
-	ID     int64
+	ImportPath string
+	Source     string
+	TypeID     int64
+	ID         int64
 }
 
 func (q *Queries) UpdatePackage(ctx context.Context, arg UpdatePackageParams) error {
-	_, err := q.db.ExecContext(ctx, updatePackage, arg.Path, arg.Source, arg.ID)
+	_, err := q.db.ExecContext(ctx, updatePackage,
+		arg.ImportPath,
+		arg.Source,
+		arg.TypeID,
+		arg.ID,
+	)
+	return err
+}
+
 const updatePackageType = `-- name: UpdatePackageType :exec
 UPDATE package_type SET name = ? WHERE id = ? RETURNING id, name
 `
+
 type UpdatePackageTypeParams struct {
 	Name string
 	ID   int64
@@ -1717,6 +1798,24 @@ func (q *Queries) UpdatePackageType(ctx context.Context, arg UpdatePackageTypePa
 	return err
 }
 
+const updatePackageVersion = `-- name: UpdatePackageVersion :exec
+UPDATE package_version SET package_id = ?, version = ?, source_url = ? WHERE id = ? RETURNING id, package_id, version, source_url
+`
+
+type UpdatePackageVersionParams struct {
+	PackageID int64
+	Version   string
+	SourceUrl string
+	ID        int64
+}
+
+func (q *Queries) UpdatePackageVersion(ctx context.Context, arg UpdatePackageVersionParams) error {
+	_, err := q.db.ExecContext(ctx, updatePackageVersion,
+		arg.PackageID,
+		arg.Version,
+		arg.SourceUrl,
+		arg.ID,
+	)
 	return err
 }
 
@@ -1765,7 +1864,7 @@ func (q *Queries) UpdateProjectByName(ctx context.Context, arg UpdateProjectByNa
 }
 
 const updateSurveyModule = `-- name: UpdateSurveyModule :exec
-UPDATE survey_module SET survey_id = ?, module_id = ?, module_version_id = ?, file_id = ?, origin_id = ? WHERE id = ? RETURNING id, survey_id, module_id, module_version_id, file_id, origin_id
+UPDATE survey_module SET survey_id = ?, module_id = ?, module_version_id = ?, file_id = ?, package_id = ? WHERE id = ? RETURNING id, survey_id, module_id, module_version_id, package_id, file_id
 `
 
 type UpdateSurveyModuleParams struct {
@@ -1773,7 +1872,7 @@ type UpdateSurveyModuleParams struct {
 	ModuleID        int64
 	ModuleVersionID int64
 	FileID          int64
-	OriginID        int64
+	PackageID       int64
 	ID              int64
 }
 
@@ -1783,7 +1882,7 @@ func (q *Queries) UpdateSurveyModule(ctx context.Context, arg UpdateSurveyModule
 		arg.ModuleID,
 		arg.ModuleVersionID,
 		arg.FileID,
-		arg.OriginID,
+		arg.PackageID,
 		arg.ID,
 	)
 	return err
@@ -1965,21 +2064,9 @@ func (q *Queries) UpsertModuleVersion(ctx context.Context, arg UpsertModuleVersi
 	return i, err
 }
 
-const upsertOrigin = `-- name: UpsertOrigin :one
-INSERT INTO origin ( path ) VALUES ( ? )
-ON CONFLICT (path) DO UPDATE SET path=excluded.path RETURNING id, path
-`
-
-func (q *Queries) UpsertOrigin(ctx context.Context, path string) (Origin, error) {
-	row := q.db.QueryRowContext(ctx, upsertOrigin, path)
-	var i Origin
-	err := row.Scan(&i.ID, &i.Path)
-	return i, err
-}
-
 const upsertPackage = `-- name: UpsertPackage :one
-INSERT INTO package ( path, source ) VALUES ( ?,? )
-ON CONFLICT (path, source) DO UPDATE SET path=excluded.path, source=excluded.source RETURNING id, path, source, name
+INSERT INTO package ( path, source, type_id ) VALUES ( ?,?,? )
+ON CONFLICT (path, source) DO UPDATE SET path=excluded.path, source=excluded.source, type_id=excluded.type_id RETURNING id, path, source, type_id, name
 `
 
 type UpsertPackageParams struct {
@@ -1989,11 +2076,11 @@ type UpsertPackageParams struct {
 }
 
 func (q *Queries) UpsertPackage(ctx context.Context, arg UpsertPackageParams) (Package, error) {
-	row := q.db.QueryRowContext(ctx, upsertPackage, arg.Path, arg.Source)
+	row := q.db.QueryRowContext(ctx, upsertPackage, arg.ImportPath, arg.Source, arg.TypeID)
 	var i Package
 	err := row.Scan(
 		&i.ID,
-		&i.Path,
+		&i.ImportPath,
 		&i.Source,
 		&i.TypeID,
 		&i.Name,
@@ -2005,6 +2092,7 @@ const upsertPackageType = `-- name: UpsertPackageType :one
 INSERT INTO package_type ( id,name ) VALUES ( ?,? )
 ON CONFLICT (id) DO UPDATE SET name=excluded.name RETURNING id, name
 `
+
 type UpsertPackageTypeParams struct {
 	ID   int64
 	Name string
@@ -2017,6 +2105,28 @@ func (q *Queries) UpsertPackageType(ctx context.Context, arg UpsertPackageTypePa
 	return i, err
 }
 
+const upsertPackageVersion = `-- name: UpsertPackageVersion :one
+INSERT INTO package_version ( package_id,version,source_url ) VALUES ( ?,?,? )
+ON CONFLICT (package_id,version) DO UPDATE SET source_url=excluded.source_url RETURNING id, package_id, version, source_url
+`
+
+type UpsertPackageVersionParams struct {
+	PackageID int64
+	Version   string
+	SourceUrl string
+}
+
+func (q *Queries) UpsertPackageVersion(ctx context.Context, arg UpsertPackageVersionParams) (PackageVersion, error) {
+	row := q.db.QueryRowContext(ctx, upsertPackageVersion, arg.PackageID, arg.Version, arg.SourceUrl)
+	var i PackageVersion
+	err := row.Scan(
+		&i.ID,
+		&i.PackageID,
+		&i.Version,
+		&i.SourceUrl,
+	)
+	return i, err
+}
 
 const upsertProject = `-- name: UpsertProject :one
 INSERT INTO project ( name,about,repo_url,website ) VALUES ( ?,?,?,? )
@@ -2049,16 +2159,16 @@ func (q *Queries) UpsertProject(ctx context.Context, arg UpsertProjectParams) (P
 }
 
 const upsertSurveyModule = `-- name: UpsertSurveyModule :one
-INSERT INTO survey_module ( survey_id, module_id, module_version_id, file_id,origin_id ) VALUES ( ?,?,?,?,? )
-ON CONFLICT (survey_id,module_version_id,file_id) DO UPDATE SET survey_id=excluded.survey_id, module_id=excluded.module_id, module_version_id=excluded.module_version_id, file_id=excluded.file_id RETURNING id, survey_id, module_id, module_version_id, file_id, origin_id
+INSERT INTO survey_module ( survey_id, module_id, module_version_id, package_id, file_id ) VALUES ( ?,?,?,?,? )
+ON CONFLICT (survey_id,module_version_id,file_id) DO UPDATE SET survey_id=excluded.survey_id, module_id=excluded.module_id, module_version_id=excluded.module_version_id, file_id=excluded.file_id RETURNING id, survey_id, module_id, module_version_id, package_id, file_id
 `
 
 type UpsertSurveyModuleParams struct {
 	SurveyID        int64
 	ModuleID        int64
 	ModuleVersionID int64
+	PackageID       int64
 	FileID          int64
-	OriginID        int64
 }
 
 func (q *Queries) UpsertSurveyModule(ctx context.Context, arg UpsertSurveyModuleParams) (SurveyModule, error) {
@@ -2066,8 +2176,8 @@ func (q *Queries) UpsertSurveyModule(ctx context.Context, arg UpsertSurveyModule
 		arg.SurveyID,
 		arg.ModuleID,
 		arg.ModuleVersionID,
+		arg.PackageID,
 		arg.FileID,
-		arg.OriginID,
 	)
 	var i SurveyModule
 	err := row.Scan(
@@ -2075,8 +2185,8 @@ func (q *Queries) UpsertSurveyModule(ctx context.Context, arg UpsertSurveyModule
 		&i.SurveyID,
 		&i.ModuleID,
 		&i.ModuleVersionID,
+		&i.PackageID,
 		&i.FileID,
-		&i.OriginID,
 	)
 	return i, err
 }

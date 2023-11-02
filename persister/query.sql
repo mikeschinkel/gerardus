@@ -138,16 +138,31 @@ ON CONFLICT (id) DO UPDATE SET name=excluded.name RETURNING *;
 -- name: LoadPackage :one
 SELECT * FROM package WHERE id = ? LIMIT 1;
 -- name: ListPackages :many
-SELECT * FROM package ORDER BY path;
+SELECT * FROM package ORDER BY import_path;
 -- name: InsertPackage :one
-INSERT INTO package ( path,source ) VALUES ( ?,? ) RETURNING *;
+INSERT INTO package ( import_path, source, type_id ) VALUES ( ?,?,? ) RETURNING *;
 -- name: DeletePackage :exec
 DELETE FROM package WHERE id = ?;
 -- name: UpdatePackage :exec
-UPDATE package SET path = ?, source = ? WHERE id = ? RETURNING *;
+UPDATE package SET import_path = ?, source = ?, type_id = ? WHERE id = ? RETURNING *;
 -- name: UpsertPackage :one
-INSERT INTO package ( path, source ) VALUES ( ?,? )
-ON CONFLICT (path, source) DO UPDATE SET path=excluded.path, source=excluded.source RETURNING *;
+INSERT INTO package ( import_path, source, type_id ) VALUES ( ?,?,? )
+ON CONFLICT (import_path, source) DO UPDATE SET import_path=excluded.import_path, source=excluded.source, type_id=excluded.type_id RETURNING *;
+
+
+-- name: LoadPackageVersion :one
+SELECT * FROM package_version WHERE id = ? LIMIT 1;
+-- name: ListPackageVersions :many
+SELECT * FROM package_version ORDER BY package_id,version;
+-- name: InsertPackageVersion :one
+INSERT INTO package_version ( package_id,version,source_url ) VALUES ( ?,?,? ) RETURNING *;
+-- name: DeletePackageVersion :exec
+DELETE FROM package_version WHERE id = ?;
+-- name: UpdatePackageVersion :exec
+UPDATE package_version SET package_id = ?, version = ?, source_url = ? WHERE id = ? RETURNING *;
+-- name: UpsertPackageVersion :one
+INSERT INTO package_version ( package_id,version,source_url ) VALUES ( ?,?,? )
+ON CONFLICT (package_id,version) DO UPDATE SET source_url=excluded.source_url RETURNING *;
 
 
 -- name: LoadImport :one
@@ -221,7 +236,7 @@ ON CONFLICT (name) DO UPDATE SET name=excluded.name RETURNING *;
 -- name: LoadModuleVersion :one
 SELECT * FROM module_version WHERE id = ? LIMIT 1;
 -- name: ListModuleVersions :many
-SELECT * FROM module_version ORDER BY name;
+SELECT * FROM module_version ORDER BY module_id,version;
 -- name: InsertModuleVersion :one
 INSERT INTO module_version ( module_id, version ) VALUES ( ?,? ) RETURNING *;
 -- name: DeleteModuleVersion :exec
@@ -235,28 +250,15 @@ ON CONFLICT (module_id,version) DO UPDATE SET version=excluded.version RETURNING
 -- name: LoadSurveyModule :one
 SELECT * FROM survey_module WHERE id = ? LIMIT 1;
 -- name: ListSurveyModules :many
-SELECT * FROM survey_module ORDER BY name;
+SELECT * FROM survey_module ORDER BY survey_id,module_id,module_version_id,package_id;
 -- name: InsertSurveyModule :one
-INSERT INTO survey_module ( survey_id, module_id, module_version_id, file_id,origin_id ) VALUES ( ?,?,?,?,? ) RETURNING *;
+INSERT INTO survey_module ( survey_id, module_id, module_version_id,package_id, file_id ) VALUES ( ?,?,?,?,? ) RETURNING *;
 -- name: DeleteSurveyModule :exec
 DELETE FROM survey_module WHERE id = ?;
 -- name: UpdateSurveyModule :exec
-UPDATE survey_module SET survey_id = ?, module_id = ?, module_version_id = ?, file_id = ?, origin_id = ? WHERE id = ? RETURNING *;
+UPDATE survey_module SET survey_id = ?, module_id = ?, module_version_id = ?, file_id = ?, package_id = ? WHERE id = ? RETURNING *;
 -- name: UpsertSurveyModule :one
-INSERT INTO survey_module ( survey_id, module_id, module_version_id, file_id,origin_id ) VALUES ( ?,?,?,?,? )
+INSERT INTO survey_module ( survey_id, module_id, module_version_id, package_id, file_id ) VALUES ( ?,?,?,?,? )
 ON CONFLICT (survey_id,module_version_id,file_id) DO UPDATE SET survey_id=excluded.survey_id, module_id=excluded.module_id, module_version_id=excluded.module_version_id, file_id=excluded.file_id RETURNING *;
 
 
--- name: LoadOrigin :one
-SELECT * FROM origin WHERE id = ? LIMIT 1;
--- name: ListOrigins :many
-SELECT * FROM origin ORDER BY path;
--- name: InsertOrigin :one
-INSERT INTO origin ( path ) VALUES ( ? ) RETURNING *;
--- name: DeleteOrigin :exec
-DELETE FROM origin WHERE id = ?;
--- name: UpdateOrigin :exec
-UPDATE origin SET path = ? WHERE id = ? RETURNING *;
--- name: UpsertOrigin :one
-INSERT INTO origin ( path ) VALUES ( ? )
-ON CONFLICT (path) DO UPDATE SET path=excluded.path RETURNING *;

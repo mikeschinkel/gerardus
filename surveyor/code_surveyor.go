@@ -3,24 +3,28 @@ package surveyor
 import (
 	"context"
 	"log/slog"
-	"sync"
+	"path/filepath"
 
 	"gerardus/channels"
 	"gerardus/collector"
 	"gerardus/parser"
 	"gerardus/scanner"
 	"golang.org/x/mod/modfile"
-
 	"golang.org/x/sync/errgroup"
 )
 
 type CodeSurveyor struct {
-	Codebase  *parser.Codebase
-	Project   *parser.Project
-	Files     scanner.Files
-	localDir  string
-	source    string
-	facetChan chan collector.CodeFacet
+	Codebase    *parser.Codebase
+	Project     *parser.Project
+	Files       scanner.Files
+	localDir    string
+	source      string
+	facetChan   chan collector.CodeFacet
+	moduleGraph *parser.ModuleGraph
+}
+
+func (cs *CodeSurveyor) ModuleGraph() *parser.ModuleGraph {
+	return cs.moduleGraph
 }
 
 func (cs *CodeSurveyor) ProjectName() string {
@@ -54,9 +58,10 @@ type Project interface {
 
 func NewCodeSurveyor(cb *parser.Codebase, p *parser.Project, dir string) *CodeSurveyor {
 	return &CodeSurveyor{
-		Codebase: cb,
-		Project:  p,
-		localDir: dir,
+		Codebase:    cb,
+		Project:     p,
+		localDir:    dir,
+		moduleGraph: parser.NewModuleGraph(),
 	}
 }
 
@@ -110,27 +115,34 @@ func (cs *CodeSurveyor) SurveyFile(ctx context.Context, f scanner.File, group *e
 	return err
 }
 
-var mutex sync.Mutex
-
 //goland:noinspection GoUnusedParameter
-func (cs *CodeSurveyor) SurveyModFile(ctx context.Context, mf *parser.ModFile) (err error) {
+func (cs *CodeSurveyor) SurveyModFile(ctx context.Context, pmf *parser.ModFile) (err error) {
+	var pm, m *parser.Module
+	var modFile *modfile.File
 
-	mf.ModFile, err = modfile.Parse("go.mod", mf.Content, nil)
+	modFile, err = modfile.Parse("go.mod", mf.Content, nil)
 	if err != nil {
 		err = errFailedToParseFile.Err(err, "filename", mf.Fullpath())
 		goto end
 	}
-
+	pmf.SetModFile(modFile)
 	// Make Modules available w/o having to look up via database to speed insert of imports
-	mutex.Lock()
-	parser.Modules[mf.Name()] = mf.Fullpath()
-	for _, r := range mf.Require() {
-		if _, ok := parser.Modules[r.Mod.Path]; !ok {
-			parser.Modules[r.Mod.Path] = ""
-		}
+	pm = cs.moduleGraph.AddProjectModule(&parser.ModuleArgs{
+		PackageType: parser.GoModPackage,
+		Name:        pmf.Name(),
+		Version:     pmf.Version(),
+		GoVersion:   pmf.GoVersion(),
+		Path:        filepath.Dir(pmf.Fullpath()),
+	})
+	for _, r := range pmf.Require() {
+		mod := r.Mod
+		cs.moduleGraph.AddDependentModule(pm, &parser.ModuleArgs{
+			Name:      mod.Path,
+			Version:   mod.Version,
+			GoVersion: pmf.GoVersion(),
+			Path:      pm.Path,
+		})
 	}
-	mutex.Unlock()
-
 	err = channels.WriteTo(ctx, cs.facetChan, collector.CodeFacet(mf))
 	if err != nil {
 		goto end

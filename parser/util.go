@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/ast"
 	"io"
+	"net/http"
 	"os"
 )
 
@@ -44,4 +45,22 @@ func WarnOnError(err error) {
 	if err != nil {
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
 	}
+}
+
+func CheckURL(url string) (status int, err error) {
+	var resp *http.Response
+
+	resp, err = http.Get(url)
+	if err != nil {
+		goto end
+	}
+	defer Close(resp.Body, WarnOnError) // Make sure to close the response body.
+
+	status = resp.StatusCode
+	if status < 200 || status > 299 {
+		err = fmt.Errorf("received HTTP status code %d from %s", status, url)
+		goto end
+	}
+end:
+	return status, err
 }

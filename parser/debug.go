@@ -2,15 +2,24 @@
 
 package parser
 
-import (
-	"gerardus/scanner"
-)
-
 func init() {
-	var s string
-	f := &GoFile{File: scanner.NewFile("", &s)}
-	f.DebugString()
+	ModFile{}.DebugString()
+	GoFile{}.DebugString()
+	Module{}.DebugString()
+	Package{}.DebugString()
 }
-func (gf *GoFile) DebugString() string {
-	return gf.Path
+
+func (mf ModFile) DebugString() string {
+	return mf.debugString
+}
+func (gf GoFile) DebugString() string {
+	return gf.debugString
+}
+
+func (m Module) DebugString() string {
+	return m.debugString
+}
+
+func (p Package) DebugString() string {
+	return p.debugString
 }

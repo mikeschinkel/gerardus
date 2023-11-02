@@ -19,6 +19,7 @@ type survey interface {
 	VersionTag() string
 	LocalDir() string
 	Source() string
+	ModuleGraph() *parser.ModuleGraph
 }
 
 type SurveyPersister struct {
@@ -128,7 +129,7 @@ func (sp *SurveyPersister) insertModFile(ctx context.Context, mf *parser.ModFile
 	var m Module
 	var mv ModuleVersion
 	var fileId int64
-	var origin Origin
+	var pkg Package
 
 	fileId, err = sp.getFileId(ctx, mf)
 	if err != nil {
@@ -141,18 +142,11 @@ func (sp *SurveyPersister) insertModFile(ctx context.Context, mf *parser.ModFile
 		//} else {
 		//	// Get the source for the go.mod file's dependencies
 		//}
-		origin, err = sp.dataStore.UpsertOrigin(ctx, module.OriginPath())
+		pkg, err = sp.upsertPackage(ctx, module.Package)
 		if err != nil {
 			goto end
 		}
-		m, err = sp.dataStore.UpsertModule(ctx, module.Name)
-		if err != nil {
-			goto end
-		}
-		mv, err = sp.dataStore.UpsertModuleVersion(ctx, UpsertModuleVersionParams{
-			ModuleID: m.ID,
-			Version:  module.Version,
-		})
+		m, mv, err = sp.upsertModule(ctx, module)
 		if err != nil {
 			goto end
 		}
@@ -161,7 +155,7 @@ func (sp *SurveyPersister) insertModFile(ctx context.Context, mf *parser.ModFile
 			ModuleID:        m.ID,
 			ModuleVersionID: mv.ID,
 			FileID:          fileId,
-			OriginID:        origin.ID,
+			PackageID:       pkg.ID,
 		})
 		if err != nil {
 			goto end
@@ -191,25 +185,69 @@ end:
 	return err
 }
 
+func (sp *SurveyPersister) upsertPackage(ctx context.Context, pp *parser.Package) (pkg Package, err error) {
+	pkg, err = sp.dataStore.UpsertPackage(ctx, UpsertPackageParams{
+		ImportPath: pp.ImportPath,
+		Source:     pp.Source(),
+		TypeID:     int64(pp.Type),
+	})
+	if err != nil {
+		goto end
+	}
+	if pp.PackageVersion.Name == "." {
+		goto end
+	}
+	_, err = sp.dataStore.UpsertPackageVersion(ctx, UpsertPackageVersionParams{
+		PackageID: pkg.ID,
+		Version:   pp.PackageVersion.Name,
+		SourceUrl: pp.PackageVersion.Source(),
+	})
+	if err != nil {
+		goto end
+	}
+end:
+	return pkg, err
+}
+
+func (sp *SurveyPersister) upsertModule(ctx context.Context, pm *parser.Module) (m Module, mv ModuleVersion, err error) {
+	m, err = sp.dataStore.UpsertModule(ctx, pm.Name())
+	if err != nil {
+		goto end
+	}
+	mv, err = sp.dataStore.UpsertModuleVersion(ctx, UpsertModuleVersionParams{
+		ModuleID: m.ID,
+		Version:  pm.VersionName(),
+	})
+	if err != nil {
+		goto end
+	}
+end:
+	return m, mv, err
+}
+
 func (sp *SurveyPersister) insertImportSpec(ctx context.Context, is collector.ImportSpec) (err error) {
 	var fileId int64
-	var p Package
+	var pkg Package
+	var pp *parser.Package
 
 	fileId, err = sp.getFileId(ctx, is.File)
 	if err != nil {
 		goto end
 	}
-	p, err = sp.dataStore.UpsertPackage(ctx, UpsertPackageParams{
-		Path:   is.Package,
-		Source: sp.survey.Source(),
-	})
+
+	pp = sp.survey.ModuleGraph().DispensePackage(is.Package, is.File.Fullpath())
+	if pp == nil {
+		goto end
+	}
+
+	pkg, err = sp.upsertPackage(ctx, pp)
 	if err != nil {
 		goto end
 	}
 	_, err = sp.dataStore.UpsertImport(ctx, UpsertImportParams{
 		FileID:    fileId,
 		SurveyID:  sp.surveyId,
-		PackageID: p.ID,
+		PackageID: pkg.ID,
 		Alias:     is.Alias,
 	})
 	if err != nil {

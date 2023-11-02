@@ -38,6 +38,7 @@ func ExecMap(args cli.ArgsMap) (err error) {
 	var cs *surveyor.CodeSurveyor
 	var cb *parser.Codebase
 	var p *parser.Project
+	var dir string
 	var ctx context.Context
 
 	fmt.Printf("Scanning Go source at %s...\n", options.SourceDir())
@@ -48,9 +49,10 @@ func ExecMap(args cli.ArgsMap) (err error) {
 	cb = parser.NewCodebase(project, versionTag)
 	p = parser.NewProject(project, check.project.RepoUrl)
 	cs = surveyor.NewCodeSurveyor(cb, p, options.SourceDir())
+	dir = options.SourceDir()
 	ma = mapArgs{
-		scanner:   scanner.NewScanner(options.SourceDir()),
-		parser:    parser.NewGoFileParser(),
+		scanner:   scanner.NewScanner(dir),
+		parser:    parser.NewGoFileParser(cs.ModuleGraph(), dir),
 		surveyor:  cs,
 		persister: persister.NewSurveyPersister(cs, persister.GetDataStore()),
 	}

@@ -29,7 +29,7 @@ func (ii ImportsMap) Sorted() Imports {
 		n++
 	}
 	sort.SliceStable(sorted, func(i, j int) bool {
-		return sorted[i].Package.Name < sorted[j].Package.Name
+		return sorted[i].Package.ImportPath < sorted[j].Package.ImportPath
 	})
 end:
 	return sorted

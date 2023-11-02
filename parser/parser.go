@@ -13,11 +13,16 @@ import (
 )
 
 type GoFileParser struct {
-	Files scanner.Files
+	Files       scanner.Files
+	ModuleGraph *ModuleGraph
+	rootDir     string
 }
 
-func NewGoFileParser() *GoFileParser {
-	return &GoFileParser{}
+func NewGoFileParser(mg *ModuleGraph, rootDir string) *GoFileParser {
+	return &GoFileParser{
+		ModuleGraph: mg,
+		rootDir:     rootDir,
+	}
 }
 
 func (p *GoFileParser) ParseChan(ctx context.Context, inFilesChan, outFilesChan chan scanner.File) (err error) {
@@ -70,7 +75,7 @@ func (p *GoFileParser) parseModFile(ctx context.Context, file scanner.File) (mf 
 	if err != nil {
 		goto end
 	}
-	mf = NewModFile(file, content)
+	mf = NewModFile(file, content, p.ModuleGraph, p.rootDir)
 end:
 	return mf, err
 }
