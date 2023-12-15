@@ -1,7 +1,7 @@
 package persister
 
 import (
-	"gerardus/collector"
+	"github.com/mikeschinkel/gerardus/collector"
 )
 
 type SQLGenerator interface {

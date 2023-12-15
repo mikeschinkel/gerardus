@@ -1,45 +1,48 @@
 package cli
 
 import (
-	"fmt"
+	"github.com/mikeschinkel/go-serr"
 )
 
-type FlagValuesMap map[string]*ValueUnion
+var _ items = (Flags)(nil)
 
-var flagValuesMap = make(FlagValuesMap, 32)
+type Flags []*Flag
 
-type Flags []Flag
-type Flag struct {
-	Switch string
-	Arg
+func (flags Flags) Len() int {
+	return len(flags)
 }
 
-func (f Flag) String() string {
-	return fmt.Sprintf(" [-%s=<%s>]", f.Switch, f.Name)
-}
-
-// Unique returns a string that uniquely identifies a flag for its command
-func (f Flag) Unique() string {
-	return fmt.Sprintf("%s:%s", f.Parent.Unique(), f.Name)
-}
-
-func (flgs Flags) validate() (err error) {
-	cmd, _, err := InvokedCommand()
-	if err != nil {
-		goto end
+func (flags Flags) Helpers() (helpers []helper) {
+	helpers = make([]helper, len(flags))
+	for i, flag := range flags {
+		helpers[i] = flag
 	}
-	for _, f := range cmd.InvokedFlags() {
-		if f.CheckFunc == nil {
-			continue
+	return helpers
+}
+
+func (flags Flags) DisplayWidth(minWidth int) (width int) {
+	width = minWidth
+	for _, flag := range flags {
+		width = max(width, len(flag.Name))
+	}
+	return
+}
+
+// RequiresSatisfied ensures that values of .Requires are satisfied
+func (flags Flags) RequiresSatisfied() (err error) {
+	for _, flag := range flags {
+		err = flag.RequiresSatisfied()
+		if err != nil {
+			goto end
 		}
-		switch {
-		case f.SetStringValFunc != nil:
-			err = f.CheckFunc(f.CheckMode, flagValuesMap[f.Unique()].String)
-		case f.SetIntValFunc != nil:
-			err = f.CheckFunc(f.CheckMode, flagValuesMap[f.Unique()].Int)
-		default:
-			f.noSetFuncAssigned()
-		}
+	}
+end:
+	return serr.Cast(err)
+}
+
+func (flags Flags) Validate() (err error) {
+	for _, f := range flags {
+		err = f.Validate()
 		if err != nil {
 			goto end
 		}
@@ -48,19 +51,30 @@ end:
 	return err
 }
 
-// InvokedFlagValuesMap returns a map of the invoked flags
-func (f Flag) InvokedFlagValuesMap() (m FlagValuesMap, err error) {
-	var flags Flags
+func (flags Flags) SignatureHelp() (s string) {
+	for _, flag := range flags {
+		s += flag.SignatureHelp()
+	}
+	return s
+}
 
-	cmd, _, err := InvokedCommand()
-	if err != nil {
-		goto end
+// callSetValueFuncs calls the user-supplied f.Arg.SetValueFunc() for each flag
+// that has been invoked for this command either from the CLI or that has a
+// default, and passes that func the value f.Initialize() stored in the flag so
+// that whatever value the user wanted to be initialized got initialized.
+func (flags Flags) callSetValueFuncs() {
+	for _, f := range flags {
+		f.callSetValueFunc(f.Type, f.Value)
 	}
-	flags = cmd.InvokedFlags()
-	m = make(FlagValuesMap)
-	for _, flg := range flags {
-		m[flg.Switch] = flagValuesMap[flg.Unique()]
+}
+
+// Initialize initializes the flag package flags by calling the flag package's
+// flag.<Type>Var() function on a pointer to f.Arg.Value.<type> so that this flag
+// 'f' will get the values passed on the command line, or the defaults if not
+// passed.
+func (flags Flags) Initialize() (err error) {
+	for _, f := range flags {
+		f.Initialize()
 	}
-end:
-	return m, err
+	return err
 }

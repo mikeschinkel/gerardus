@@ -1,12 +1,11 @@
-package main
+package app
 
 import (
 	"context"
 	"fmt"
 
-	"gerardus/cli"
-	"gerardus/options"
-	"gerardus/persister"
+	"github.com/mikeschinkel/gerardus/cli"
+	"github.com/mikeschinkel/gerardus/persister"
 )
 
 //goland:noinspection GoUnusedGlobalVariable
@@ -20,22 +19,22 @@ var CmdAddCodebase = CmdAdd.
 //	Usage:            "URL for versioned source of a Project repo",
 //	Optional:         true,
 //	CheckFunc:        checkSourceURL,
-//	SetStringValFunc: options.SetSourceURL,
+//	SetStringValueFunc: options.SetSourceURL,
 //})
 
-func ExecAddCodebase(args cli.ArgsMap) (err error) {
+func ExecAddCodebase(i *cli.CommandInvoker) (err error) {
 	var p persister.Project
 
 	ds := persister.GetDataStore()
 
-	project := options.ProjectName()
-	versionTag := options.VersionTag()
-	sourceURL := options.SourceURL()
+	project := i.ArgString(ProjectArg)
+	versionTag := i.ArgString(VersionTagArg)
+	sourceURL := i.ArgString(SourceURLArg)
 
 	ctx := context.Background()
 	p, err = ds.LoadProjectByName(ctx, project)
 	if err != nil {
-		err = errProjectNotFound.Err(err, "project", project)
+		err = ErrProjectNotFound.Err(err, "project", project)
 		goto end
 	}
 	if versionTag != "." && len(sourceURL) == 0 {
@@ -43,7 +42,7 @@ func ExecAddCodebase(args cli.ArgsMap) (err error) {
 		sourceURL, err = persister.ComposeCodebaseSourceURL(p.RepoUrl, versionTag)
 	}
 	if err != nil {
-		err = errInvalidCodebaseSourceURL.Err(err,
+		err = ErrInvalidCodebaseSourceURL.Err(err,
 			"project", project,
 			"version_tag", versionTag,
 			"repo_url", p.RepoUrl,
@@ -57,7 +56,7 @@ func ExecAddCodebase(args cli.ArgsMap) (err error) {
 		SourceUrl:  sourceURL,
 	})
 	if err != nil {
-		err = errAddingCodebase.Err(err,
+		err = ErrAddingCodebase.Err(err,
 			"project_id", p.ID,
 			"version_tag", versionTag,
 			"project", project,
@@ -75,13 +74,13 @@ end:
 	return err
 }
 
-//func checkSourceURL(mode cli.ArgCheckMode, url any) (err error) {
+//func checkSourceURL(requires cli.ArgRequires, url any) (err error) {
 //	sourceURL := url.(string)
-//	switch mode {
+//	switch requires {
 //	case cli.MustExist:
 //		err = cli.CheckURL(sourceURL)
 //		if err != nil {
-//			err = errSourceURLAppearsInvalid.Err(err, "source_url", sourceURL)
+//			err = ErrSourceURLAppearsInvalid.Err(err, "source_url", sourceURL)
 //			goto end
 //		}
 //	case cli.OkToExist:

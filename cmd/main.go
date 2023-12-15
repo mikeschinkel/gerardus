@@ -2,43 +2,15 @@ package main
 
 import (
 	"context"
+	"os"
 
-	"gerardus/cli"
-	"gerardus/collector"
-	"gerardus/logger"
-	"gerardus/options"
-	"gerardus/parser"
-	"gerardus/persister"
+	"github.com/mikeschinkel/gerardus/app"
 )
 
 func main() {
-	var err error
-	err = logger.Initialize(opts)
+	help, err := app.Main(context.TODO(), os.Args, app.MainOpts{})
 	if err != nil {
-		usage("%s.", err.Error())
-	}
-	err = options.Initialize(opts)
-	if err != nil {
-		usage("%s.", err.Error())
-	}
-	err = cli.Initialize(opts)
-	if err != nil {
-		usage("%s.", err.Error())
-	}
-	err = persister.Initialize(context.Background(),
-		options.DataFile(),
-		collector.SymbolTypes,
-		parser.PackageTypes,
-	)
-	if err != nil {
-		usage("Failed to initialize data store; %s", err.Error())
-	}
-	err = cli.ValidateCLIArgs()
-	if err != nil {
-		usage("%s.", err.Error())
-	}
-	err = cli.ExecInvokedCommand()
-	if err != nil {
-		usage("Failed to scan source; %s", err.Error())
+		help.Usage(err, os.Stderr)
+		os.Exit(1)
 	}
 }

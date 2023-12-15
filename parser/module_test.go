@@ -3,7 +3,7 @@ package parser_test
 import (
 	"testing"
 
-	"gerardus/parser"
+	"github.com/mikeschinkel/gerardus/parser"
 )
 
 type newModuleWant struct {
@@ -44,7 +44,7 @@ func getModuleGraph() *parser.ModuleGraph {
 
 	pm = mg.AddProjectModule(&parser.ModuleArgs{
 		ModuleGraph: mg,
-		Name:        "gerardus/cmd",
+		Name:        "github.com/mikeschinkel/gerardus/cmd",
 		PackageType: parser.GoModPackage,
 		GoVersion:   "1.20",
 		Version:     ".",

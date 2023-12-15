@@ -67,10 +67,9 @@ func (mg *ModuleGraph) addModule(args *ModuleArgs) (m *Module) {
 		mv.ModPath = m.GoModPath()
 		mg.ModuleMap[m.Name()] = mv
 	}
-	modDir := m.GoModDir()
-	_, ok = mv.VersionMap[modDir]
+	_, ok = mv.VersionMap[mv.ModPath]
 	if !ok {
-		mv.VersionMap[modDir] = m
+		mv.VersionMap[mv.ModPath] = m
 	}
 	mutex.Unlock()
 	return m
@@ -134,29 +133,40 @@ end:
 	return m
 }
 
+// GetGoModByExactPath returns a module for a go.mod based upon an exact path
+func (mg *ModuleGraph) GetGoModByExactPath(path string) (gm *Module, found bool) {
+	for _, mv := range mg.ModuleMap {
+		if !mv.GoMod {
+			continue
+		}
+		if path == mv.ModPath {
+			gm = mv.Module
+			found = true
+			goto end
+		}
+	}
+end:
+	return gm, found
+}
+
 // DispenseGoModByPath returns a module for a go.mod based upon a path that has
 // the go.mod's path as a string prefix, e.g.:
 //
 //			For /foo/go.mod then /foo/bar/baz will return module for /foo/go.mod,
 //	   Except if a /foo/bar/go.mod then it will return module for /foo/bar/go.mod,
 //	   OTOH will return `nil` for path="github.com/example/project"
-func (mg *ModuleGraph) DispenseGoModByPath(path string) (m *Module) {
+func (mg *ModuleGraph) DispenseGoModByPath(path string) (gm *Module) {
 	var ok bool
 
-	m, ok = mg.pathGoModMap[path]
+	gm, ok = mg.pathGoModMap[path]
 	if ok {
 		goto end
 	}
 
 	for {
-		var mv *ModuleVersions
-		mv, ok = mg.ModuleMap[path]
+		gm, ok = mg.GetGoModByExactPath(path)
 		if ok {
-			m = mv.Module
 			goto end
-		}
-		if !mv.GoMod {
-			continue
 		}
 		if path == "." {
 			goto end
@@ -168,9 +178,9 @@ func (mg *ModuleGraph) DispenseGoModByPath(path string) (m *Module) {
 	}
 end:
 	if _, ok = mg.pathGoModMap[path]; !ok {
-		mg.pathGoModMap[path] = m
+		mg.pathGoModMap[path] = gm
 	}
-	return m
+	return gm
 }
 
 // DispenseModule returns a *Module given a module name and path to source file where imported
@@ -237,7 +247,7 @@ func (mg *ModuleGraph) DispenseLocalPackage(importPath, source string) (pkg *Pac
 	}
 
 	// Now create a package based on the above.
-	pkg = dispensePackage(&PackageArgs{
+	pkg = newPackage(&PackageArgs{
 		ImportPath: importPath,
 		Type:       pt,
 		Version:    ".",

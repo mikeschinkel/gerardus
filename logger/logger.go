@@ -13,15 +13,12 @@ import (
 
 var LogFilename string
 
-var options = Options{
-	logDir:  ".",
-	showLog: false,
-}
+var options Options
 
 type ReplacerFunc func(groups []string, a slog.Attr) slog.Attr
 
 var logger *slog.Logger
-var replacerFuncs = []ReplacerFunc{}
+var replacerFuncs []ReplacerFunc
 
 func AddReplacer(r ReplacerFunc) {
 	replacerFuncs = append(replacerFuncs, r)
@@ -33,14 +30,24 @@ type Opts interface {
 	AppName() string
 	EnvPrefix() string
 }
+type Params struct {
+	Name      string
+	EnvPrefix string
+}
 
-func Initialize(opts Opts) (err error) {
+func Initialize(params Params) (err error) {
 	var h slog.Handler
 	var w io.Writer
 
-	options.initArgOpts = opts
+	replacerFuncs = make([]ReplacerFunc, 0)
 
-	LogFilename = strings.ToLower(opts.AppName() + ".log")
+	options = Options{
+		logDir:    ".",
+		showLog:   false,
+		envPrefix: params.EnvPrefix,
+	}
+
+	LogFilename = strings.ToLower(params.Name + ".log")
 
 	if options.LogLevel() == LogLevelNone {
 		slog.SetDefault(slog.New(NullSLogHandler{}))
@@ -177,11 +184,11 @@ func (n NullSLogHandler) WithGroup(_ string) slog.Handler {
 }
 
 type Options struct {
-	logDir      string
-	logLevel    string
-	sLogLevel   slog.Leveler
-	showLog     bool
-	initArgOpts Opts
+	logDir    string
+	logLevel  string
+	sLogLevel slog.Leveler
+	showLog   bool
+	envPrefix string
 	// Additional fields as required
 }
 
@@ -190,7 +197,7 @@ func (o *Options) LogDir() string {
 }
 
 func (o *Options) LogLevel() LogLevelName {
-	level := os.Getenv(o.initArgOpts.EnvPrefix() + "LOG_LEVEL")
+	level := os.Getenv(o.envPrefix + "LOG_LEVEL")
 	if len(level) > 0 {
 		o.logLevel = level
 	}

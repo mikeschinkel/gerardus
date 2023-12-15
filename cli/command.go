@@ -1,38 +1,86 @@
 package cli
 
 import (
-	"flag"
-	"os"
+	"fmt"
+	"reflect"
 	"slices"
-	"strconv"
 	"strings"
 )
 
 type Command struct {
-	Name          string
-	Parent        *Command
-	ExecFunc      ExecFunc
-	Flags         Flags
-	Args          Args
-	SubCommands   CommandMap
-	invokedFlags  Flags
-	argsMap       ArgsMap
-	flagValuesMap FlagValuesMap
+	Name         string
+	Parent       *Command
+	ExecFunc     ExecFunc
+	Flags        Flags
+	Args         Args
+	SubCommands  CommandMap
+	invokedFlags Flags
+	argsMap      ArgsMap
 }
 
 func NewCommand(name string, ef ExecFunc) *Command {
 	return &Command{
-		Name:          name,
-		ExecFunc:      ef,
-		Flags:         make(Flags, 0),
-		Args:          make(Args, 0),
-		SubCommands:   make(CommandMap),
-		flagValuesMap: make(FlagValuesMap, 8),
+		Name:        name,
+		ExecFunc:    ef,
+		Flags:       make(Flags, 0),
+		Args:        make(Args, 0),
+		SubCommands: make(CommandMap),
 	}
 }
 
-func (c *Command) ExecuteFunc(args ArgsMap) error {
-	return c.ExecFunc(args)
+func (c *Command) FullName() (name string) {
+	if c.Parent == nil {
+		name = c.Name
+		goto end
+	}
+	name = fmt.Sprintf("%s %s", c.Parent.FullName(), c.Name)
+	if name[0] == ' ' {
+		name = name[1:]
+	}
+end:
+
+	return name
+}
+
+func (c *Command) IsLeaf() bool {
+	return len(c.SubCommands) == 0
+}
+
+func (c *Command) Help() string {
+	var helpCmds []string
+	helpCmds = make([]string, 0)
+	for _, subCmd := range c.SubCommands {
+		//if !c.IsLeaf() {
+		//	continue
+		//}
+		helpCmds = append(helpCmds, subCmd.subHelp()...)
+	}
+	slices.Sort(helpCmds)
+	return strings.Join(helpCmds, "")
+}
+
+func (c *Command) subHelp() (help []string) {
+	if len(c.SubCommands) == 0 {
+		help = []string{c.SignatureHelp()}
+		goto end
+	}
+	for _, subCmd := range c.SubCommands {
+		//if !c.IsLeaf() {
+		//	continue
+		//}
+		help = append(help, subCmd.subHelp()...)
+	}
+end:
+	return help
+}
+
+func (c *Command) SignatureHelp() string {
+	var sb = strings.Builder{}
+	sb.WriteString(fmt.Sprintf("%s%s- %s", Indent, Indent, c.FullName()))
+	sb.WriteString(c.Flags.SignatureHelp())
+	sb.WriteString(c.Args.SignatureHelp())
+	sb.WriteByte('\n')
+	return sb.String()
 }
 
 func (c *Command) AddSubCommand(name string, ef ExecFunc) (cmd *Command) {
@@ -42,13 +90,13 @@ func (c *Command) AddSubCommand(name string, ef ExecFunc) (cmd *Command) {
 	return cmd
 }
 
-func (c *Command) AddFlag(flg Flag) (cmd *Command) {
+func (c *Command) AddFlag(flg *Flag) (cmd *Command) {
 	flg.Parent = c
 	if flg.Default == nil {
-		switch {
-		case flg.SetStringValFunc != nil:
+		switch flg.Type {
+		case reflect.String:
 			flg.Default = ""
-		case flg.SetIntValFunc != nil:
+		case reflect.Int:
 			flg.Default = 0
 		default:
 			flg.noSetFuncAssigned()
@@ -95,130 +143,66 @@ end:
 }
 
 func (c *Command) String() string {
-	sb := strings.Builder{}
-	sb.WriteString(c.Name)
-	//if len(c.InvokedFlags()) > 0 && c.Name != "help" {
-	//	for _, flg := range c.InvokedFlags() {
-	//		sb.WriteString(" [-")
-	//		sb.WriteString(flg.Name)
-	//		sb.WriteString("=<")
-	//		sb.WriteString(flg.Name)
-	//		sb.WriteString(">] ")
-	//	}
-	//}
-	//if len(c.Args) > 0 {
-	//	sb.WriteString(" <")
-	//	sb.WriteString(strings.Join(c.Args, "> <"))
-	//	sb.WriteByte('>')
-	//}
-	//if len(c.OptArgs) > 0 {
-	//	var i int
-	//	var arg string
-	//	for i, arg = range c.OptArgs {
-	//		sb.WriteString(" [<")
-	//		sb.WriteString(arg)
-	//		sb.WriteByte('>')
-	//	}
-	//	sb.WriteString(strings.Repeat("]", i+1))
-	//}
-	return sb.String()
+	return c.Name
 }
 
 // commandDepth returns how deep the command is.
 // e.g. `myapp -a 10 -b hello foo bar baz` would be commandDepth 3 for `foo bar baz`
 func (c *Command) commandDepth() (n int) {
-	for c.Parent != nil {
-		c = c.Parent
+	p := c
+	for p.Parent != nil {
+		p = p.Parent
 		n++
 	}
 	return n
 }
 
-func (c *Command) ArgsMap() (_ ArgsMap, err error) {
-	var index int
-	var args []string
+//func (c *Command) ArgsMap(args []string) (_ ArgsMap, err error) {
+//	var index, depth int
+//
+//	if len(c.argsMap) > 0 {
+//		goto end
+//	}
+//	c.argsMap = make(ArgsMap)
+//
+//	depth = c.commandDepth()
+//	if depth >= len(args) {
+//		goto end
+//	}
+//	args = args[1+depth:]
+//
+//	for _, arg := range c.Args {
+//		if index < len(args) {
+//			value := args[index]
+//			if value[0] == '-' {
+//				continue
+//			}
+//			index++
+//			arg.Value.string = value
+//		}
+//		arg.Value.Type = arg.Type
+//		c.argsMap[arg.Name] = arg
+//	}
+//end:
+//	return c.argsMap, err
+//}
 
-	if len(c.argsMap) > 0 {
-		goto end
+// callSetArgValueFuncs sets the Value values
+func (c *Command) callSetArgValueFuncs(args []string) (err error) {
+	var index, depth int
+	depth = c.commandDepth()
+	if depth <= len(args) {
+		args = args[:depth]
 	}
-
-	args = os.Args[1+c.commandDepth():]
-
-	c.argsMap = make(ArgsMap)
+	// Loop through all args defined for this command
 	for _, arg := range c.Args {
 		if index < len(args) {
-			value := args[index]
+			// If we received the arg on the CLI then assign it
+			arg.callSetValueFunc(arg.Type, args[index])
 			index++
-			if value[0] == '-' {
-				continue
-			}
-			switch {
-			case arg.SetStringValFunc != nil:
-				arg.Value.String = value
-			case arg.SetIntValFunc != nil:
-				var n int
-				n, err = strconv.Atoi(value)
-				if err != nil {
-					goto end
-				}
-				arg.Value.Int = n
-			}
+			continue
 		}
-		c.argsMap[arg.Name] = arg
-	}
-end:
-	return c.argsMap, err
-}
-
-// SetArgValues sets the ValueUnion values
-func (c *Command) SetArgValues() error {
-	am, err := c.ArgsMap()
-	if err != nil {
-		goto end
-	}
-	for _, arg := range am {
-		switch {
-		case arg.SetStringValFunc != nil:
-			arg.SetStringValFunc(arg.String())
-		case arg.SetIntValFunc != nil:
-			arg.SetIntValFunc(arg.Value.Int)
-			//default:
-			//	arg.noSetFuncAssigned()
-		}
-	}
-end:
-	return err
-}
-
-// SetFlagValues sets the ValueUnion values
-func (c *Command) SetFlagValues() {
-	for _, f := range c.InvokedFlags() {
-		fv := flagValuesMap[f.Unique()]
-		switch {
-		case f.SetStringValFunc != nil:
-			f.SetStringValFunc(fv.String)
-		case f.SetIntValFunc != nil:
-			f.SetIntValFunc(fv.Int)
-		default:
-			f.noSetFuncAssigned()
-		}
-	}
-
-}
-
-// AddFlags initializes the flag package flags
-func (c *Command) AddFlags() (err error) {
-	for _, f := range c.InvokedFlags() {
-		fu := ValueUnion{}
-		flagValuesMap[f.Unique()] = &fu
-		switch {
-		case f.SetStringValFunc != nil:
-			flag.StringVar(&fu.String, f.Switch, f.Default.(string), f.Usage)
-		case f.SetIntValFunc != nil:
-			flag.IntVar(&fu.Int, f.Switch, f.Default.(int), f.Usage)
-		default:
-			f.noSetFuncAssigned()
-		}
+		arg.callSetValueFunc(arg.Type, arg.Value)
 	}
 	return err
 }
@@ -236,30 +220,42 @@ func (c *Command) RequiredArgsCount() (cnt int) {
 
 // OptionalArgsCount returns the number of optional args
 func (c *Command) OptionalArgsCount() (cnt int) {
-	return c.ArgsCount() - c.RequiredArgsCount()
+	return c.DeclaredArgsCount() - c.RequiredArgsCount()
 }
 
-// ArgsCount returns the number of total args; required and optional
-func (c *Command) ArgsCount() (cnt int) {
+// DeclaredArgsCount returns the number of total args; required and optional
+func (c *Command) DeclaredArgsCount() (cnt int) {
 	return len(c.Args)
 }
 
-func (c *Command) AddArg(arg Arg) (cmd *Command) {
+func (c *Command) AddArg(arg *Arg) (cmd *Command) {
 	arg.Parent = c
-
-	if arg.SetStringValFunc == nil && arg.SetIntValFunc == nil {
-		arg.SetStringValFunc = func(s string) {}
-	}
-	if arg.Default == nil {
-		switch {
-		case arg.SetStringValFunc != nil:
-			arg.Default = ""
-		case arg.SetIntValFunc != nil:
-			arg.Default = 0
-			//default:
-			//	arg.noSetFuncAssigned()
-		}
-	}
-	c.Args = append(c.Args, arg)
+	c.Args = append(c.Args, NewArg(arg))
 	return c
+}
+
+// InvokedFlags returns all the flags for th invoked command, including all
+// parent flags including the root flags.
+func (c *Command) InvokedFlags() (flags Flags) {
+	var cmds []*Command
+	var cmd *Command
+
+	if c.invokedFlags != nil {
+		goto end
+	}
+	cmds = []*Command{c}
+	cmd = c
+	for cmd.Parent != nil {
+		cmds = append(cmds, cmd.Parent)
+		cmd = cmd.Parent
+	}
+	slices.Reverse(cmds)
+	for _, cmd = range cmds {
+		if len(cmd.Flags) == 0 {
+			continue
+		}
+		flags = append(flags, cmd.Flags...)
+	}
+end:
+	return flags
 }

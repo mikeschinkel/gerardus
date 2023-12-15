@@ -17,6 +17,7 @@ type Module struct {
 	*Package
 	*GoMod
 	Parent      *Module
+	Module      *Module
 	ModuleGraph *ModuleGraph
 	pathMap     PathMap
 	debugString string
@@ -25,6 +26,7 @@ type Module struct {
 type ModuleArgs struct {
 	ModuleGraph *ModuleGraph
 	Parent      *Module
+	Module      *Module
 	Name        string
 	PackageDir  string
 	Version     string
@@ -41,31 +43,36 @@ func newModule(args *ModuleArgs) *Module {
 	if args.PackageDir == "" {
 		args.PackageDir = filepath.Dir(args.Path)
 	}
-	pkg := dispensePackage(&PackageArgs{
+	m := &Module{}
+	pkg := newPackage(&PackageArgs{
 		ImportPath:  args.Name,
 		Directory:   args.PackageDir,
 		Type:        args.PackageType,
 		Version:     args.Version,
 		ModuleGraph: args.ModuleGraph,
+		Module:      m,
 	})
-	switch pkg.Type {
-	case GoModPackage:
+	if args.Version == "." {
+		// Only create this for Go mod that are being loaded.
 		gm = &GoMod{
 			Version: args.GoVersion,
 			Path:    args.Path,
 		}
+	} else {
+		// Go Mods that are dependent on other go mods will reference the source go mod
+		// and will have a long version, e.g. v0.0.0-00010101000000-000000000000, so we
+		// do n\ot need to recreate GoMod as we already have it.
+		gm = args.Parent.GoMod
 	}
-	m := &Module{
-		Package:     pkg,
-		GoMod:       gm,
-		ModuleGraph: args.ModuleGraph,
-		pathMap:     make(PathMap),
-	}
+	m.Package = pkg
+	m.GoMod = gm
+	m.ModuleGraph = args.ModuleGraph
+	m.Parent = args.Parent
+	m.pathMap = make(PathMap)
 	m.debugString = fmt.Sprintf("[go%s] %s",
 		args.GoVersion,
 		args.Name,
 	)
-	pkg.Module = m
 
 	switch pkg.Type {
 	case StdLibPackage:

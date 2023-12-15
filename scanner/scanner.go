@@ -9,9 +9,9 @@ import (
 	"slices"
 	"strings"
 
-	"gerardus/channels"
-	"gerardus/options"
-	"gerardus/paths"
+	"github.com/mikeschinkel/gerardus/channels"
+	"github.com/mikeschinkel/gerardus/options"
+	"github.com/mikeschinkel/gerardus/paths"
 )
 
 type DoScanFunc func(path string) bool

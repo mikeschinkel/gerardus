@@ -1,39 +1,41 @@
-package main
+package app
 
 import (
 	"context"
 	"fmt"
 	"log/slog"
 	"os"
+	"reflect"
 	"regexp"
 
-	"gerardus/channels"
-	"gerardus/cli"
-	"gerardus/collector"
-	"gerardus/options"
-	"gerardus/parser"
-	"gerardus/persister"
-	"gerardus/scanner"
-	"gerardus/surveyor"
+	"github.com/mikeschinkel/gerardus/channels"
+	"github.com/mikeschinkel/gerardus/cli"
+	"github.com/mikeschinkel/gerardus/collector"
+	"github.com/mikeschinkel/gerardus/options"
+	"github.com/mikeschinkel/gerardus/parser"
+	"github.com/mikeschinkel/gerardus/persister"
+	"github.com/mikeschinkel/gerardus/scanner"
+	"github.com/mikeschinkel/gerardus/surveyor"
 )
 
 //goland:noinspection GoUnusedGlobalVariable
 var CmdMap = cli.AddCommandWithFunc("map", ExecMap).
 	AddArg(projectArg.MustExist()).
 	AddArg(versionTagArg.MustExist()).
-	AddFlag(cli.Flag{
+	AddFlag(&cli.Flag{
 		Switch: "src",
-		Arg: cli.Arg{
-			Name:             "source_dir",
-			Usage:            "Source directory",
-			Default:          defaultSourceDir(opts),
-			CheckFunc:        checkDir,
-			SetStringValFunc: options.SetSourceDir,
+		Arg: &cli.Arg{
+			Name:         "source_dir",
+			Usage:        "Source directory",
+			Type:         reflect.String,
+			Default:      defaultSourceDir(opts),
+			CheckFunc:    checkDir,
+			SetValueFunc: options.SetSourceDir,
 		},
 	})
 
 //goland:noinspection GoUnusedParameter
-func ExecMap(args cli.ArgsMap) (err error) {
+func ExecMap(i *cli.CommandInvoker) (err error) {
 	var ma mapArgs
 	var cs *surveyor.CodeSurveyor
 	var cb *parser.Codebase
@@ -43,8 +45,8 @@ func ExecMap(args cli.ArgsMap) (err error) {
 
 	fmt.Printf("Scanning Go source at %s...\n", options.SourceDir())
 
-	project := options.ProjectName()
-	versionTag := options.VersionTag()
+	project := i.ArgString(ProjectArg)
+	versionTag := i.ArgString(VersionTagArg)
 
 	cb = parser.NewCodebase(project, versionTag)
 	p = parser.NewProject(project, check.project.RepoUrl)
@@ -61,7 +63,7 @@ func ExecMap(args cli.ArgsMap) (err error) {
 	//err = mapWithSlices(ctx,ma)
 	err = mapWithChans(ctx, ma)
 	if err != nil {
-		err = errMapCommandFailed.Err(err, "source_dir", options.SourceDir())
+		err = ErrMapCommandFailed.Err(err, "source_dir", options.SourceDir())
 		goto end
 	}
 	fmt.Println("Scanning completed successfully.")
@@ -110,13 +112,13 @@ end:
 }
 
 // checkDir validates source directory
-func checkDir(mode cli.ArgCheckMode, dir any) (err error) {
+func checkDir(requires cli.ArgRequires, dir any) (err error) {
 	var info os.FileInfo
 	var absDir string
 
 	sDir := dir.(string)
 	if len(sDir) == 0 {
-		err = errDirIsEmpty
+		err = ErrDirIsEmpty
 		goto end
 	}
 
@@ -125,15 +127,16 @@ func checkDir(mode cli.ArgCheckMode, dir any) (err error) {
 		goto end
 	}
 
-	switch mode {
+	//goland:noinspection GoSwitchMissingCasesForIotaConsts
+	switch cli.Existence(requires) {
 	case cli.MustExist:
 		info, err = os.Stat(absDir)
 		if err != nil {
-			err = errReadingSourceDir.Err(err, "source_dir", absDir)
+			err = ErrReadingSourceDir.Err(err, "source_dir", absDir)
 			goto end
 		}
 		if !info.IsDir() {
-			err = errPathNotADir.Err(err, "source_dir", absDir)
+			err = ErrPathNotADir.Err(err, "source_dir", absDir)
 			goto end
 		}
 		dir = absDir // TODO Verify this actually sets the passed parameter

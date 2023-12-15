@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"go/ast"
 
-	"gerardus/channels"
+	"github.com/mikeschinkel/gerardus/channels"
 )
 
 var _ CodeFacet = (*FuncDecl)(nil)

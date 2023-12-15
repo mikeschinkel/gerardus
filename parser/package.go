@@ -40,16 +40,6 @@ func NewFlyweightPackage(importPath string) *Package {
 	}
 }
 
-func dispensePackage(args *PackageArgs) (pkg *Package) {
-	pkg = args.ModuleGraph.GetPackageByImportPath(args.ImportPath)
-	if pkg != nil {
-		goto end
-	}
-	pkg = newPackage(args)
-end:
-	return pkg
-}
-
 func newPackage(args *PackageArgs) *Package {
 	var pkg *Package
 	var dir string
@@ -165,7 +155,12 @@ end:
 }
 
 func (p Package) LocalSourceDir() (dir string) {
+	if strings.Contains(p.ImportPath, ".") {
+		dir = p.ExternalURL()
+		goto end
+	}
 	dir = fmt.Sprintf("%s/%s", filepath.Dir(p.GoModPath()), p.ImportPath)
+end:
 	return dir
 }
 

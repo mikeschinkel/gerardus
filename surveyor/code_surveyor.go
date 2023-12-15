@@ -2,13 +2,16 @@ package surveyor
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"path/filepath"
+	"reflect"
 
-	"gerardus/channels"
-	"gerardus/collector"
-	"gerardus/parser"
-	"gerardus/scanner"
+	"github.com/mikeschinkel/gerardus/channels"
+	"github.com/mikeschinkel/gerardus/collector"
+	"github.com/mikeschinkel/gerardus/parser"
+	"github.com/mikeschinkel/gerardus/scanner"
+	"github.com/mikeschinkel/go-typegen"
 	"golang.org/x/mod/modfile"
 	"golang.org/x/sync/errgroup"
 )
@@ -117,12 +120,12 @@ func (cs *CodeSurveyor) SurveyFile(ctx context.Context, f scanner.File, group *e
 
 //goland:noinspection GoUnusedParameter
 func (cs *CodeSurveyor) SurveyModFile(ctx context.Context, pmf *parser.ModFile) (err error) {
-	var pm, m *parser.Module
+	var pm *parser.Module
 	var modFile *modfile.File
 
-	modFile, err = modfile.Parse("go.mod", mf.Content, nil)
+	modFile, err = modfile.Parse("go.mod", pmf.Content, nil)
 	if err != nil {
-		err = errFailedToParseFile.Err(err, "filename", mf.Fullpath())
+		err = errFailedToParseFile.Err(err, "filename", pmf.Fullpath())
 		goto end
 	}
 	pmf.SetModFile(modFile)
@@ -139,19 +142,28 @@ func (cs *CodeSurveyor) SurveyModFile(ctx context.Context, pmf *parser.ModFile) 
 		cs.moduleGraph.AddDependentModule(pm, &parser.ModuleArgs{
 			Name:      mod.Path,
 			Version:   mod.Version,
+			Path:      mod.Path,
 			GoVersion: pmf.GoVersion(),
-			Path:      pm.Path,
 		})
 	}
-	err = channels.WriteTo(ctx, cs.facetChan, collector.CodeFacet(mf))
+	err = channels.WriteTo(ctx, cs.facetChan, collector.CodeFacet(pmf))
 	if err != nil {
 		goto end
 	}
-
+	showData(pm)
 end:
 	return err
 }
-
+func showData(m *parser.Module) {
+	subs := typegen.Substitutions{
+		reflect.TypeOf(reflect.Value{}): func(rv *reflect.Value) string {
+			return fmt.Sprintf("reflect.ValueOf(%v)", (*rv).Interface())
+		},
+	}
+	nm := typegen.NewNodeMarshaler(subs)
+	nodes := nm.Marshal(m)
+	fmt.Println(typegen.NewCodeBuilder("getData", "", nodes))
+}
 func (cs *CodeSurveyor) SurveyGoFile(ctx context.Context, gf *parser.GoFile, group *errgroup.Group) (err error) {
 	// TODO Make this work with Survey() in addition to SurveyChan().
 	c := collector.New(gf, cs.facetChan)

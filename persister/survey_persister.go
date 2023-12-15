@@ -4,11 +4,11 @@ import (
 	"context"
 	"log/slog"
 
-	"gerardus/channels"
-	"gerardus/collector"
-	"gerardus/parser"
-	"gerardus/scanner"
-	"gerardus/surveyor"
+	"github.com/mikeschinkel/gerardus/channels"
+	"github.com/mikeschinkel/gerardus/collector"
+	"github.com/mikeschinkel/gerardus/parser"
+	"github.com/mikeschinkel/gerardus/scanner"
+	"github.com/mikeschinkel/gerardus/surveyor"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -67,7 +67,7 @@ func (sp *SurveyPersister) PersistChan(ctx context.Context, facetChan chan colle
 	group.Go(func() (err error) {
 		err = sp.persistFacetChan(ctx, facetChan)
 		if err != nil {
-			err = errFailedWhilePersisting.Err(err)
+			err = ErrFailedWhilePersisting.Err(err)
 		}
 		return
 	})
@@ -84,7 +84,7 @@ func (sp *SurveyPersister) persistFacetChan(ctx context.Context, facetChan chan 
 		slog.Info("Inserting", args...)
 		err = insert(ctx, f)
 		if err != nil {
-			err = errFailedToInsertSpec.Err(err, args...)
+			err = ErrFailedToInsertSpec.Err(err, args...)
 		}
 		return err
 	}

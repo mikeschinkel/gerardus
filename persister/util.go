@@ -62,18 +62,35 @@ type GitHubRepoInfo struct {
 	Homepage    string `json:"homepage"`
 }
 
+func checkGitHubRepoURL(repoURL string) (parts []string, err error) {
+	if repoURL == "" {
+		err = ErrValueCannotBeEmpty.Args("which_value", RepoURLArg)
+		goto end
+	}
+	if repoURL == "." {
+		err = ErrInvalidGitHubRepoURL.Args(RepoURLArg, repoURL)
+		goto end
+	}
+	parts = strings.Split(repoURL, "/")
+	if len(parts) < 5 {
+		err = ErrInvalidGitHubRepoURL.Args(RepoURLArg, repoURL)
+		goto end
+	}
+end:
+	return parts, err
+}
+
 func RequestGitHubRepoInfo(repoURL string) (info *GitHubRepoInfo, err error) {
 	var body []byte
-	var parts []string
 	var owner, repo, apiURL string
 	var resp *http.Response
 
 	info = &GitHubRepoInfo{}
 
-	if repoURL == "." {
+	parts, err := checkGitHubRepoURL(repoURL)
+	if err != nil {
 		goto end
 	}
-	parts = strings.Split(repoURL, "/")
 	owner = parts[3]
 	repo = parts[4]
 
@@ -82,7 +99,10 @@ func RequestGitHubRepoInfo(repoURL string) (info *GitHubRepoInfo, err error) {
 	// Make the HTTP GET request
 	resp, err = http.Get(apiURL)
 	if err != nil {
-		err = fmt.Errorf("failed to make the HTTP request: %w", err)
+		err = ErrHTTPRequestFailed.Err(err,
+			"status_code", resp.StatusCode,
+			"request_url", apiURL,
+		)
 		goto end
 	}
 	defer Close(resp.Body, WarnOnError)

@@ -3,6 +3,8 @@ package parser
 import (
 	"fmt"
 	"strings"
+
+	. "github.com/mikeschinkel/go-lib"
 )
 
 type PackageVersion struct {
@@ -40,8 +42,8 @@ func (v PackageVersion) StdLibSourceURL() (url string) {
 // ExternalURL returns a URL for an external package at the given version.
 // Panics if the package is not external.
 func (v PackageVersion) ExternalURL() (url string) {
-	if v.Package.Type != ExternalPackage {
-		panicf("Unexpected; package type not External: %s", v.Package.Type.Name())
+	if !OneOf(v.Package.Type, ExternalPackage, GoModPackage, LocalPackage) {
+		panicf("Unexpected; package type not External, GoMod or Local: %s", v.Package.Type.Name())
 	}
 	genericURL := func() string {
 		// Just do our best
@@ -50,6 +52,10 @@ func (v PackageVersion) ExternalURL() (url string) {
 	host, after, found := strings.Cut(v.Package.ImportPath, "/")
 	if !found {
 		url = genericURL()
+		goto end
+	}
+	if v.Package.Type != ExternalPackage {
+		url = fmt.Sprintf("https://%s", v.Package.ImportPath)
 		goto end
 	}
 	switch host {

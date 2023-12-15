@@ -3,7 +3,7 @@ package parser_test
 import (
 	"testing"
 
-	"gerardus/parser"
+	"github.com/mikeschinkel/gerardus/parser"
 )
 
 type newPackageWant struct {
@@ -48,20 +48,20 @@ func TestNewPackage(t *testing.T) {
 		},
 		{
 			args: &parser.PackageArgs{
-				ImportPath: "gerardus/cmd",
+				ImportPath: "github.com/mikeschinkel/gerardus/cmd",
 				Type:       parser.GoModPackage,
 				Version:    ".",
 				Directory:  rootPath("cmd"),
 			},
 			want: newPackageWant{
-				ImportPath:  "gerardus/cmd",
+				ImportPath:  "github.com/mikeschinkel/gerardus/cmd",
 				PackageName: "cmd",
 				PackageType: parser.GoModPackage,
 				Directory:   rootPath("cmd"),
 				Version:     ".",
 				Sources: sourceWant{
-					Source:        "./gerardus/cmd",
-					SourceVersion: "./gerardus/cmd",
+					Source:        "https://github.com/mikeschinkel/gerardus/cmd",
+					SourceVersion: "https://github.com/mikeschinkel/gerardus/cmd",
 				},
 			},
 		},
@@ -114,7 +114,7 @@ func TestNewPackage(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.args.ImportPath+" — New()", func(t *testing.T) {
-			got := parser.DispensePackage(tt.args)
+			got := parser.NewPackage(tt.args)
 			equals(t, "Source", got.Source(), tt.want.Sources.Source)
 			equals(t, "Source Version", got.PackageVersion.Source(), tt.want.Sources.SourceVersion)
 			equals(t, "ImportPath", got.ImportPath, tt.want.ImportPath)

@@ -1,117 +1,94 @@
 package cli
 
 import (
-	"fmt"
-	"strconv"
+	"reflect"
 	"strings"
+
+	"github.com/mikeschinkel/go-serr"
 )
 
-type Args []Arg
-type ArgName = string
-type ArgsMap map[ArgName]Arg
+type Args []*Arg
 
-type ArgCheckMode int
+var _ items = (Args)(nil)
 
-const (
-	MustExist = iota
-	OkToExist
-	MustNotExist
-)
-
-type Arg struct {
-	Name             string
-	Parent           *Command
-	Usage            string
-	Default          interface{}
-	Optional         bool
-	CheckFunc        func(ArgCheckMode, any) error
-	SetStringValFunc func(string)
-	SetIntValFunc    func(int)
-	Value            ValueUnion
-	CheckMode        ArgCheckMode
-}
-
-func (arg Arg) IsZero() bool {
-	switch {
-	case arg.SetStringValFunc != nil:
-		return len(arg.Value.String) == 0
-	case arg.SetIntValFunc != nil:
-		return arg.Value.Int == 0
-	default:
-		panicf("Unhandled type for arg '%s'", arg.Unique())
+func (args Args) DisplayWidth(minWidth int) (width int) {
+	width = minWidth
+	for _, arg := range args {
+		width = max(width, len(arg.Name))
 	}
-	return false
+	return width
+}
+func (args Args) Len() int {
+	return len(args)
 }
 
-func (arg Arg) MustExist() Arg {
-	arg.CheckMode = MustExist
-	return arg
-}
-func (arg Arg) OkToExist() Arg {
-	arg.CheckMode = OkToExist
-	return arg
-}
-func (arg Arg) MustNotExist() Arg {
-	arg.CheckMode = MustNotExist
-	return arg
-}
-func (arg Arg) ClearCheck() Arg {
-	arg.CheckFunc = nil
-	return arg
-}
-
-func (arg Arg) String() string {
-	switch {
-	case arg.SetStringValFunc != nil:
-		return arg.Value.String
-	case arg.SetIntValFunc != nil:
-		return strconv.Itoa(arg.Value.Int)
-	default:
-		panicf("Unhandled type for arg '%s'", arg.Unique())
+func (args Args) Helpers() (helpers []helper) {
+	helpers = make([]helper, len(args))
+	for i, flag := range args {
+		helpers[i] = flag
 	}
-	return ""
+	return helpers
 }
 
-func (arg Arg) noSetFuncAssigned() {
-	panicf("No func(<type>) assigned to property `Set*ValFunc` for arg '%s'", arg.Unique())
-}
-
-func (arg Arg) Unique() string {
-	return fmt.Sprintf("%s:%s", arg.Parent.Unique(), arg.Name)
-}
-
-func (m ArgsMap) String() (s string) {
-	sb := strings.Builder{}
-	if len(m) == 0 {
-		goto end
+func (args Args) SignatureHelp() (help string) {
+	optCnt := 0
+	for _, arg := range args {
+		help += arg.SignatureHelp()
+		if arg.Optional {
+			optCnt++
+		}
 	}
-	for _, arg := range m {
-		sb.WriteString(arg.Name)
-		sb.WriteByte(' ')
+	if optCnt > 0 {
+		help += strings.Repeat("]", optCnt)
 	}
-	s = sb.String()
-	s = s[:len(s)-1]
+	return help
+}
+
+// RequiresSatisfied ensures that values of .Requires are satisfied
+func (args Args) RequiresSatisfied() (err error) {
+	for _, arg := range args {
+		err = arg.RequiresSatisfied()
+		if err != nil {
+			goto end
+		}
+	}
 end:
-	return s
+	return serr.Cast(err)
 }
 
-func (m ArgsMap) Validate() (err error) {
-	for _, arg := range m {
+func (args Args) Validate() (err error) {
+	for _, arg := range args {
 		if arg.CheckFunc == nil {
 			continue
 		}
-		switch {
-		case arg.SetStringValFunc != nil:
-			err = arg.CheckFunc(arg.CheckMode, arg.Value.String)
-		case arg.SetIntValFunc != nil:
-			err = arg.CheckFunc(arg.CheckMode, arg.Value.Int)
-			//default:
-			//	arg.noSetFuncAssigned()
+		//goland:noinspection GoSwitchMissingCasesForIotaConsts
+		switch arg.Type {
+		case reflect.String:
+			err = arg.CheckFunc(arg.Requires, arg.Value.string)
+		case reflect.Int:
+			err = arg.CheckFunc(arg.Requires, arg.Value.int)
+		default:
+			arg.noSetFuncAssigned()
 		}
 		if err != nil {
 			goto end
 		}
 	}
 end:
-	return err
+	return serr.Cast(err)
+}
+
+func (args Args) String() (s string) {
+	sb := strings.Builder{}
+	if len(args) == 0 {
+		goto end
+	}
+	for _, arg := range args {
+		sb.WriteString(string(arg.Name))
+		sb.WriteByte(' ')
+	}
+	s = sb.String()
+	s = s[:len(s)-1]
+end:
+	return s
 }

@@ -6,8 +6,8 @@ import (
 	"os"
 	"regexp"
 
-	"gerardus/paths"
-	"gerardus/scanner"
+	"github.com/mikeschinkel/gerardus/paths"
+	"github.com/mikeschinkel/gerardus/scanner"
 )
 
 type GoFile struct {

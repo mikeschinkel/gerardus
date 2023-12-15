@@ -1,16 +1,15 @@
-package main
+package app
 
 import (
-	"gerardus/logger"
-	"gerardus/options"
+	"github.com/mikeschinkel/gerardus/logger"
 )
 
 var _ logger.Opts = (*_opts)(nil)
-var _ options.Opts = (*_opts)(nil)
 
 type Opts interface {
 	AppName() string
 	EnvPrefix() string
+	Args() []string
 }
 
 var opts = _opts{
@@ -21,6 +20,7 @@ var opts = _opts{
 type _opts struct {
 	appName   string
 	envPrefix string
+	args      []string
 }
 
 func (o _opts) AppName() string {
@@ -28,4 +28,7 @@ func (o _opts) AppName() string {
 }
 func (o _opts) EnvPrefix() string {
 	return o.envPrefix
+}
+func (o _opts) Args() []string {
+	return o.args
 }

@@ -1,7 +1,7 @@
 package surveyor
 
 import (
-	"gerardus/serr"
+	"github.com/mikeschinkel/go-serr"
 )
 
 var (

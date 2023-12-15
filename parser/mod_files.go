@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gerardus/collector"
-	"gerardus/scanner"
+	"github.com/mikeschinkel/gerardus/collector"
+	"github.com/mikeschinkel/gerardus/scanner"
 	"golang.org/x/mod/modfile"
 	"golang.org/x/mod/module"
 )

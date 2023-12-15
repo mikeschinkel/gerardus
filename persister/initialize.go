@@ -4,8 +4,8 @@ import (
 	"context"
 	"log/slog"
 
-	"gerardus/collector"
-	"gerardus/parser"
+	"github.com/mikeschinkel/gerardus/collector"
+	"github.com/mikeschinkel/gerardus/parser"
 )
 
 func Initialize(ctx context.Context, fp string, etss ...any) (err error) {

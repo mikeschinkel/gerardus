@@ -3,7 +3,6 @@ package cli
 import (
 	"fmt"
 	"log/slog"
-	"os"
 	"strings"
 )
 
@@ -38,118 +37,67 @@ end:
 	return cmd, depth
 }
 
-var argsCount *int
+//func (i *CommandInvoker) ArgCount() (cnt int, err error) {
+//	var depth int
+//	_, depth, err = InvokedCommand(i.Tokens)
+//	if err != nil {
+//		goto end
+//	}
+//	cnt -= depth
+//end:
+//	return cnt, err
+//}
 
-func ArgsCount() (_ int, err error) {
-	var n, depth int
-	if argsCount != nil {
-		goto end
-	}
-	argsCount = &n
-	for _, arg := range os.Args[1:] {
-		if arg[0] == '-' {
-			continue
-		}
-		*argsCount++
-	}
-	_, depth, err = InvokedCommand()
-	if err != nil {
-		goto end
-	}
-	*argsCount -= depth
-end:
-	return *argsCount, err
-}
-
-func ExecInvokedCommand() (err error) {
-	var am ArgsMap
-	var expected, got int
-
-	cmd, _, err := InvokedCommand()
-	if err != nil {
-		goto end
-	}
-
+func (i *CommandInvoker) InvokeCommand() (err error) {
+	cmd := i.Command
 	slog.Info("Invoking command", "command", cmd.String())
-
-	expected = cmd.RequiredArgsCount()
-	got, err = ArgsCount()
-	if err != nil {
-		goto end
-	}
-	if got < expected {
-		err = fmt.Errorf("not enough CLI args passed; expected at least %d, got %d", expected, got)
-		goto end
-	}
-	expected = cmd.ArgsCount()
-	if got > expected {
-		err = fmt.Errorf("too many CLI args passed; expected no more than %d, got %d", expected, got)
-		goto end
-	}
-	am, err = cmd.ArgsMap()
-	err = cmd.ExecuteFunc(am)
-end:
+	err = cmd.ExecFunc(i)
 	return err
 }
 
-var invokedCommand *Command
-var commandDepth int
-
-func InvokedCommand() (_ *Command, _ int, err error) {
-	var arg string
+func InvokedCommand(tokens []string) (_ *Command, _ int, err error) {
+	var cmdName string
+	var cmd *Command
+	var depth int
 	var cnt int
 
-	if invokedCommand != nil {
-		goto end
-	}
-
-	arg, cnt, err = CommandString()
+	cmdName, cnt, err = CommandString(tokens)
 	if err != nil {
 		goto end
 	}
 
 	if cnt == 0 {
-		invokedCommand = RootCmd.SubCommands["help"]
+		cmd = RootCmd
 		goto end
 	}
-	invokedCommand, commandDepth = CommandByName(arg)
-	if invokedCommand != nil {
-		invokedCommand.Name = arg
-	}
+	cmd, depth = CommandByName(cmdName)
+	//if cmd != nil {
+	// This assigns "add project" that what which was previously "project"
+	// Not sure we actually want this.
+	//	cmd.Name = cmdName
+	//}
+
 end:
-	return invokedCommand, commandDepth, err
+	return cmd, depth, err
 }
 
-var (
-	commandString *string
-	commandCount  *int
-)
-
 // CommandString returns the full list of commands minus the flags
-func CommandString() (cs string, _ int, err error) {
+func CommandString(tokens []string) (cs string, _ int, err error) {
 	var sb strings.Builder
-	var n int
+	var cnt int
 	var cmds CommandMap
 
-	if commandString != nil {
-		goto end
-	}
-	commandString = &cs
 	cmds = RootCmd.SubCommands
-	commandCount = &n
 	sb = strings.Builder{}
-	for _, arg := range os.Args[1:] {
-		if arg[0] == '-' {
-			continue
-		}
-		if _, ok := cmds[arg]; !ok {
-			err = fmt.Errorf("command '%s' is not valid", arg)
+	for _, token := range tokens {
+		if _, ok := cmds[token]; !ok {
+			err = fmt.Errorf("command '%s' is not valid", token)
 			goto end
 		}
-		sb.WriteString(arg)
+		sb.WriteString(token)
 		sb.WriteByte(' ')
-		*commandCount++
-		cmds = cmds[arg].SubCommands
+		cnt++
+		cmds = cmds[token].SubCommands
 		if len(cmds) == 0 {
 			break
 		}
@@ -159,9 +107,8 @@ func CommandString() (cs string, _ int, err error) {
 		goto end
 	}
 	cs = cs[:len(cs)-1]
-	commandString = &cs
 end:
-	return *commandString, *commandCount, err
+	return cs, cnt, err
 }
 
 func AddCommand(name string) (cmd *Command) {

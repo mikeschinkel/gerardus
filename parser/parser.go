@@ -8,8 +8,8 @@ import (
 	"log/slog"
 	"os"
 
-	"gerardus/channels"
-	"gerardus/scanner"
+	"github.com/mikeschinkel/gerardus/channels"
+	"github.com/mikeschinkel/gerardus/scanner"
 )
 
 type GoFileParser struct {

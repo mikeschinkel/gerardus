@@ -1,3 +1,6 @@
 package persister
 
-const SqliteDB = "./data/gerardus.db"
+const (
+	SqliteDB   = "./gerardus.db"
+	RepoURLArg = "repo_url"
+)

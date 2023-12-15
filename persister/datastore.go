@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"log/slog"
 
-	"gerardus/paths"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/mikeschinkel/gerardus/paths"
 )
 
 var dataStore *DataStore

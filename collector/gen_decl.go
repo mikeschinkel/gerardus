@@ -5,7 +5,7 @@ import (
 	"go/ast"
 	"go/token"
 
-	"gerardus/channels"
+	"github.com/mikeschinkel/gerardus/channels"
 )
 
 func (c *Collector) CollectGenDecl(ctx context.Context, d *ast.GenDecl) (err error) {

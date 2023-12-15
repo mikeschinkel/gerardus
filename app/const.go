@@ -1,7 +1,8 @@
-package main
+package app
 
 import (
-	"gerardus/cli"
+	"github.com/mikeschinkel/gerardus/cli"
+	"github.com/mikeschinkel/gerardus/persister"
 )
 
 const (
@@ -12,7 +13,9 @@ const (
 const (
 	ProjectArg    cli.ArgName = "project"
 	VersionTagArg cli.ArgName = "version_tag"
-	RepoURLArg    cli.ArgName = "repo_url"
+	SourceURLArg  cli.ArgName = "source_url"
 	WebsiteArg    cli.ArgName = "website"
 	AboutArg      cli.ArgName = "about"
+
+	RepoURLArg cli.ArgName = persister.RepoURLArg
 )
