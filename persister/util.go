@@ -56,12 +56,6 @@ end:
 	return ok, err
 }
 
-// GitHubRepoInfo contains relevant information about a GitHub repository
-type GitHubRepoInfo struct {
-	Description string `json:"description"`
-	Homepage    string `json:"homepage"`
-}
-
 func checkGitHubRepoURL(repoURL string) (parts []string, err error) {
 	if repoURL == "" {
 		err = ErrValueCannotBeEmpty.Args("which_value", RepoURLArg)
@@ -80,12 +74,12 @@ end:
 	return parts, err
 }
 
-func RequestGitHubRepoInfo(repoURL string) (info *GitHubRepoInfo, err error) {
+func RequestGitHubRepoInfo(repoURL string) (info *RepoInfo, err error) {
 	var body []byte
 	var owner, repo, apiURL string
 	var resp *http.Response
 
-	info = &GitHubRepoInfo{}
+	info = &RepoInfo{}
 
 	parts, err := checkGitHubRepoURL(repoURL)
 	if err != nil {
