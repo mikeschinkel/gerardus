@@ -36,11 +36,12 @@ func TestAppMain(t *testing.T) {
 			stdErr: addProjectOutput(),
 			errStr: "argument cannot be empty [arg_name='<project>']",
 		},
-		//{
-		//	name:    "add project golang",
-		//	args:    []string{"add", "project", "golang"},
-		//	errStr: "*",
-		//},
+		{
+			name:   "add project golang",
+			args:   []string{"add", "project", "golang"},
+			stdErr: addProjectGoLangOutput(),
+			errStr: "argument cannot be empty [arg_name='<repo_url>']",
+		},
 		//{
 		//	name:    "add",
 		//	args:    []string{"codebase", "golang", "1.21.4"},
@@ -114,6 +115,28 @@ ERROR: There is no 'add' command, but there are these commands:
 func addProjectOutput() string {
 	return `
 ERROR: Argument cannot be empty [arg_name='<project>']:
+
+  Usage: gerardus [<options>] <command> [<args>]
+
+  Command:
+
+    - add project <project> <repo_url> [<about> [<website>]]
+
+        Args:
+
+          project:   Project name, e.g. 'golang'
+          repo_url:  The full GitHub repository URL for the project, e.g. https://github.com/golang/go
+          about:
+          website:
+
+        Global Options:
+
+          -data=<data_file>: Data file (sqlite3)
+`
+}
+func addProjectGoLangOutput() string {
+	return `
+ERROR: Argument cannot be empty [arg_name='<repo_url>']:
 
   Usage: gerardus [<options>] <command> [<args>]
 
