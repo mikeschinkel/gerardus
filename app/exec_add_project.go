@@ -16,10 +16,12 @@ var CmdAddProject = CmdAdd.
 	AddArg(&cli.Arg{
 		Name:     AboutArg,
 		Optional: true,
+		Usage:    "Repo description. Defaults to 'about' from the GitHub API",
 	}).
 	AddArg(&cli.Arg{
 		Name:     WebsiteArg,
 		Optional: true,
+		Usage:    "Project website URL. Defaults to 'website' from the GitHub API",
 	})
 
 func ExecAddProject(i *cli.CommandInvoker) (err error) {

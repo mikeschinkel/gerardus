@@ -126,8 +126,8 @@ ERROR: Argument cannot be empty [arg_name='<project>']:
 
           project:   Project name, e.g. 'golang'
           repo_url:  The full GitHub repository URL for the project, e.g. https://github.com/golang/go
-          about:
-          website:
+          about:     Repo description. Defaults to 'about' from the GitHub API
+          website:   Project website URL. Defaults to 'website' from the GitHub API
 
         Global Options:
 
@@ -148,8 +148,8 @@ ERROR: Argument cannot be empty [arg_name='<repo_url>']:
 
           project:   Project name, e.g. 'golang'
           repo_url:  The full GitHub repository URL for the project, e.g. https://github.com/golang/go
-          about:
-          website:
+          about:     Repo description. Defaults to 'about' from the GitHub API
+          website:   Project website URL. Defaults to 'website' from the GitHub API
 
         Global Options:
 
