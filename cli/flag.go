@@ -30,7 +30,6 @@ func (f *Flag) Initialize() {
 		f.noSetFuncAssigned()
 	}
 	f.Value = fu
-	//flagsMap[f.Unique()] = fu
 }
 
 func (f *Flag) String() string {
