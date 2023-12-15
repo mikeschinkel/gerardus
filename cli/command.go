@@ -187,22 +187,30 @@ func (c *Command) commandDepth() (n int) {
 //	return c.argsMap, err
 //}
 
-// callSetArgValueFuncs sets the Value values
-func (c *Command) callSetArgValueFuncs(args []string) (err error) {
+// callSetArgValues sets the Value values
+func (c *Command) callSetArgValues(args []string) (err error) {
 	var index, depth int
 	depth = c.commandDepth()
 	if depth <= len(args) {
-		args = args[:depth]
+		args = args[depth:]
 	}
 	// Loop through all args defined for this command
 	for _, arg := range c.Args {
-		if index < len(args) {
-			// If we received the arg on the CLI then assign it
-			arg.callSetValueFunc(arg.Type, args[index])
-			index++
-			continue
+		if index >= len(args) {
+			goto end
 		}
-		arg.callSetValueFunc(arg.Type, arg.Value)
+		// If we received the arg on the CLI then assign it
+		arg.Value = NewValue(arg.Type, args[index])
+		index++
+	}
+end:
+	return err
+}
+
+// callSetArgValueFuncs calls the SetValueFunc for each arg
+func (c *Command) callSetArgValueFuncs() (err error) {
+	for _, arg := range c.Args {
+		arg.callSetValueFunc()
 	}
 	return err
 }

@@ -165,17 +165,6 @@ func (arg *Arg) noSetFuncAssigned() {
 }
 
 // callSetValueFunc sets the Value for one arg
-func (arg *Arg) callSetValueFunc(t reflect.Kind, value any) {
-	var v *Value
-	switch tv := value.(type) {
-	case *Value:
-		v = tv
-		v.Type = t
-	case Value:
-		v = &tv
-		v.Type = t
-	default:
-		v = NewValue(t, value)
-	}
-	arg.SetValueFunc(v)
+func (arg *Arg) callSetValueFunc() {
+	arg.SetValueFunc(arg.Value)
 }

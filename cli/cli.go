@@ -22,7 +22,12 @@ func Initialize(params Params) (invoker *CommandInvoker, err error) {
 	}
 	invoker.Command = cmd
 
-	err = cmd.callSetArgValueFuncs(args)
+	err = cmd.callSetArgValues(args)
+	if err != nil {
+		goto end
+	}
+
+	err = cmd.callSetArgValueFuncs()
 	if err != nil {
 		goto end
 	}

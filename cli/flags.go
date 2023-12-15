@@ -64,7 +64,7 @@ func (flags Flags) SignatureHelp() (s string) {
 // that whatever value the user wanted to be initialized got initialized.
 func (flags Flags) callSetValueFuncs() {
 	for _, f := range flags {
-		f.callSetValueFunc(f.Type, f.Value)
+		f.callSetValueFunc()
 	}
 }
 
