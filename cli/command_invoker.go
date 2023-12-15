@@ -55,7 +55,7 @@ func (i *CommandInvoker) SubCommands() CommandMap {
 }
 
 // Validate validates args and options passed on the CLI
-func (i *CommandInvoker) Validate() (err error) {
+func (i *CommandInvoker) Validate(ctx Context) (err error) {
 	slog.Info("Validating CLI Args and Flags")
 	cmd := i.Command
 
@@ -73,11 +73,11 @@ func (i *CommandInvoker) Validate() (err error) {
 	if err != nil {
 		goto end
 	}
-	err = i.ValidateArgs()
+	err = i.ValidateArgs(ctx)
 	if err != nil {
 		goto end
 	}
-	err = i.ValidateFlags()
+	err = i.ValidateFlags(ctx)
 	if err != nil {
 		goto end
 	}
@@ -102,16 +102,16 @@ end:
 }
 
 // ValidateFlags validates options passed on the CLI
-func (i *CommandInvoker) ValidateFlags() (err error) {
-	return i.Command.InvokedFlags().Validate()
+func (i *CommandInvoker) ValidateFlags(ctx Context) (err error) {
+	return i.Command.InvokedFlags().Validate(ctx)
 }
 
 // ValidateArgs validates args passed on the CLI
-func (i *CommandInvoker) ValidateArgs() (err error) {
+func (i *CommandInvoker) ValidateArgs(ctx Context) (err error) {
 	var expected, got int
 
 	cmd := i.Command
-	err = cmd.Args.Validate()
+	err = cmd.Args.Validate(ctx)
 	if err != nil {
 		goto end
 	}

@@ -35,13 +35,12 @@ var CmdMap = cli.AddCommandWithFunc("map", ExecMap).
 	})
 
 //goland:noinspection GoUnusedParameter
-func ExecMap(i *cli.CommandInvoker) (err error) {
+func ExecMap(ctx context.Context, i *cli.CommandInvoker) (err error) {
 	var ma mapArgs
 	var cs *surveyor.CodeSurveyor
 	var cb *parser.Codebase
 	var p *parser.Project
 	var dir string
-	var ctx context.Context
 
 	fmt.Printf("Scanning Go source at %s...\n", options.SourceDir())
 
@@ -59,7 +58,6 @@ func ExecMap(i *cli.CommandInvoker) (err error) {
 		persister: persister.NewSurveyPersister(cs, persister.GetDataStore()),
 	}
 
-	ctx = context.Background()
 	//err = mapWithSlices(ctx,ma)
 	err = mapWithChans(ctx, ma)
 	if err != nil {
@@ -112,7 +110,7 @@ end:
 }
 
 // checkDir validates source directory
-func checkDir(requires cli.ArgRequires, dir any) (err error) {
+func checkDir(ctx Context, requires cli.ArgRequires, dir any) (err error) {
 	var info os.FileInfo
 	var absDir string
 

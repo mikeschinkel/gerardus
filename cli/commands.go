@@ -48,10 +48,10 @@ end:
 //	return cnt, err
 //}
 
-func (i *CommandInvoker) InvokeCommand() (err error) {
+func (i *CommandInvoker) InvokeCommand(ctx Context) (err error) {
 	cmd := i.Command
 	slog.Info("Invoking command", "command", cmd.String())
-	err = cmd.ExecFunc(i)
+	err = cmd.ExecFunc(ctx, i)
 	return err
 }
 

@@ -40,9 +40,9 @@ end:
 	return serr.Cast(err)
 }
 
-func (flags Flags) Validate() (err error) {
+func (flags Flags) Validate(ctx Context) (err error) {
 	for _, f := range flags {
-		err = f.Validate()
+		err = f.Validate(ctx)
 		if err != nil {
 			goto end
 		}

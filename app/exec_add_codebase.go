@@ -22,7 +22,7 @@ var CmdAddCodebase = CmdAdd.
 //	SetStringValueFunc: options.SetSourceURL,
 //})
 
-func ExecAddCodebase(i *cli.CommandInvoker) (err error) {
+func ExecAddCodebase(ctx context.Context, i *cli.CommandInvoker) (err error) {
 	var p persister.Project
 
 	ds := persister.GetDataStore()
@@ -31,7 +31,6 @@ func ExecAddCodebase(i *cli.CommandInvoker) (err error) {
 	versionTag := i.ArgString(VersionTagArg)
 	sourceURL := i.ArgString(SourceURLArg)
 
-	ctx := context.Background()
 	p, err = ds.LoadProjectByName(ctx, project)
 	if err != nil {
 		err = ErrProjectNotFound.Err(err, "project", project)

@@ -1,7 +1,6 @@
 package app
 
 import (
-	"context"
 	"reflect"
 	"strings"
 
@@ -25,11 +24,10 @@ var projectArg = &cli.Arg{
 	SetValueFunc: options.SetProjectName,
 }
 
-func (checker) projectName(requires cli.ArgRequires, project any) (err error) {
+func (checker) projectName(ctx Context, requires cli.ArgRequires, project any) (err error) {
 	var p persister.Project
 	var ds *persister.DataStore
 	var existence = cli.Existence(requires)
-	var ctx context.Context
 
 	projName := project.(string)
 	if projName == "" && existence == cli.MustExist {
@@ -37,7 +35,6 @@ func (checker) projectName(requires cli.ArgRequires, project any) (err error) {
 		goto end
 	}
 	ds = persister.GetDataStore()
-	ctx = context.Background()
 	//goland:noinspection GoSwitchMissingCasesForIotaConsts
 	switch existence {
 	case cli.MustExist:
@@ -63,9 +60,8 @@ var versionTagArg = &cli.Arg{
 	SetValueFunc: options.SetVersionTag,
 }
 
-func (checker) versionTag(requires cli.ArgRequires, tag any) (err error) {
+func (checker) versionTag(ctx Context, requires cli.ArgRequires, tag any) (err error) {
 	var ds *persister.DataStore
-	var ctx context.Context
 	var verTag string
 
 	projName := options.ProjectName()
@@ -79,7 +75,6 @@ func (checker) versionTag(requires cli.ArgRequires, tag any) (err error) {
 		goto end
 	}
 	ds = persister.GetDataStore()
-	ctx = context.Background()
 
 	//goland:noinspection GoSwitchMissingCasesForIotaConsts
 	switch cli.Existence(requires) {
@@ -108,9 +103,10 @@ var repoURLArg = &cli.Arg{
 	SetValueFunc: options.SetRepoURL,
 }
 
-func (checker) repoURL(requires cli.ArgRequires, url any) (err error) {
+func (checker) repoURL(ctx Context, requires cli.ArgRequires, url any) (err error) {
 	var parts []string
 	var numParts int
+
 	repoURL := url.(string)
 	if len(repoURL) == 0 {
 		err = ErrNoRepoURLSpecified
@@ -133,7 +129,8 @@ func (checker) repoURL(requires cli.ArgRequires, url any) (err error) {
 	//goland:noinspection GoSwitchMissingCasesForIotaConsts
 	switch cli.Existence(requires) {
 	case cli.MustExist:
-		err = cli.CheckURL(repoURL)
+		di := ctx.Value(DIKey).(*DI).Assign(DI{CheckURLFunc: cli.CheckURL})
+		err = di.CheckURLFunc(repoURL)
 		if err != nil {
 			err = ErrURLCouldNotBeDereferenced
 		}

@@ -24,7 +24,7 @@ type Arg struct {
 	Usage        string
 	Default      interface{}
 	Optional     bool
-	CheckFunc    func(ArgRequires, any) error
+	CheckFunc    func(Context, ArgRequires, any) error
 	Type         reflect.Kind
 	SetValueFunc func(*Value)
 	Value        *Value

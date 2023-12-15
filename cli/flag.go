@@ -54,15 +54,15 @@ func (f *Flag) signature() string {
 	return fmt.Sprintf("-%s=<%s>", f.Switch, f.Name)
 }
 
-func (f *Flag) Validate() (err error) {
+func (f *Flag) Validate(ctx Context) (err error) {
 	if f.CheckFunc == nil {
 		goto end
 	}
 	switch f.Type {
 	case reflect.String:
-		err = f.CheckFunc(f.Requires, f.Value.string)
+		err = f.CheckFunc(ctx, f.Requires, f.Value.string)
 	case reflect.Int:
-		err = f.CheckFunc(f.Requires, f.Value.int)
+		err = f.CheckFunc(ctx, f.Requires, f.Value.int)
 	default:
 		f.noSetFuncAssigned()
 	}

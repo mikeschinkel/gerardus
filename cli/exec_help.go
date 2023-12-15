@@ -8,6 +8,6 @@ var CmdHelp = AddCommandWithFunc("help", ExecHelp).
 		Optional: true,
 	})
 
-func ExecHelp(i *CommandInvoker) (err error) {
+func ExecHelp(Context, *CommandInvoker) (err error) {
 	return err
 }

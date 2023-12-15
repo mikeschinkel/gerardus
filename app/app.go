@@ -40,7 +40,7 @@ func Main(ctx context.Context, osArgs []string, mo MainOpts) (help cli.Help, err
 	if err != nil {
 		goto end
 	}
-	err = persister.Initialize(context.Background(),
+	err = persister.Initialize(ctx,
 		options.DataFile(),
 		collector.SymbolTypes,
 		parser.PackageTypes,
@@ -49,11 +49,11 @@ func Main(ctx context.Context, osArgs []string, mo MainOpts) (help cli.Help, err
 		err = ErrFailedToInitDataStore.Err(err, "data_file", options.DataFile())
 		goto end
 	}
-	err = i.Validate()
+	err = i.Validate(ctx)
 	if err != nil {
 		goto end
 	}
-	err = i.InvokeCommand()
+	err = i.InvokeCommand(ctx)
 	if err != nil {
 		goto end
 	}

@@ -56,7 +56,7 @@ end:
 	return serr.Cast(err)
 }
 
-func (args Args) Validate() (err error) {
+func (args Args) Validate(ctx Context) (err error) {
 	for _, arg := range args {
 		if arg.CheckFunc == nil {
 			continue
@@ -64,9 +64,9 @@ func (args Args) Validate() (err error) {
 		//goland:noinspection GoSwitchMissingCasesForIotaConsts
 		switch arg.Type {
 		case reflect.String:
-			err = arg.CheckFunc(arg.Requires, arg.Value.string)
+			err = arg.CheckFunc(ctx, arg.Requires, arg.Value.string)
 		case reflect.Int:
-			err = arg.CheckFunc(arg.Requires, arg.Value.int)
+			err = arg.CheckFunc(ctx, arg.Requires, arg.Value.int)
 		default:
 			arg.noSetFuncAssigned()
 		}
