@@ -5,6 +5,7 @@ import (
 )
 
 //go:generate sqlc generate -f ./sqlc.yaml
+//go:generate ifacemaker -f query.sql.go -s Queries -i DataStoreQueries -p persister -o query.iface.go
 
 //go:embed schema.sql
 var ddl string

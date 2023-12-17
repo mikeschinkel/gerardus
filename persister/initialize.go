@@ -5,24 +5,28 @@ import (
 	"log/slog"
 
 	"github.com/mikeschinkel/gerardus/collector"
+	"github.com/mikeschinkel/gerardus/options"
 	"github.com/mikeschinkel/gerardus/parser"
 )
 
-func Initialize(ctx context.Context, fp string, etss ...any) (err error) {
+func Initialize(ctx context.Context, fp string, types ...any) (ds DataStore, err error) {
+
+	var q DataStoreQueries
+
 	slog.Info("Initializing persister")
-	dataStore, err = getDataStore(fp)
+
+	ds = NewSqliteDataStore(fp)
+
+	err = ds.Initialize(ctx)
 	if err != nil {
 		goto end
 	}
-	err = dataStore.InitializeDataStore(ctx)
-	if err != nil {
-		goto end
-	}
-	for _, ets := range etss {
-		switch t := ets.(type) {
+	q = ds.Queries()
+	for _, typ := range types {
+		switch t := typ.(type) {
 		case []collector.SymbolType:
 			for _, st := range t {
-				_, err = dataStore.UpsertSymbolType(ctx, UpsertSymbolTypeParams{
+				_, err = q.UpsertSymbolType(ctx, UpsertSymbolTypeParams{
 					ID:   int64(st.ID()),
 					Name: st.Name(),
 				})
@@ -32,7 +36,7 @@ func Initialize(ctx context.Context, fp string, etss ...any) (err error) {
 			}
 		case []parser.PackageType:
 			for _, pt := range t {
-				_, err = dataStore.UpsertPackageType(ctx, UpsertPackageTypeParams{
+				_, err = q.UpsertPackageType(ctx, UpsertPackageTypeParams{
 					ID:   int64(pt.ID()),
 					Name: pt.Name(),
 				})
@@ -41,9 +45,12 @@ func Initialize(ctx context.Context, fp string, etss ...any) (err error) {
 				}
 			}
 		default:
-			panicf("Unexpected invalid EnumTypes: %#v.", ets)
+			panicf("Unexpected invalid EnumTypes: %#v.", typ)
 		}
 	}
 end:
-	return err
+	if err != nil {
+		err = ErrFailedToInitDataStore.Err(err, "data_file", options.DataFile())
+	}
+	return ds, err
 }

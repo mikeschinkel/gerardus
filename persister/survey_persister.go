@@ -27,10 +27,10 @@ type SurveyPersister struct {
 	surveyId  int64
 	fileId    int64
 	filepath  string
-	dataStore *DataStore
+	dataStore DataStore
 }
 
-func NewSurveyPersister(survey survey, ds *DataStore) *SurveyPersister {
+func NewSurveyPersister(survey survey, ds DataStore) *SurveyPersister {
 	return &SurveyPersister{
 		survey:    survey,
 		dataStore: ds,
@@ -48,14 +48,14 @@ func (sp *SurveyPersister) PersistChan(ctx context.Context, facetChan chan colle
 	var survey Survey
 	ds := sp.dataStore
 
-	codebaseID, err = ds.LoadCodebaseByProjectNameAndVersionTag(ctx, LoadCodebaseByProjectNameAndVersionTagParams{
+	codebaseID, err = ds.Queries().LoadCodebaseIDByProjectAndVersion(ctx, LoadCodebaseByProjectNameAndVersionTagParams{
 		Name:       sp.survey.ProjectName(),
 		VersionTag: sp.survey.VersionTag(),
 	})
 	if err != nil {
 		goto end
 	}
-	survey, err = ds.InsertSurvey(ctx, InsertSurveyParams{
+	survey, err = ds.Queries().InsertSurvey(ctx, InsertSurveyParams{
 		CodebaseID: codebaseID,
 		LocalDir:   sp.survey.LocalDir(),
 	})
@@ -150,7 +150,7 @@ func (sp *SurveyPersister) insertModFile(ctx context.Context, mf *parser.ModFile
 		if err != nil {
 			goto end
 		}
-		_, err = sp.dataStore.UpsertSurveyModule(ctx, UpsertSurveyModuleParams{
+		_, err = sp.dataStore.Queries().UpsertSurveyModule(ctx, UpsertSurveyModuleParams{
 			SurveyID:        sp.surveyId,
 			ModuleID:        m.ID,
 			ModuleVersionID: mv.ID,
@@ -172,7 +172,7 @@ func (sp *SurveyPersister) insertTypeSpec(ctx context.Context, ts collector.Type
 	if err != nil {
 		goto end
 	}
-	_, err = sp.dataStore.InsertType(ctx, InsertTypeParams{
+	_, err = sp.dataStore.Queries().InsertType(ctx, InsertTypeParams{
 		FileID:       fileId,
 		SymbolTypeID: int64(ts.SymbolType),
 		Name:         ts.Name,
@@ -186,7 +186,7 @@ end:
 }
 
 func (sp *SurveyPersister) upsertPackage(ctx context.Context, pp *parser.Package) (pkg Package, err error) {
-	pkg, err = sp.dataStore.UpsertPackage(ctx, UpsertPackageParams{
+	pkg, err = sp.dataStore.Queries().UpsertPackage(ctx, UpsertPackageParams{
 		ImportPath: pp.ImportPath,
 		Source:     pp.Source(),
 		TypeID:     int64(pp.Type),
@@ -197,7 +197,7 @@ func (sp *SurveyPersister) upsertPackage(ctx context.Context, pp *parser.Package
 	if pp.PackageVersion.Name == "." {
 		goto end
 	}
-	_, err = sp.dataStore.UpsertPackageVersion(ctx, UpsertPackageVersionParams{
+	_, err = sp.dataStore.Queries().UpsertPackageVersion(ctx, UpsertPackageVersionParams{
 		PackageID: pkg.ID,
 		Version:   pp.PackageVersion.Name,
 		SourceUrl: pp.PackageVersion.Source(),
@@ -210,11 +210,11 @@ end:
 }
 
 func (sp *SurveyPersister) upsertModule(ctx context.Context, pm *parser.Module) (m Module, mv ModuleVersion, err error) {
-	m, err = sp.dataStore.UpsertModule(ctx, pm.Name())
+	m, err = sp.dataStore.Queries().UpsertModule(ctx, pm.Name())
 	if err != nil {
 		goto end
 	}
-	mv, err = sp.dataStore.UpsertModuleVersion(ctx, UpsertModuleVersionParams{
+	mv, err = sp.dataStore.Queries().UpsertModuleVersion(ctx, UpsertModuleVersionParams{
 		ModuleID: m.ID,
 		Version:  pm.VersionName(),
 	})
@@ -244,7 +244,7 @@ func (sp *SurveyPersister) insertImportSpec(ctx context.Context, is collector.Im
 	if err != nil {
 		goto end
 	}
-	_, err = sp.dataStore.UpsertImport(ctx, UpsertImportParams{
+	_, err = sp.dataStore.Queries().UpsertImport(ctx, UpsertImportParams{
 		FileID:    fileId,
 		SurveyID:  sp.surveyId,
 		PackageID: pkg.ID,
@@ -268,7 +268,7 @@ func (sp *SurveyPersister) getFileId(ctx context.Context, f relPathGetter) (fid 
 		fid = sp.fileId
 		goto end
 	}
-	mf, err = sp.dataStore.UpsertFile(ctx, UpsertFileParams{
+	mf, err = sp.dataStore.Queries().UpsertFile(ctx, UpsertFileParams{
 		SurveyID: sp.surveyId,
 		Filepath: f.RelPath(),
 	})

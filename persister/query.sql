@@ -25,7 +25,7 @@ ON CONFLICT (name) DO UPDATE SET about=excluded.about, repo_url=excluded.repo_ur
 
 -- name: LoadCodebase :one
 SELECT * FROM codebase WHERE id = ? LIMIT 1;
--- name: LoadCodebaseByProjectNameAndVersionTag :one
+-- name: LoadCodebaseIDByProjectAndVersion :one
 SELECT c.id FROM codebase c JOIN project p ON p.id=c.project_id WHERE p.name = ? AND c.version_tag = ? LIMIT 1;
 -- name: LoadCodebaseIdByRepoURL :one
 SELECT c.id FROM codebase c JOIN project p ON p.id=c.project_id WHERE p.repo_url = ? LIMIT 1;

@@ -8,7 +8,7 @@ import (
 
 var MatchSpaces = regexp.MustCompile(`\s+`)
 
-func Initialize(params Params) (invoker *CommandInvoker, err error) {
+func Initialize(ctx Context, params Params) (invoker *CommandInvoker, err error) {
 	var flags Flags
 
 	slog.Info("Initializing commands")

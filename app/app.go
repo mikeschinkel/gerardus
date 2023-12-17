@@ -5,19 +5,59 @@ import (
 
 	"github.com/mikeschinkel/gerardus/cli"
 	"github.com/mikeschinkel/gerardus/collector"
+	"github.com/mikeschinkel/gerardus/fi"
 	"github.com/mikeschinkel/gerardus/logger"
 	"github.com/mikeschinkel/gerardus/options"
 	"github.com/mikeschinkel/gerardus/parser"
 	"github.com/mikeschinkel/gerardus/persister"
 )
 
-type MainOpts struct {
+var Root *App
+
+type App struct {
+	dataStore DataStore
 }
 
-func Main(ctx context.Context, osArgs []string, mo MainOpts) (help cli.Help, err error) {
-	var i *cli.CommandInvoker
+func New() *App {
+	return &App{}
+}
 
-	err = logger.Initialize(logger.Params{
+func NewWithDeps(a App) *App {
+	return &App{
+		dataStore: a.dataStore,
+	}
+}
+
+func (a *App) DataStore() DataStore {
+	return a.dataStore
+}
+
+func (a *App) Queries() DataStoreQueries {
+	return a.dataStore.Queries()
+}
+
+func Initialize() {
+	Root = New()
+	Check.App = Root
+}
+
+func DefaultContext() Context {
+	return fi.WrapContext(context.Background(), &FI{
+		Persister: PersisterFI{
+			InitializeFunc: persister.Initialize,
+		},
+		Logger: LoggerFI{
+			InitializeFunc: logger.Initialize,
+		},
+	})
+}
+
+func (a *App) Main(ctx Context, osArgs []string) (help cli.Help, err error) {
+	var invoker *cli.CommandInvoker
+
+	injector := fi.GetFI(ctx).(*FI)
+
+	err = injector.Logger.Initialize(logger.Params{
 		Name:      AppName,
 		EnvPrefix: EnvPrefix,
 	})
@@ -30,30 +70,28 @@ func Main(ctx context.Context, osArgs []string, mo MainOpts) (help cli.Help, err
 	if err != nil {
 		goto end
 	}
-	i, err = cli.Initialize(cli.Params{
+	invoker, err = cli.Initialize(ctx, cli.Params{
 		AppName: AppName,
 		OSArgs:  osArgs,
 	})
-
-	help = cli.NewHelp(i)
-
+	help = cli.NewHelp(invoker)
 	if err != nil {
 		goto end
 	}
-	err = persister.Initialize(ctx,
+
+	a.dataStore, err = injector.Persister.Initialize(ctx,
 		options.DataFile(),
 		collector.SymbolTypes,
 		parser.PackageTypes,
 	)
 	if err != nil {
-		err = ErrFailedToInitDataStore.Err(err, "data_file", options.DataFile())
 		goto end
 	}
-	err = i.Validate(ctx)
+	err = invoker.Validate(ctx)
 	if err != nil {
 		goto end
 	}
-	err = i.InvokeCommand(ctx)
+	err = invoker.InvokeCommand(ctx)
 	if err != nil {
 		goto end
 	}

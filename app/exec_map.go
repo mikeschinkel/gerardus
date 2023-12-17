@@ -19,7 +19,7 @@ import (
 )
 
 //goland:noinspection GoUnusedGlobalVariable
-var CmdMap = cli.AddCommandWithFunc("map", ExecMap).
+var CmdMap = cli.AddCommandWithFunc("map", Root.ExecMap).
 	AddArg(projectArg.MustExist()).
 	AddArg(versionTagArg.MustExist()).
 	AddFlag(&cli.Flag{
@@ -35,7 +35,7 @@ var CmdMap = cli.AddCommandWithFunc("map", ExecMap).
 	})
 
 //goland:noinspection GoUnusedParameter
-func ExecMap(ctx context.Context, i *cli.CommandInvoker) (err error) {
+func (a *App) ExecMap(ctx context.Context, i *cli.CommandInvoker) (err error) {
 	var ma mapArgs
 	var cs *surveyor.CodeSurveyor
 	var cb *parser.Codebase
@@ -48,14 +48,14 @@ func ExecMap(ctx context.Context, i *cli.CommandInvoker) (err error) {
 	versionTag := i.ArgString(VersionTagArg)
 
 	cb = parser.NewCodebase(project, versionTag)
-	p = parser.NewProject(project, check.project.RepoUrl)
+	p = parser.NewProject(project, Check.project.RepoUrl)
 	cs = surveyor.NewCodeSurveyor(cb, p, options.SourceDir())
 	dir = options.SourceDir()
 	ma = mapArgs{
 		scanner:   scanner.NewScanner(dir),
 		parser:    parser.NewGoFileParser(cs.ModuleGraph(), dir),
 		surveyor:  cs,
-		persister: persister.NewSurveyPersister(cs, persister.GetDataStore()),
+		persister: persister.NewSurveyPersister(cs, a.dataStore),
 	}
 
 	//err = mapWithSlices(ctx,ma)

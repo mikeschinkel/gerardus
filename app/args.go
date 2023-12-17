@@ -10,23 +10,16 @@ import (
 	"github.com/mikeschinkel/go-serr"
 )
 
-type checker struct {
-	project *persister.Project
-}
-
-var check = checker{}
-
 var projectArg = &cli.Arg{
 	Name:         ProjectArg,
 	Usage:        "Project name, e.g. 'golang'",
 	Type:         reflect.String,
-	CheckFunc:    check.projectName,
+	CheckFunc:    Check.projectName,
 	SetValueFunc: options.SetProjectName,
 }
 
-func (checker) projectName(ctx Context, requires cli.ArgRequires, project any) (err error) {
+func (c *checker) projectName(ctx Context, requires cli.ArgRequires, project any) (err error) {
 	var p persister.Project
-	var ds *persister.DataStore
 	var existence = cli.Existence(requires)
 
 	projName := project.(string)
@@ -34,16 +27,18 @@ func (checker) projectName(ctx Context, requires cli.ArgRequires, project any) (
 		err = ErrProjectNotFound
 		goto end
 	}
-	ds = persister.GetDataStore()
 	//goland:noinspection GoSwitchMissingCasesForIotaConsts
 	switch existence {
 	case cli.MustExist:
-		p, err = ds.LoadProjectByName(ctx, projName)
+		injector := AssignFI(ctx, FI{Persister: PersisterFI{
+			LoadProjectByNameFunc: c.App.Queries().LoadProjectByName,
+		}})
+		p, err = injector.Persister.LoadProjectByName(ctx, projName)
 		if err != nil {
 			err = ErrProjectNotFound.Err(err, "project", project)
 			goto end
 		}
-		check.project = &p
+		c.project = &p
 	case cli.OkToExist:
 	case cli.MustNotExist:
 		panic("Need to implement")
@@ -56,12 +51,11 @@ var versionTagArg = &cli.Arg{
 	Name:         VersionTagArg,
 	Usage:        "Git version tag",
 	Type:         reflect.String,
-	CheckFunc:    check.versionTag,
+	CheckFunc:    Check.versionTag,
 	SetValueFunc: options.SetVersionTag,
 }
 
-func (checker) versionTag(ctx Context, requires cli.ArgRequires, tag any) (err error) {
-	var ds *persister.DataStore
+func (c *checker) versionTag(ctx Context, requires cli.ArgRequires, tag any) (err error) {
 	var verTag string
 
 	projName := options.ProjectName()
@@ -74,12 +68,14 @@ func (checker) versionTag(ctx Context, requires cli.ArgRequires, tag any) (err e
 		err = ErrNoVersionTagSpecified.Args("project", projName)
 		goto end
 	}
-	ds = persister.GetDataStore()
 
 	//goland:noinspection GoSwitchMissingCasesForIotaConsts
 	switch cli.Existence(requires) {
 	case cli.MustExist:
-		_, err = ds.LoadCodebaseByProjectNameAndVersionTag(ctx, persister.LoadCodebaseByProjectNameAndVersionTagParams{
+		injector := AssignFI(ctx, FI{Persister: PersisterFI{
+			LoadCodebaseIDByProjectAndVersionFunc: c.App.Queries().LoadCodebaseIDByProjectAndVersion,
+		}})
+		_, err = injector.Persister.LoadCodebaseIDByProjectAndVersion(ctx, persister.LoadCodebaseByProjectNameAndVersionTagParams{
 			Name:       projName,
 			VersionTag: verTag,
 		})
@@ -99,11 +95,11 @@ var repoURLArg = &cli.Arg{
 	Name:         RepoURLArg,
 	Usage:        "The full GitHub repository URL for the project, e.g. https://github.com/golang/go",
 	Type:         reflect.String,
-	CheckFunc:    check.repoURL,
+	CheckFunc:    Check.repoURL,
 	SetValueFunc: options.SetRepoURL,
 }
 
-func (checker) repoURL(ctx Context, requires cli.ArgRequires, url any) (err error) {
+func (c *checker) repoURL(ctx Context, requires cli.ArgRequires, url any) (err error) {
 	var parts []string
 	var numParts int
 
@@ -129,8 +125,8 @@ func (checker) repoURL(ctx Context, requires cli.ArgRequires, url any) (err erro
 	//goland:noinspection GoSwitchMissingCasesForIotaConsts
 	switch cli.Existence(requires) {
 	case cli.MustExist:
-		di := ctx.Value(DIKey).(*DI).Assign(DI{CheckURLFunc: cli.CheckURL})
-		err = di.CheckURLFunc(repoURL)
+		injector := AssignFI(ctx, FI{CheckURLFunc: cli.CheckURL})
+		err = injector.CheckURL(repoURL)
 		if err != nil {
 			err = ErrURLCouldNotBeDereferenced
 		}

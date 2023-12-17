@@ -9,5 +9,6 @@ var CmdHelp = AddCommandWithFunc("help", ExecHelp).
 	})
 
 func ExecHelp(Context, *CommandInvoker) (err error) {
+	// TODO Implement help
 	return err
 }

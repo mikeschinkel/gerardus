@@ -26,6 +26,4 @@ var (
 	ErrPathNotADir               = serr.New("path is not a directory")
 	ErrMapCommandFailed          = serr.New("`map` command failed").ValidArgs("source_dir")
 	ErrFailedConvertingToAbsPath = serr.New("failed to convert directory to absolute path").ValidArgs("path")
-
-	ErrFailedToInitDataStore = serr.New("failed to initialize data store").ValidArgs("data_file")
 )

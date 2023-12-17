@@ -5,9 +5,11 @@ import (
 )
 
 var (
-	ErrFailedToInsertSpec    = serr.New("failed to insert Spec")
-	ErrFailedWhilePersisting = serr.New("failed while persisting")
-	ErrInvalidGitHubRepoURL  = serr.New("invalid Github URL").ValidArgs("repo_url")
-	ErrHTTPRequestFailed     = serr.New("failed HTTP request").ValidArgs("status_code", "request_url")
-	ErrValueCannotBeEmpty    = serr.New("value cannot be empty").ValidArgs("which_value")
+	ErrFailedToInsertSpec     = serr.New("failed to insert Spec")
+	ErrFailedWhilePersisting  = serr.New("failed while persisting")
+	ErrInvalidGitHubRepoURL   = serr.New("invalid Github URL").ValidArgs("repo_url")
+	ErrHTTPRequestFailed      = serr.New("failed HTTP request").ValidArgs("status_code", "request_url")
+	ErrValueCannotBeEmpty     = serr.New("value cannot be empty").ValidArgs("which_value")
+	ErrFailedConvertToAbsPath = serr.New("failed to convert to absolute path").ValidArgs("filepath")
+	ErrFailedToInitDataStore  = serr.New("failed to initialize data store").ValidArgs("data_file")
 )

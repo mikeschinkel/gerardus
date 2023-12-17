@@ -10,7 +10,7 @@ import (
 
 //goland:noinspection GoUnusedGlobalVariable
 var CmdAddProject = CmdAdd.
-	AddSubCommand("project", ExecAddProject).
+	AddSubCommand("project", Root.ExecAddProject).
 	AddArg(projectArg.MustExist()).
 	AddArg(repoURLArg.MustExist()).
 	AddArg(&cli.Arg{
@@ -24,20 +24,18 @@ var CmdAddProject = CmdAdd.
 		Usage:    "Project website URL. Defaults to 'website' from the GitHub API",
 	})
 
-func ExecAddProject(ctx context.Context, i *cli.CommandInvoker) (err error) {
-
-	di := ctx.Value(DIKey).(*DI)
+func (a *App) ExecAddProject(ctx context.Context, i *cli.CommandInvoker) (err error) {
+	var injector *FI
 
 	name := i.ArgString(ProjectArg)
 	repoURL := i.ArgString(RepoURLArg)
 	about := i.ArgString(AboutArg)
 	website := i.ArgString(WebsiteArg)
 
-	di.Assign(DI{RepoInfoRequesterFunc: persister.RequestGitHubRepoInfo})
-
 	if len(about) == 0 {
 		var info *persister.RepoInfo
-		info, err = di.RepoInfoRequesterFunc(repoURL)
+		injector = AssignFI(ctx, FI{Persister: PersisterFI{RepoInfoRequesterFunc: persister.RequestGitHubRepoInfo}})
+		info, err = injector.Persister.RepoInfoRequesterFunc(repoURL)
 		if err != nil {
 			goto end
 		}
@@ -45,9 +43,9 @@ func ExecAddProject(ctx context.Context, i *cli.CommandInvoker) (err error) {
 		website = info.Homepage
 	}
 
-	di.Assign(DI{UpsertProjectFunc: persister.GetDataStore().UpsertProject})
 	ctx = context.Background()
-	_, err = di.UpsertProjectFunc(ctx, persister.UpsertProjectParams{
+	injector = AssignFI(ctx, FI{Persister: PersisterFI{UpsertProjectFunc: a.Queries().UpsertProject}})
+	_, err = injector.Persister.UpsertProject(ctx, persister.UpsertProjectParams{
 		Name:    name,
 		About:   about,
 		RepoUrl: repoURL,
