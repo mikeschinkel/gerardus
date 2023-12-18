@@ -73,7 +73,7 @@ type DataStoreQueries interface {
 	ListVariables(ctx context.Context) ([]Variable, error)
 	LoadCategory(ctx context.Context, id int64) (persister.Category, error)
 	LoadCodebase(ctx context.Context, id int64) (persister.Codebase, error)
-	LoadCodebaseIDByProjectAndVersion(ctx context.Context, arg persister.LoadCodebaseByProjectNameAndVersionTagParams) (int64, error)
+	LoadCodebaseIDByProjectAndVersion(ctx context.Context, arg persister.LoadCodebaseIDByProjectAndVersionParams) (int64, error)
 	LoadCodebaseIdByRepoURL(ctx context.Context, repoUrl string) (int64, error)
 	LoadFile(ctx context.Context, id int64) (persister.File, error)
 	LoadImport(ctx context.Context, id int64) (persister.Import, error)

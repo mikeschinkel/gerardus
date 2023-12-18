@@ -1297,17 +1297,17 @@ func (q *Queries) LoadCodebase(ctx context.Context, id int64) (Codebase, error) 
 	return i, err
 }
 
-const loadCodebaseByProjectNameAndVersionTag = `-- name: LoadCodebaseIDByProjectAndVersionFunc :one
+const loadCodebaseIDByProjectAndVersion = `-- name: LoadCodebaseIDByProjectAndVersion :one
 SELECT c.id FROM codebase c JOIN project p ON p.id=c.project_id WHERE p.name = ? AND c.version_tag = ? LIMIT 1
 `
 
-type LoadCodebaseByProjectNameAndVersionTagParams struct {
+type LoadCodebaseIDByProjectAndVersionParams struct {
 	Name       string
 	VersionTag string
 }
 
-func (q *Queries) LoadCodebaseIDByProjectAndVersion(ctx context.Context, arg LoadCodebaseByProjectNameAndVersionTagParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, loadCodebaseByProjectNameAndVersionTag, arg.Name, arg.VersionTag)
+func (q *Queries) LoadCodebaseIDByProjectAndVersion(ctx context.Context, arg LoadCodebaseIDByProjectAndVersionParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, loadCodebaseIDByProjectAndVersion, arg.Name, arg.VersionTag)
 	var id int64
 	err := row.Scan(&id)
 	return id, err

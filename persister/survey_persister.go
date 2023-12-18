@@ -48,7 +48,7 @@ func (sp *SurveyPersister) PersistChan(ctx context.Context, facetChan chan colle
 	var survey Survey
 	ds := sp.dataStore
 
-	codebaseID, err = ds.Queries().LoadCodebaseIDByProjectAndVersion(ctx, LoadCodebaseByProjectNameAndVersionTagParams{
+	codebaseID, err = ds.Queries().LoadCodebaseIDByProjectAndVersion(ctx, LoadCodebaseIDByProjectAndVersionParams{
 		Name:       sp.survey.ProjectName(),
 		VersionTag: sp.survey.VersionTag(),
 	})

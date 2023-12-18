@@ -23,7 +23,7 @@ type PersisterFI struct {
 	fi.FI
 	InitializeFunc                        func(Context, string, ...any) (persister.DataStore, error)
 	LoadProjectByNameFunc                 func(Context, string) (persister.Project, error)
-	LoadCodebaseIDByProjectAndVersionFunc func(Context, persister.LoadCodebaseByProjectNameAndVersionTagParams) (int64, error)
+	LoadCodebaseIDByProjectAndVersionFunc func(Context, persister.LoadCodebaseIDByProjectAndVersionParams) (int64, error)
 	RepoInfoRequesterFunc                 func(string) (*persister.RepoInfo, error)
 	UpsertProjectFunc                     func(Context, persister.UpsertProjectParams) (persister.Project, error)
 }
@@ -40,7 +40,7 @@ func (fi PersisterFI) UpsertProject(ctx Context, p persister.UpsertProjectParams
 func (fi PersisterFI) LoadProjectByName(ctx Context, name string) (persister.Project, error) {
 	return fi.LoadProjectByNameFunc(ctx, name)
 }
-func (fi PersisterFI) LoadCodebaseIDByProjectAndVersion(ctx Context, p persister.LoadCodebaseByProjectNameAndVersionTagParams) (int64, error) {
+func (fi PersisterFI) LoadCodebaseIDByProjectAndVersion(ctx Context, p persister.LoadCodebaseIDByProjectAndVersionParams) (int64, error) {
 	return fi.LoadCodebaseIDByProjectAndVersionFunc(ctx, p)
 }
 

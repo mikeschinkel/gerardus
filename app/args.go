@@ -75,7 +75,7 @@ func (c *checker) versionTag(ctx Context, requires cli.ArgRequires, tag any) (er
 		injector := AssignFI(ctx, FI{Persister: PersisterFI{
 			LoadCodebaseIDByProjectAndVersionFunc: c.App.Queries().LoadCodebaseIDByProjectAndVersion,
 		}})
-		_, err = injector.Persister.LoadCodebaseIDByProjectAndVersion(ctx, persister.LoadCodebaseByProjectNameAndVersionTagParams{
+		_, err = injector.Persister.LoadCodebaseIDByProjectAndVersion(ctx, persister.LoadCodebaseIDByProjectAndVersionParams{
 			Name:       projName,
 			VersionTag: verTag,
 		})
