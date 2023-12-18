@@ -25,7 +25,7 @@ var CmdAddProject = CmdAdd.
 	})
 
 func (a *App) ExecAddProject(ctx context.Context, i *cli.CommandInvoker) (err error) {
-	var injector *FI
+	var injector FI
 
 	name := i.ArgString(ProjectArg)
 	repoURL := i.ArgString(RepoURLArg)

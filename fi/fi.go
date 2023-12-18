@@ -12,28 +12,18 @@ const Key ContextKey = "func-injection"
 
 type FI struct{}
 
-func GetFI(ctx context.Context) any {
+func GetFI[T any](ctx context.Context) T {
 	fi := ctx.Value(Key)
 	if fi == nil {
 		lib.Panicf("Func Injector not yet set as a value for context.Context.")
 	}
-	return fi
+	return fi.(T)
 }
 
-func WrapContext(ctx context.Context, fi any) context.Context {
+func WrapContextFI[T any](ctx context.Context, fi T) context.Context {
 	return context.WithValue(ctx, Key, fi)
 }
 
-//func (fi *FI) Call(f any, args ...any) (results []any) {
-//	rv := reflect.ValueOf(f)
-//	in := make([]reflect.Value, len(args))
-//	for i, arg := range args {
-//		in[i] = reflect.ValueOf(arg)
-//	}
-//	out := rv.Call(in)
-//	results = make([]any, len(out))
-//	for i, result := range out {
-//		results[i] = result.Interface()
-//	}
-//	return results
-//}
+func UpdateContextFI[T any](ctx context.Context, f func(T) T) context.Context {
+	return WrapContextFI(ctx, f(GetFI[T](ctx)))
+}

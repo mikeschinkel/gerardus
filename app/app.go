@@ -42,7 +42,7 @@ func Initialize() {
 }
 
 func DefaultContext() Context {
-	return fi.WrapContext(context.Background(), &FI{
+	return fi.WrapContextFI(context.Background(), FI{
 		Persister: PersisterFI{
 			InitializeFunc: persister.Initialize,
 		},
@@ -55,7 +55,7 @@ func DefaultContext() Context {
 func (a *App) Main(ctx Context, osArgs []string) (help cli.Help, err error) {
 	var invoker *cli.CommandInvoker
 
-	injector := fi.GetFI(ctx).(*FI)
+	injector := fi.GetFI[FI](ctx)
 
 	err = injector.Logger.Initialize(logger.Params{
 		Name:      AppName,

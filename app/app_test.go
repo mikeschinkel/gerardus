@@ -8,6 +8,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/mikeschinkel/gerardus/app"
 	"github.com/mikeschinkel/gerardus/cli"
+	"github.com/mikeschinkel/gerardus/fi"
 	"github.com/mikeschinkel/gerardus/persister"
 	. "github.com/mikeschinkel/go-lib"
 	"github.com/mikeschinkel/go-serr"
@@ -15,11 +16,11 @@ import (
 
 func TestAppMain(t *testing.T) {
 	tests := []struct {
-		name    string
-		args    []string
-		errStr  string
-		stdErr  string
-		ctxFunc func(context.Context) context.Context
+		name      string
+		args      []string
+		errStr    string
+		stdErr    string
+		setFIFunc func(app.FI) app.FI
 	}{
 		{
 			name:   "No CLI arguments",
@@ -51,21 +52,22 @@ func TestAppMain(t *testing.T) {
 			stdErr: addProjectGoLangNotThereOutput(),
 			errStr: "not a valid GitHub repo URL [repo_url='https://not.there']",
 		},
-		//{
-		//	name:   "add project golang https://github.com/not/there",
-		//	args:   []string{"add", "project", "golang", "https://github.com/not/there"},
-		//	stdErr: addProjectGoLangGitHubNotThereOutput(),
-		//	errStr: "",
-		//	ctxFunc: func(ctx context.Context) context.Context {
-		//		return fi.WrapContext(ctx, &app.FI{})
-		//	},
-		//},
+		{
+			name:   "add project golang https://github.com/not/there",
+			args:   []string{"add", "project", "golang", "https://github.com/not/there"},
+			stdErr: addProjectGoLangGitHubNotThereOutput(),
+			errStr: "",
+			setFIFunc: func(fi app.FI) app.FI {
+				fi.CheckURLFunc = CheckURLMock
+				return fi
+			},
+		},
 		//{
 		//	name:   "add project golang http://github.com/golang/go",
 		//	args:   []string{"add", "project", "golang", "http://github.com/golang/go"},
 		//	stdErr: addProjectGoLangGitHubGolangGo(),
 		//	errStr: "",
-		//	ctxFunc: func() context.Context {
+		//	setFIFunc: func() context.Context {
 		//		return context.WithValue(context.Background(), app.Key, &app.DI{
 		//			RepoInfoRequesterFunc: RepoInfoRequesterMock,
 		//			UpsertProjectFunc:     UpsertProjectMock,
@@ -87,8 +89,8 @@ func TestAppMain(t *testing.T) {
 		tt.args = RightShift(tt.args, cli.ExecutableFilepath(app.AppName))
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := app.DefaultContext()
-			if tt.ctxFunc != nil {
-				ctx = tt.ctxFunc(ctx)
+			if tt.setFIFunc != nil {
+				ctx = fi.UpdateContextFI(ctx, tt.setFIFunc)
 			}
 			app.Initialize()
 			help, err := app.Root.Main(ctx, tt.args)

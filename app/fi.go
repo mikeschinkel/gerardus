@@ -53,8 +53,8 @@ func (fi LoggerFI) Initialize(p logger.Params) error {
 	return fi.InitializeFunc(p)
 }
 
-func AssignFI(ctx Context, new FI) *FI {
-	injector := fi.GetFI(ctx).(*FI)
+func AssignFI(ctx Context, new FI) FI {
+	injector := fi.GetFI[FI](ctx)
 	if injector.CheckURLFunc == nil {
 		injector.CheckURLFunc = new.CheckURLFunc
 	}
