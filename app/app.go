@@ -15,7 +15,7 @@ import (
 var Root *App
 
 type App struct {
-	dataStore DataStore
+	dataStore persister.DataStore
 }
 
 func New() *App {
@@ -29,6 +29,7 @@ func NewWithDeps(a App) *App {
 }
 
 func (a *App) DataStore() DataStore {
+func (a *App) DataStore() persister.DataStore {
 	return a.dataStore
 }
 

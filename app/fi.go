@@ -28,7 +28,7 @@ type PersisterFI struct {
 	UpsertProjectFunc                     func(Context, persister.UpsertProjectParams) (persister.Project, error)
 }
 
-func (fi PersisterFI) Initialize(ctx Context, s string, args ...any) (DataStore, error) {
+func (fi PersisterFI) Initialize(ctx Context, s string, args ...any) (persister.DataStore, error) {
 	return fi.InitializeFunc(ctx, s, args...)
 }
 func (fi PersisterFI) RepoInfoRequester(url string) (info *persister.RepoInfo, err error) {
