@@ -3,16 +3,25 @@ package app_test
 import (
 	"bytes"
 	"context"
+	"log/slog"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/mikeschinkel/gerardus/app"
 	"github.com/mikeschinkel/gerardus/cli"
 	"github.com/mikeschinkel/gerardus/fi"
+	"github.com/mikeschinkel/gerardus/logger"
 	"github.com/mikeschinkel/gerardus/persister"
 	"github.com/mikeschinkel/go-lib"
 	"github.com/mikeschinkel/go-serr"
 )
+
+func TestingContext() Context {
+	ctx := app.DefaultContext()
+	injector := fi.GetFI[app.FI](ctx)
+	injector.Logger.InitializeFunc = loggerInitializeMock
+	return fi.WrapContextFI(ctx, injector)
+}
 
 func TestAppMain(t *testing.T) {
 	tests := []struct {
@@ -88,11 +97,11 @@ func TestAppMain(t *testing.T) {
 	for _, tt := range tests {
 		tt.args = lib.RightShift(tt.args, cli.ExecutableFilepath(app.AppName))
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := app.DefaultContext()
+			ctx := TestingContext()
 			if tt.setFIFunc != nil {
 				ctx = fi.UpdateContextFI(ctx, tt.setFIFunc)
 			}
-			app.Initialize()
+			app.Initialize(ctx)
 			help, err := app.Root.Main(ctx, tt.args)
 			buf := bytes.Buffer{}
 			help.Usage(err, &buf)
@@ -112,6 +121,19 @@ func TestAppMain(t *testing.T) {
 		})
 	}
 }
+
+var sLogger *slog.Logger
+
+func getLogContent() string {
+	return sLogger.Handler().(*lib.SLogBufferHandler).Content()
+}
+
+func loggerInitializeMock(logger.Params) error {
+	sLogger = slog.New(lib.NewSLogBufferHandler())
+	slog.SetDefault(sLogger)
+	return nil
+}
+
 func CheckURLMock(url string) (err error) {
 	switch url {
 	case "https://github.com/not/there":
