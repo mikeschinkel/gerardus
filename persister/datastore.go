@@ -13,7 +13,7 @@ import (
 var _ DataStore = (*SqliteDataStore)(nil)
 
 type SqliteDataStore struct {
-	queries  *Queries
+	queries  DataStoreQueries
 	Filepath string
 	db       *sql.DB
 }

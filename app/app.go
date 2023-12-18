@@ -32,7 +32,7 @@ func (a *App) DataStore() DataStore {
 	return a.dataStore
 }
 
-func (a *App) Queries() DataStoreQueries {
+func (a *App) Queries() persister.DataStoreQueries {
 	return a.dataStore.Queries()
 }
 
