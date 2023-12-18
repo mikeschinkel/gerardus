@@ -10,7 +10,7 @@ import (
 	"github.com/mikeschinkel/gerardus/cli"
 	"github.com/mikeschinkel/gerardus/fi"
 	"github.com/mikeschinkel/gerardus/persister"
-	. "github.com/mikeschinkel/go-lib"
+	"github.com/mikeschinkel/go-lib"
 	"github.com/mikeschinkel/go-serr"
 )
 
@@ -86,7 +86,7 @@ func TestAppMain(t *testing.T) {
 		//},
 	}
 	for _, tt := range tests {
-		tt.args = RightShift(tt.args, cli.ExecutableFilepath(app.AppName))
+		tt.args = lib.RightShift(tt.args, cli.ExecutableFilepath(app.AppName))
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := app.DefaultContext()
 			if tt.setFIFunc != nil {
