@@ -4,10 +4,15 @@ package persister
 
 import (
 	"context"
+	"database/sql"
+	_ "embed"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 // DataStoreQueries ...
 type DataStoreQueries interface {
+	WithTx(tx *sql.Tx) *Queries
 	DeleteCategory(ctx context.Context, id int64) error
 	DeleteCodebase(ctx context.Context, id int64) error
 	DeleteCodebaseByProjectIdAndVersionTag(ctx context.Context, arg DeleteCodebaseByProjectIdAndVersionTagParams) error
