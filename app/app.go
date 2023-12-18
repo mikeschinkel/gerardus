@@ -16,19 +16,22 @@ var Root *App
 
 type App struct {
 	dataStore persister.DataStore
+	fi        FI
 }
 
 func New() *App {
-	return &App{}
-}
-
-func NewWithDeps(a App) *App {
 	return &App{
-		dataStore: a.dataStore,
+		fi: DefaultFI(),
 	}
 }
 
-func (a *App) DataStore() DataStore {
+func NewWithDeps(a App) *App {
+	if a.fi.IsValid() {
+		a.fi = New().fi
+	}
+	return &a
+}
+
 func (a *App) DataStore() persister.DataStore {
 	return a.dataStore
 }
@@ -37,28 +40,31 @@ func (a *App) Queries() persister.DataStoreQueries {
 	return a.dataStore.Queries()
 }
 
-func Initialize() {
+func Initialize(ctx Context) {
 	Root = New()
+	Root.fi = fi.GetFI[FI](ctx)
 	Check.App = Root
 }
 
-func DefaultContext() Context {
-	return fi.WrapContextFI(context.Background(), FI{
+func DefaultFI() FI {
+	return FI{
 		Persister: PersisterFI{
 			InitializeFunc: persister.Initialize,
 		},
 		Logger: LoggerFI{
 			InitializeFunc: logger.Initialize,
 		},
-	})
+	}
+}
+
+func DefaultContext() Context {
+	return fi.WrapContextFI(context.Background(), DefaultFI())
 }
 
 func (a *App) Main(ctx Context, osArgs []string) (help cli.Help, err error) {
 	var invoker *cli.CommandInvoker
 
-	injector := fi.GetFI[FI](ctx)
-
-	err = injector.Logger.Initialize(logger.Params{
+	err = a.fi.Logger.Initialize(logger.Params{
 		Name:      AppName,
 		EnvPrefix: EnvPrefix,
 	})
@@ -80,7 +86,7 @@ func (a *App) Main(ctx Context, osArgs []string) (help cli.Help, err error) {
 		goto end
 	}
 
-	a.dataStore, err = injector.Persister.Initialize(ctx,
+	a.dataStore, err = a.fi.Persister.Initialize(ctx,
 		options.DataFile(),
 		collector.SymbolTypes,
 		parser.PackageTypes,
