@@ -16,6 +16,8 @@ import (
 	"github.com/mikeschinkel/go-serr"
 )
 
+type Context = context.Context
+
 func TestingContext() Context {
 	ctx := app.DefaultContext()
 	injector := fi.GetFI[app.FI](ctx)
@@ -153,7 +155,7 @@ func RepoInfoRequesterMock(url string) (ri persister.RepoInfo, err error) {
 	}
 	return ri, err
 }
-func UpsertProjectMock(ctx context.Context, params persister.UpsertProjectParams) (p persister.Project, err error) {
+func UpsertProjectMock(ctx Context, params persister.UpsertProjectParams) (p persister.Project, err error) {
 	return p, err
 }
 
