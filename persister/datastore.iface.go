@@ -11,4 +11,5 @@ type DataStore interface {
 	DB() *sql.DB
 	Initialize(ctx context.Context) error
 	Queries() DataStoreQueries
+	SetQueries(DataStoreQueries)
 }

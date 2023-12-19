@@ -68,3 +68,7 @@ func (db *SqliteDataStore) Queries() DataStoreQueries {
 func (db *SqliteDataStore) DB() *sql.DB {
 	return db.db
 }
+
+func (db *SqliteDataStore) SetQueries(q DataStoreQueries) {
+	db.queries = q
+}
