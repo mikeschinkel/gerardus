@@ -7,8 +7,9 @@ import (
 )
 
 func main() {
-	app.Initialize()
-	help, err := app.Root.Main(app.DefaultContext(), os.Args)
+	ctx := app.DefaultContext()
+	app.Initialize(ctx)
+	help, err := app.Root.Main(ctx, os.Args)
 	if err != nil {
 		help.Usage(err, os.Stderr)
 		os.Exit(1)

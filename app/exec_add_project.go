@@ -11,17 +11,19 @@ import (
 //goland:noinspection GoUnusedGlobalVariable
 var CmdAddProject = CmdAdd.
 	AddSubCommand("project", Root.ExecAddProject).
-	AddArg(projectArg.MustExist()).
-	AddArg(repoURLArg.MustExist()).
-	AddArg(&cli.Arg{
+	AddArg(projectArg.NotEmpty().MustFailCheck()).
+	AddArg(repoURLArg.NotEmpty().MustPassCheck()).
+	AddArg(cli.Arg{
 		Name:     AboutArg,
 		Optional: true,
 		Usage:    "Repo description. Defaults to 'about' from the GitHub API",
+		Requires: cli.AndRequires(cli.EmptyOk, cli.IgnoreCheck),
 	}).
-	AddArg(&cli.Arg{
+	AddArg(cli.Arg{
 		Name:     WebsiteArg,
 		Optional: true,
 		Usage:    "Project website URL. Defaults to 'website' from the GitHub API",
+		Requires: cli.AndRequires(cli.EmptyOk, cli.IgnoreCheck),
 	})
 
 func (a *App) ExecAddProject(ctx context.Context, i *cli.CommandInvoker) (err error) {

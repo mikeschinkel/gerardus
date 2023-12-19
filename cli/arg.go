@@ -11,9 +11,12 @@ type ArgName string
 type ArgRequires int
 
 const (
-	MustExist ArgRequires = 1 << iota
-	OkToExist
-	MustNotExist
+	MustPassCheck ArgRequires = 1 << iota
+	IgnoreCheck
+	MustFailCheck
+	EmptyOk
+	MustBeEmpty
+	NotEmpty
 )
 
 var _ helper = (*Arg)(nil)
@@ -24,14 +27,15 @@ type Arg struct {
 	Usage        string
 	Default      interface{}
 	Optional     bool
-	CheckFunc    func(Context, ArgRequires, any) error
+	CheckFunc    func(Context, any, *Arg) error
 	Type         reflect.Kind
 	SetValueFunc func(*Value)
 	Value        *Value
 	Requires     ArgRequires
+	Message      string
 }
 
-func NewArg(arg *Arg) *Arg {
+func NewArg(arg Arg) Arg {
 	if arg.SetValueFunc == nil {
 		arg.SetValueFunc = func(*Value) {}
 	}
@@ -44,19 +48,19 @@ func NewArg(arg *Arg) *Arg {
 	return arg
 }
 
-func (arg *Arg) Check(requires ArgRequires) bool {
+func (arg Arg) Check(requires ArgRequires) bool {
 	return arg.Requires&requires != 0
 }
 
-func (arg *Arg) RequiresSatisfied() (err error) {
-	e := Existence(arg.Requires)
+func (arg Arg) EmptyStateSatisfied() (err error) {
+	e := ArgEmptiness(arg.Requires)
 	isZero := arg.Value.IsZero()
 	name := fmt.Sprintf("<%s>", arg.Name)
 	switch {
-	case e == MustExist && isZero:
+	case e == NotEmpty && isZero:
 		err = ErrArgCannotBeEmpty.Args("arg_name", name)
 		goto end
-	case e == MustNotExist && !isZero:
+	case e == MustBeEmpty && !isZero:
 		err = ErrArgMustBeEmpty.Args("arg_name", name)
 		goto end
 	}
@@ -64,7 +68,7 @@ end:
 	return err
 }
 
-func (arg *Arg) IsZero() bool {
+func (arg Arg) IsZero() bool {
 	switch arg.Type {
 	case reflect.String:
 		return len(arg.Value.string) == 0
@@ -76,31 +80,49 @@ func (arg *Arg) IsZero() bool {
 	return false
 }
 
-func (arg *Arg) MustExist() *Arg {
-	arg.Requires &= ^OkToExist
-	arg.Requires &= ^MustNotExist
-	arg.Requires |= MustExist
+func (arg Arg) EmptyOk() Arg {
+	arg.Requires &= ^NotEmpty
+	arg.Requires &= ^MustBeEmpty
+	arg.Requires |= EmptyOk
 	return arg
 }
-func (arg *Arg) OkToExist() *Arg {
-	arg.Requires &= ^MustExist
-	arg.Requires &= ^MustNotExist
-	arg.Requires = OkToExist
+func (arg Arg) NotEmpty() Arg {
+	arg.Requires &= ^EmptyOk
+	arg.Requires &= ^MustBeEmpty
+	arg.Requires |= NotEmpty
 	return arg
 }
-func (arg *Arg) MustNotExist() *Arg {
-	arg.Requires &= ^MustExist
-	arg.Requires &= ^OkToExist
-	arg.Requires = MustNotExist
+func (arg Arg) MustBeEmpty() Arg {
+	arg.Requires &= ^EmptyOk
+	arg.Requires &= ^NotEmpty
+	arg.Requires |= MustBeEmpty
+	return arg
+}
+func (arg Arg) MustPassCheck() Arg {
+	arg.Requires &= ^IgnoreCheck
+	arg.Requires &= ^MustFailCheck
+	arg.Requires |= MustPassCheck
+	return arg
+}
+func (arg Arg) IgnoreCheck() Arg {
+	arg.Requires &= ^MustPassCheck
+	arg.Requires &= ^MustFailCheck
+	arg.Requires |= IgnoreCheck
+	return arg
+}
+func (arg Arg) MustFailCheck() Arg {
+	arg.Requires &= ^MustPassCheck
+	arg.Requires &= ^IgnoreCheck
+	arg.Requires |= MustFailCheck
 	return arg
 }
 
-func (arg *Arg) ClearCheck() *Arg {
+func (arg Arg) ClearCheckFunc() Arg {
 	arg.CheckFunc = nil
 	return arg
 }
 
-func (arg *Arg) DefaultHelp(opts HelpOpts) (help string) {
+func (arg Arg) DefaultHelp(opts HelpOpts) (help string) {
 	space := strings.Repeat(" ", opts.width-len("Default")-len(Indent))
 	return fmt.Sprintf("%s%s%sDefault: %s%s\n",
 		opts.indent,
@@ -111,12 +133,12 @@ func (arg *Arg) DefaultHelp(opts HelpOpts) (help string) {
 	)
 }
 
-func (arg *Arg) Help(opts HelpOpts) (help string) {
+func (arg Arg) Help(opts HelpOpts) (help string) {
 	opts.signature = string(arg.Name)
 	return arg.help(opts)
 }
 
-func (arg *Arg) help(opts HelpOpts) string {
+func (arg Arg) help(opts HelpOpts) string {
 	sb := strings.Builder{}
 	sb.WriteString(opts.indent)
 	sb.WriteString(Indent)
@@ -143,15 +165,15 @@ end:
 	return sb.String()
 }
 
-func (arg *Arg) String() string {
+func (arg Arg) String() string {
 	return arg.Value.String()
 }
 
-func (arg *Arg) Unique() string {
+func (arg Arg) Unique() string {
 	return fmt.Sprintf("%s:%s", arg.Parent.Unique(), arg.Name)
 }
 
-func (arg *Arg) SignatureHelp() (s string) {
+func (arg Arg) SignatureHelp() (s string) {
 	if arg.Optional {
 		s = fmt.Sprintf(" [<%s>", arg.Name)
 	} else {
@@ -160,11 +182,12 @@ func (arg *Arg) SignatureHelp() (s string) {
 	return s
 }
 
-func (arg *Arg) noSetFuncAssigned() {
+func (arg Arg) noSetFuncAssigned() {
 	panicf("No func(<type>) assigned to property `Set<type>ValFunc` for arg '%s'", arg.Unique())
 }
 
-// callSetValueFunc sets the Value for one arg
-func (arg *Arg) callSetValueFunc() {
+// callSetArgValueFunc sets the Value for one arg
+func callSetArgValueFunc(arg Arg) Arg {
 	arg.SetValueFunc(arg.Value)
+	return arg
 }

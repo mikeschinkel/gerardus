@@ -20,11 +20,11 @@ import (
 
 //goland:noinspection GoUnusedGlobalVariable
 var CmdMap = cli.AddCommandWithFunc("map", Root.ExecMap).
-	AddArg(projectArg.MustExist()).
-	AddArg(versionTagArg.MustExist()).
+	AddArg(projectArg.NotEmpty().MustPassCheck()).
+	AddArg(versionTagArg.NotEmpty().MustPassCheck()).
 	AddFlag(&cli.Flag{
 		Switch: "src",
-		Arg: &cli.Arg{
+		Arg: cli.Arg{
 			Name:         "source_dir",
 			Usage:        "Source directory",
 			Type:         reflect.String,
@@ -110,7 +110,7 @@ end:
 }
 
 // checkDir validates source directory
-func checkDir(ctx Context, requires cli.ArgRequires, dir any) (err error) {
+func checkDir(ctx Context, dir any, arg *cli.Arg) (err error) {
 	var info os.FileInfo
 	var absDir string
 
@@ -125,23 +125,16 @@ func checkDir(ctx Context, requires cli.ArgRequires, dir any) (err error) {
 		goto end
 	}
 
-	//goland:noinspection GoSwitchMissingCasesForIotaConsts
-	switch cli.Existence(requires) {
-	case cli.MustExist:
-		info, err = os.Stat(absDir)
-		if err != nil {
-			err = ErrReadingSourceDir.Err(err, "source_dir", absDir)
-			goto end
-		}
-		if !info.IsDir() {
-			err = ErrPathNotADir.Err(err, "source_dir", absDir)
-			goto end
-		}
-		dir = absDir // TODO Verify this actually sets the passed parameter
-	case cli.OkToExist:
-	case cli.MustNotExist:
-		panic("Need to implement")
+	info, err = os.Stat(absDir)
+	if err != nil {
+		err = ErrReadingSourceDir.Err(err, "source_dir", absDir)
+		goto end
 	}
+	if !info.IsDir() {
+		err = ErrPathNotADir.Err(err, "source_dir", absDir)
+		goto end
+	}
+	dir = absDir // TODO Verify this actually sets the passed parameter
 
 end:
 	return err

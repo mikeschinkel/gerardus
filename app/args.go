@@ -1,6 +1,8 @@
 package app
 
 import (
+	"database/sql"
+	"errors"
 	"reflect"
 	"strings"
 
@@ -10,7 +12,7 @@ import (
 	"github.com/mikeschinkel/go-serr"
 )
 
-var projectArg = &cli.Arg{
+var projectArg = cli.Arg{
 	Name:         ProjectArg,
 	Usage:        "Project name, e.g. 'golang'",
 	Type:         reflect.String,
@@ -18,31 +20,25 @@ var projectArg = &cli.Arg{
 	SetValueFunc: options.SetProjectName,
 }
 
-func (c *checker) projectName(ctx Context, requires cli.ArgRequires, project any) (err error) {
+func (c *checker) projectName(ctx Context, project any, arg *cli.Arg) (err error) {
 	var p persister.Project
-	var existence = cli.Existence(requires)
+	var injector FI
 
 	projName := project.(string)
-	if projName == "" && existence == cli.MustExist {
-		err = ErrProjectNotFound
+	injector = AssignFI(ctx, FI{Persister: PersisterFI{
+		LoadProjectByNameFunc: c.App.Queries().LoadProjectByName,
+	}})
+	p, err = injector.Persister.LoadProjectByName(ctx, projName)
+	if errors.Is(err, sql.ErrNoRows) {
+		err = ErrProjectNotFound.Args("project", project)
 		goto end
 	}
-	//goland:noinspection GoSwitchMissingCasesForIotaConsts
-	switch existence {
-	case cli.MustExist:
-		injector := AssignFI(ctx, FI{Persister: PersisterFI{
-			LoadProjectByNameFunc: c.App.Queries().LoadProjectByName,
-		}})
-		p, err = injector.Persister.LoadProjectByName(ctx, projName)
-		if err != nil {
-			err = ErrProjectNotFound.Err(err, "project", project)
-			goto end
-		}
-		c.project = &p
-	case cli.OkToExist:
-	case cli.MustNotExist:
-		panic("Need to implement")
+	if err != nil {
+		err = ErrProjectNotFound.Err(err, "project", project)
+		goto end
 	}
+	arg.Message = serr.New("project found").Args(ProjectArg, projName).Error()
+	c.project = &p
 end:
 	return err
 }
@@ -55,8 +51,9 @@ var versionTagArg = &cli.Arg{
 	SetValueFunc: options.SetVersionTag,
 }
 
-func (c *checker) versionTag(ctx Context, requires cli.ArgRequires, tag any) (err error) {
+func (c *checker) versionTag(ctx Context, tag any, arg *cli.Arg) (err error) {
 	var verTag string
+	var injector FI
 
 	projName := options.ProjectName()
 	if len(projName) == 0 {
@@ -69,23 +66,16 @@ func (c *checker) versionTag(ctx Context, requires cli.ArgRequires, tag any) (er
 		goto end
 	}
 
-	//goland:noinspection GoSwitchMissingCasesForIotaConsts
-	switch cli.Existence(requires) {
-	case cli.MustExist:
-		injector := AssignFI(ctx, FI{Persister: PersisterFI{
-			LoadCodebaseIDByProjectAndVersionFunc: c.App.Queries().LoadCodebaseIDByProjectAndVersion,
-		}})
-		_, err = injector.Persister.LoadCodebaseIDByProjectAndVersion(ctx, persister.LoadCodebaseIDByProjectAndVersionParams{
-			Name:       projName,
-			VersionTag: verTag,
-		})
-		if err != nil {
-			err = ErrFailedToAddCodebase.Err(err, "project", projName, "version_tag", verTag)
-			goto end
-		}
-	case cli.OkToExist:
-	case cli.MustNotExist:
-		panic("Need to implement")
+	injector = AssignFI(ctx, FI{Persister: PersisterFI{
+		LoadCodebaseIDByProjectAndVersionFunc: c.App.Queries().LoadCodebaseIDByProjectAndVersion,
+	}})
+	_, err = injector.Persister.LoadCodebaseIDByProjectAndVersion(ctx, persister.LoadCodebaseIDByProjectAndVersionParams{
+		Name:       projName,
+		VersionTag: verTag,
+	})
+	if err != nil {
+		err = ErrFailedToAddCodebase.Err(err, "project", projName, "version_tag", verTag)
+		goto end
 	}
 end:
 	return err
@@ -99,9 +89,10 @@ var repoURLArg = &cli.Arg{
 	SetValueFunc: options.SetRepoURL,
 }
 
-func (c *checker) repoURL(ctx Context, requires cli.ArgRequires, url any) (err error) {
+func (c *checker) repoURL(ctx Context, url any, arg *cli.Arg) (err error) {
 	var parts []string
 	var numParts int
+	var injector FI
 
 	repoURL := url.(string)
 	if len(repoURL) == 0 {
@@ -122,17 +113,10 @@ func (c *checker) repoURL(ctx Context, requires cli.ArgRequires, url any) (err e
 		err = ErrInvalidGitHubRepoRootURL
 		goto end
 	}
-	//goland:noinspection GoSwitchMissingCasesForIotaConsts
-	switch cli.Existence(requires) {
-	case cli.MustExist:
-		injector := AssignFI(ctx, FI{CheckURLFunc: cli.CheckURL})
-		err = injector.CheckURL(repoURL)
-		if err != nil {
-			err = ErrURLCouldNotBeDereferenced
-		}
-	case cli.OkToExist:
-	case cli.MustNotExist:
-		panic("Need to implement")
+	injector = AssignFI(ctx, FI{CheckURLFunc: cli.CheckURL})
+	err = injector.CheckURL(repoURL)
+	if err != nil {
+		err = ErrURLCouldNotBeDereferenced
 	}
 end:
 	if err != nil && len(repoURL) > 0 {

@@ -1,7 +1,10 @@
 package cli
 
 import (
+	"errors"
 	"log/slog"
+
+	"github.com/mikeschinkel/go-serr"
 )
 
 type CommandInvoker struct {
@@ -69,7 +72,7 @@ func (i *CommandInvoker) Validate(ctx Context) (err error) {
 		goto end
 	}
 
-	err = i.RequiresSatisfied()
+	err = i.EmptyStateSatisfied()
 	if err != nil {
 		goto end
 	}
@@ -86,14 +89,14 @@ end:
 	return err
 }
 
-// RequiresSatisfied ensures that values of .Requires are satisfied for both args and options.
-func (i *CommandInvoker) RequiresSatisfied() (err error) {
+// EmptyStateSatisfied ensures that values of .Requires are satisfied for both args and options.
+func (i *CommandInvoker) EmptyStateSatisfied() (err error) {
 	cmd := i.Command
-	err = cmd.Args.RequiresSatisfied()
+	err = cmd.Args.EmptyStateSatisfied()
 	if err != nil {
 		goto end
 	}
-	err = cmd.InvokedFlags().RequiresSatisfied()
+	err = cmd.InvokedFlags().EmptyStateSatisfied()
 	if err != nil {
 		goto end
 	}
@@ -113,6 +116,9 @@ func (i *CommandInvoker) ValidateArgs(ctx Context) (err error) {
 	cmd := i.Command
 	err = cmd.Args.Validate(ctx)
 	if err != nil {
+		if errors.Is(err, ErrRequiresCheckFailed) {
+			err = err.(serr.SError).Unwrap()
+		}
 		goto end
 	}
 	expected = cmd.RequiredArgsCount()

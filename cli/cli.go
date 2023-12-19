@@ -36,6 +36,7 @@ func Initialize(ctx Context, params Params) (invoker *CommandInvoker, err error)
 		ExecutableFilepath(params.AppName),
 		flag.ExitOnError,
 	)
+
 	flags = cmd.InvokedFlags()
 	err = flags.Initialize()
 	if err != nil {
@@ -46,6 +47,7 @@ func Initialize(ctx Context, params Params) (invoker *CommandInvoker, err error)
 		goto end
 	}
 	flags.callSetValueFuncs()
+	cmd.SetFlags(flags)
 
 end:
 	return invoker, err

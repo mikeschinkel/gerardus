@@ -201,6 +201,7 @@ func (c *Command) callSetArgValues(args []string) (err error) {
 		}
 		// If we received the arg on the CLI then assign it
 		arg.Value = NewValue(arg.Type, args[index])
+		c.Args[index] = arg
 		index++
 	}
 end:
@@ -209,8 +210,8 @@ end:
 
 // callSetArgValueFuncs calls the SetValueFunc for each arg
 func (c *Command) callSetArgValueFuncs() (err error) {
-	for _, arg := range c.Args {
-		arg.callSetValueFunc()
+	for i, arg := range c.Args {
+		c.Args[i] = callSetArgValueFunc(arg)
 	}
 	return err
 }
@@ -236,10 +237,24 @@ func (c *Command) DeclaredArgsCount() (cnt int) {
 	return len(c.Args)
 }
 
-func (c *Command) AddArg(arg *Arg) (cmd *Command) {
+func (c *Command) AddArg(arg Arg) (cmd *Command) {
 	arg.Parent = c
 	c.Args = append(c.Args, NewArg(arg))
 	return c
+}
+
+func (c *Command) SetFlags(flags Flags) {
+	// TODO: Verify this works as expectec
+	for _, flag := range c.Flags {
+		n := flags.Index(flag.Name)
+		if n != -1 {
+			c.Flags[n] = flag
+		}
+		if c.Parent == nil {
+			continue
+		}
+		c.Parent.SetFlags(flags)
+	}
 }
 
 // InvokedFlags returns all the flags for th invoked command, including all

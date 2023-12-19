@@ -3,6 +3,7 @@ package app_test
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"log/slog"
 	"testing"
 
@@ -18,21 +19,43 @@ import (
 
 type Context = context.Context
 
-func TestingContext() Context {
+type TestOps struct {
+	LiveDB bool
+}
+
+func TestingContext(tt test, opts TestOps) Context {
 	ctx := app.DefaultContext()
 	injector := fi.GetFI[app.FI](ctx)
+	//--------------
 	injector.Logger.InitializeFunc = loggerInitializeMock
+	if !opts.LiveDB {
+		injector.Persister.InitializeFunc = func(c app.Context, s string, a ...any) (persister.DataStore, error) {
+			ds, err := persisterInitializeMock(c, s, a...)
+			ds.SetQueries(tt.queries)
+			return ds, err
+		}
+	}
+	//--------------
+	if tt.fiFunc != nil {
+		injector = tt.fiFunc(injector)
+	}
 	return fi.WrapContextFI(ctx, injector)
 }
 
+type test struct {
+	name    string
+	args    []string
+	errStr  string
+	stdErr  string
+	fiFunc  func(app.FI) app.FI
+	queries persister.DataStoreQueries
+}
+
 func TestAppMain(t *testing.T) {
-	tests := []struct {
-		name      string
-		args      []string
-		errStr    string
-		stdErr    string
-		setFIFunc func(app.FI) app.FI
-	}{
+	testOpts := TestOps{
+		LiveDB: false,
+	}
+	tests := []test{
 		{
 			name:   "No CLI arguments",
 			args:   []string{},
@@ -54,21 +77,45 @@ func TestAppMain(t *testing.T) {
 		{
 			name:   "add project golang",
 			args:   []string{"add", "project", "golang"},
-			stdErr: addProjectGoLangOutput(),
+			stdErr: addProjectGolangOutput(),
 			errStr: "argument cannot be empty [arg_name='<repo_url>']",
 		},
 		{
-			name:   "add project golang https://not.there",
-			args:   []string{"add", "project", "golang", "https://not.there"},
-			stdErr: addProjectGoLangNotThereOutput(),
-			errStr: "not a valid GitHub repo URL [repo_url='https://not.there']",
+			name:    "add project golang https://not.there",
+			args:    []string{"add", "project", "golang", "https://not.there"},
+			stdErr:  addProjectGolangNotThereOutput(),
+			errStr:  "not a valid GitHub repo URL [repo_url='https://not.there']",
+			queries: stubQueriesForLoadProjectByNameMissing(),
 		},
 		{
-			name:   "add project golang https://github.com/not/there",
-			args:   []string{"add", "project", "golang", "https://github.com/not/there"},
-			stdErr: addProjectGoLangGitHubNotThereOutput(),
-			errStr: "",
-			setFIFunc: func(fi app.FI) app.FI {
+			name:    "add project golang http://github.com/not/there",
+			args:    []string{"add", "project", "golang", "http://github.com/not/there"},
+			stdErr:  addProjectGolangHTTP(),
+			errStr:  "repo URL does not begin with https://github.com [repo_url='http://github.com/not/there']",
+			queries: stubQueriesForLoadProjectByNameMissing(),
+			fiFunc: func(fi app.FI) app.FI {
+				fi.CheckURLFunc = CheckURLMock
+				return fi
+			},
+		},
+		{
+			name:    "add project golang https://not/important",
+			args:    []string{"add", "project", "golang", "https://not/important"},
+			stdErr:  addProjectGolangAlreadyExists(),
+			errStr:  "project found [project='golang']",
+			queries: stubQueriesForLoadProjectByName(),
+			fiFunc: func(fi app.FI) app.FI {
+				fi.CheckURLFunc = CheckURLMock
+				return fi
+			},
+		},
+		{
+			name:    "add project golang https://github.com/not/there",
+			args:    []string{"add", "project", "golang", "https://github.com/not/there"},
+			stdErr:  addProjectGolangGitHubNotThereOutput(),
+			errStr:  "URL could not be dereferenced [repo_url='https://github.com/not/there']",
+			queries: stubQueriesForLoadProjectByNameMissing(),
+			fiFunc: func(fi app.FI) app.FI {
 				fi.CheckURLFunc = CheckURLMock
 				return fi
 			},
@@ -76,41 +123,37 @@ func TestAppMain(t *testing.T) {
 		//{
 		//	name:   "add project golang http://github.com/golang/go",
 		//	args:   []string{"add", "project", "golang", "http://github.com/golang/go"},
-		//	stdErr: addProjectGoLangGitHubGolangGo(),
-		//	errStr: "",
-		//	setFIFunc: func() context.Context {
-		//		return context.WithValue(context.Background(), app.Key, &app.DI{
-		//			RepoInfoRequesterFunc: RepoInfoRequesterMock,
-		//			UpsertProjectFunc:     UpsertProjectMock,
-		//		})
+		//	stdErr: addProjectGolangGitHubGolangGo(),
+		//	errStr: "<n/a>",
+		//	fiFunc: func(fi app.FI) app.FI {
+		//		fi.CheckURLFunc = CheckURLMock
+		//		return fi
 		//	},
 		//},
 		//{
-		//	name:    "add",
-		//	args:    []string{"codebase", "golang", "1.21.4"},
+		//	name:   "add",
+		//	args:   []string{"codebase", "golang", "1.21.4"},
 		//	errStr: "*",
 		//},
 		//{
-		//	name:    "map",
-		//	args:    []string{"map", "golang", "1.21.4"},
+		//	name:   "map",
+		//	args:   []string{"map", "golang", "1.21.4"},
 		//	errStr: "*",
 		//},
 	}
 	for _, tt := range tests {
 		tt.args = lib.RightShift(tt.args, cli.ExecutableFilepath(app.AppName))
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := TestingContext()
-			if tt.setFIFunc != nil {
-				ctx = fi.UpdateContextFI(ctx, tt.setFIFunc)
-			}
+			ctx := TestingContext(tt, testOpts)
 			app.Initialize(ctx)
-			help, err := app.Root.Main(ctx, tt.args)
+			root := app.Root
+			help, err := root.Main(ctx, tt.args)
 			buf := bytes.Buffer{}
 			help.Usage(err, &buf)
 			if tt.stdErr != buf.String() {
 				t.Errorf("Main() value -want +got: %s", cmp.Diff(buf.String(), tt.stdErr))
 			}
-			if tt.errStr == "" {
+			if tt.errStr == "<n/a>" {
 				return
 			}
 			if err == nil {
@@ -124,10 +167,36 @@ func TestAppMain(t *testing.T) {
 	}
 }
 
+func stubQueriesForLoadProjectByNameMissing() persister.DataStoreQueries {
+	return &app.DataStoreQueriesMock{
+		LoadProjectByNameFunc: func(ctx context.Context, name string) (persister.Project, error) {
+			return persister.Project{}, sql.ErrNoRows
+		},
+	}
+}
+
+func stubQueriesForLoadProjectByName() persister.DataStoreQueries {
+	return &app.DataStoreQueriesMock{
+		LoadProjectByNameFunc: func(ctx context.Context, name string) (persister.Project, error) {
+			return persister.Project{
+				ID:      1,
+				Name:    "golang",
+				RepoUrl: "https://github.com/golang/go",
+			}, nil
+		},
+	}
+}
+
 var sLogger *slog.Logger
 
 func getLogContent() string {
 	return sLogger.Handler().(*lib.SLogBufferHandler).Content()
+}
+
+func persisterInitializeMock(ctx Context, fp string, types ...any) (ds persister.DataStore, err error) {
+	ds = NewTestingDataStore()
+	err = ds.Initialize(ctx)
+	return ds, err
 }
 
 func loggerInitializeMock(logger.Params) error {
@@ -140,9 +209,12 @@ func CheckURLMock(url string) (err error) {
 	switch url {
 	case "https://github.com/not/there":
 		err = serr.New("oops")
+	case "https://github.com/golang/go":
+		err = nil
 	}
 	return err
 }
+
 func RepoInfoRequesterMock(url string) (ri persister.RepoInfo, err error) {
 	switch url {
 	case "https://github.com/not/there":
@@ -155,6 +227,7 @@ func RepoInfoRequesterMock(url string) (ri persister.RepoInfo, err error) {
 	}
 	return ri, err
 }
+
 func UpsertProjectMock(ctx Context, params persister.UpsertProjectParams) (p persister.Project, err error) {
 	return p, err
 }
@@ -200,24 +273,34 @@ func addProjectOutput() string {
 ERROR: Argument cannot be empty [arg_name='<project>']:
 ` + projectUsage()
 }
-func addProjectGoLangOutput() string {
+func addProjectGolangOutput() string {
 	return `
 ERROR: Argument cannot be empty [arg_name='<repo_url>']:
 ` + projectUsage()
 }
 
-func addProjectGoLangNotThereOutput() string {
+func addProjectGolangNotThereOutput() string {
 	return `
 ERROR: Not a valid GitHub repo URL [repo_url='https://not.there']:
 ` + projectUsage()
 }
-func addProjectGoLangGitHubNotThereOutput() string {
+func addProjectGolangGitHubNotThereOutput() string {
 	return `
 ERROR: URL could not be dereferenced [repo_url='https://github.com/not/there']:
 ` + projectUsage()
 }
+func addProjectGolangAlreadyExists() string {
+	return `
+ERROR: Project found [project='golang']:
+` + projectUsage()
+}
+func addProjectGolangHTTP() string {
+	return `
+ERROR: Repo URL does not begin with https://github.com [repo_url='http://github.com/not/there']:
+` + projectUsage()
+}
 
-func addProjectGoLangGitHubGolangGo() string {
+func addProjectGolangGitHubGolangGo() string {
 	return ``
 }
 
@@ -241,3 +324,42 @@ func projectUsage() string {
           -data=<data_file>: Data file (sqlite3)
 `
 }
+
+var _ persister.DataStore = (*TestingDataStore)(nil)
+
+type TestingDataStore struct {
+	persister.DataStore
+}
+
+func NewTestingDataStore() *TestingDataStore {
+	ds := persister.NewSqliteDataStore("/tmp/test.db")
+	return &TestingDataStore{
+		DataStore: ds,
+	}
+}
+
+func (db *TestingDataStore) Open() (err error) {
+	return nil
+}
+func (db *TestingDataStore) Queries() persister.DataStoreQueries {
+	if db.DataStore.Queries() == nil {
+		panic("DatastoreQueries NOT SET for TESTING.")
+	}
+	return db.DataStore.Queries()
+}
+
+//func (t TestingDataStore) Open() error {
+//	return nil
+//}
+//
+//func (t TestingDataStore) Query(ctx context.Context, sql string) error {
+//	return nil
+//}
+//
+//func (t TestingDataStore) DB() *sql.DB {
+//	return &sql.DB{}
+//}
+//
+//func (t TestingDataStore) Initialize(ctx context.Context) error {
+//	return nil
+//}

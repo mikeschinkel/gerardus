@@ -12,6 +12,19 @@ func (flags Flags) Len() int {
 	return len(flags)
 }
 
+func (flags Flags) Index(name ArgName) (n int) {
+	n = -1
+	for i, flag := range flags {
+		if flag.Name != name {
+			continue
+		}
+		n = i
+		goto end
+	}
+end:
+	return n
+}
+
 func (flags Flags) Helpers() (helpers []helper) {
 	helpers = make([]helper, len(flags))
 	for i, flag := range flags {
@@ -28,10 +41,10 @@ func (flags Flags) DisplayWidth(minWidth int) (width int) {
 	return
 }
 
-// RequiresSatisfied ensures that values of .Requires are satisfied
-func (flags Flags) RequiresSatisfied() (err error) {
+// EmptyStateSatisfied ensures that values of .Requires are satisfied
+func (flags Flags) EmptyStateSatisfied() (err error) {
 	for _, flag := range flags {
-		err = flag.RequiresSatisfied()
+		err = flag.EmptyStateSatisfied()
 		if err != nil {
 			goto end
 		}
@@ -62,10 +75,11 @@ func (flags Flags) SignatureHelp() (s string) {
 // that has been invoked for this command either from the CLI or that has a
 // default, and passes that func the value f.Initialize() stored in the flag so
 // that whatever value the user wanted to be initialized got initialized.
-func (flags Flags) callSetValueFuncs() {
-	for _, f := range flags {
-		f.callSetValueFunc()
+func (flags Flags) callSetValueFuncs() Flags {
+	for i, f := range flags {
+		flags[i].Arg = callSetArgValueFunc(f.Arg)
 	}
+	return flags
 }
 
 // Initialize initializes the flag package flags by calling the flag package's

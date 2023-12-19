@@ -12,7 +12,7 @@ func init() {
 	cli.RootCmd.
 		AddFlag(&cli.Flag{
 			Switch: "data",
-			Arg: &cli.Arg{
+			Arg: cli.Arg{
 				Name:         "data_file",
 				Usage:        "Data file (sqlite3)",
 				Type:         reflect.String,

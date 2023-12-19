@@ -7,7 +7,7 @@ import (
 	"github.com/mikeschinkel/go-serr"
 )
 
-type Args []*Arg
+type Args []Arg
 
 var _ items = (Args)(nil)
 
@@ -44,10 +44,10 @@ func (args Args) SignatureHelp() (help string) {
 	return help
 }
 
-// RequiresSatisfied ensures that values of .Requires are satisfied
-func (args Args) RequiresSatisfied() (err error) {
+// EmptyStateSatisfied ensures that values of .Requires are satisfied
+func (args Args) EmptyStateSatisfied() (err error) {
 	for _, arg := range args {
-		err = arg.RequiresSatisfied()
+		err = arg.EmptyStateSatisfied()
 		if err != nil {
 			goto end
 		}
@@ -57,24 +57,39 @@ end:
 }
 
 func (args Args) Validate(ctx Context) (err error) {
+	var message string
 	for _, arg := range args {
 		if arg.CheckFunc == nil {
+			continue
+		}
+		emptyState := ExistenceInDB(arg.Requires)
+		if emptyState == IgnoreCheck {
 			continue
 		}
 		//goland:noinspection GoSwitchMissingCasesForIotaConsts
 		switch arg.Type {
 		case reflect.String:
-			err = arg.CheckFunc(ctx, arg.Requires, arg.Value.string)
+			err = arg.CheckFunc(ctx, arg.Value.string, &arg)
 		case reflect.Int:
-			err = arg.CheckFunc(ctx, arg.Requires, arg.Value.int)
+			err = arg.CheckFunc(ctx, arg.Value.int, &arg)
 		default:
 			arg.noSetFuncAssigned()
 		}
-		if err != nil {
-			goto end
+		message = arg.Message
+		switch {
+		case emptyState == MustPassCheck && err != nil:
+			err = ErrRequiresCheckFailed.Err(err, "arg_name", arg.Name)
+		case emptyState == MustFailCheck && err == nil:
+			err = ErrRequiresCheckPassed.Err(err, "arg_name", arg.Name)
+		default:
+			continue
 		}
+		goto end
 	}
 end:
+	if err != nil && message != "" {
+		err = serr.New(message).Err(err)
+	}
 	return serr.Cast(err)
 }
 

@@ -4,14 +4,19 @@ import (
 	"github.com/mikeschinkel/go-serr"
 )
 
-var ErrNoCommandSpecified = serr.New("no command specified")
-var ErrNoExecFuncFound = serr.New("no exec func found")
-var ErrNoCLIArgsProvided = serr.New("no command line args provided")
-var ErrHelpNeeded = serr.New("help needed")
-var ErrFailedToRunCommand = serr.New("failed to run command").ValidArgs("command")
+var (
+	ErrNoCommandSpecified = serr.New("no command specified")
+	ErrNoExecFuncFound    = serr.New("no exec func found")
 
-var ErrTooFewArgsPassed = serr.New("too few arguments passed").ValidArgs("expected", "got")
-var ErrTooManyArgsPassed = serr.New("too many arguments passed").ValidArgs("expected", "got")
+	ErrNoCLIArgsProvided  = serr.New("no command line args provided")
+	ErrHelpNeeded         = serr.New("help needed")
+	ErrFailedToRunCommand = serr.New("failed to run command").ValidArgs("command")
 
-var ErrArgCannotBeEmpty = serr.New("argument cannot be empty").ValidArgs("arg_name")
-var ErrArgMustBeEmpty = serr.New("argument must empty").ValidArgs("arg_name")
+	ErrTooFewArgsPassed  = serr.New("too few arguments passed").ValidArgs("expected", "got")
+	ErrTooManyArgsPassed = serr.New("too many arguments passed").ValidArgs("expected", "got")
+	ErrArgCannotBeEmpty  = serr.New("argument cannot be empty").ValidArgs("arg_name")
+	ErrArgMustBeEmpty    = serr.New("argument must be empty").ValidArgs("arg_name")
+
+	ErrRequiresCheckFailed = serr.New("args requires check failed")
+	ErrRequiresCheckPassed = serr.New("args requires check passed unwantedly")
+)

@@ -12,7 +12,7 @@ var _ helper = (*Flag)(nil)
 
 type Flag struct {
 	Switch string
-	*Arg
+	Arg
 }
 
 func (f *Flag) noSetFuncAssigned() {
@@ -60,12 +60,15 @@ func (f *Flag) Validate(ctx Context) (err error) {
 	}
 	switch f.Type {
 	case reflect.String:
-		err = f.CheckFunc(ctx, f.Requires, f.Value.string)
+		err = f.CheckFunc(ctx, f.Value.string, &f.Arg)
 	case reflect.Int:
-		err = f.CheckFunc(ctx, f.Requires, f.Value.int)
+		err = f.CheckFunc(ctx, f.Value.int, &f.Arg)
 	default:
 		f.noSetFuncAssigned()
 	}
 end:
+	if err != nil && f.Message != "" {
+		err = serr.New(f.Message).Err(err)
+	}
 	return serr.Cast(err)
 }

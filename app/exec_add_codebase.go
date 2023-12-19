@@ -11,8 +11,8 @@ import (
 //goland:noinspection GoUnusedGlobalVariable
 var CmdAddCodebase = CmdAdd.
 	AddSubCommand("codebase", Root.ExecAddCodebase).
-	AddArg(projectArg.MustExist()).
-	AddArg(versionTagArg.OkToExist())
+	AddArg(projectArg.NotEmpty().MustPassCheck()).
+	AddArg(versionTagArg.NotEmpty().IgnoreCheck())
 
 func (a *App) ExecAddCodebase(ctx context.Context, i *cli.CommandInvoker) (err error) {
 	var p persister.Project
