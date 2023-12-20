@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/mikeschinkel/gerardus/cli"
 	"github.com/mikeschinkel/gerardus/persister"
