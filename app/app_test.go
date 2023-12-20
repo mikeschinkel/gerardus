@@ -16,8 +16,7 @@ type test struct {
 	args    []string
 	output  string
 	errStr  string
-	stdErr  string
-	fiFunc  func(app.FI) app.FI
+	fi      func(app.FI) app.FI
 	queries persister.DataStoreQueries
 }
 
