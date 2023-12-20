@@ -26,7 +26,6 @@ var CmdAddProject = CmdAdd.
 	})
 
 func (a *App) ExecAddProject(ctx context.Context, i *cli.CommandInvoker) (err error) {
-	var injector FI
 
 	name := i.ArgString(ProjectArg)
 	repoURL := i.ArgString(RepoURLArg)
@@ -39,9 +38,7 @@ func (a *App) ExecAddProject(ctx context.Context, i *cli.CommandInvoker) (err er
 		website = info.Homepage
 	}
 
-	ctx = context.Background()
-	injector = AssignFI(ctx, FI{Persister: PersisterFI{UpsertProjectFunc: a.Queries().UpsertProject}})
-	_, err = injector.Persister.UpsertProject(ctx, persister.UpsertProjectParams{
+	_, err = a.Queries().UpsertProject(ctx, persister.UpsertProjectParams{
 		Name:    name,
 		About:   about,
 		RepoUrl: repoURL,
