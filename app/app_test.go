@@ -21,8 +21,9 @@ type test struct {
 }
 
 func TestAppMain(t *testing.T) {
+	//goland:noinspection GoBoolExpressions
 	testOpts := TestOps{
-		LiveDB: false,
+		NoStub: !UseStubs,
 	}
 	tests := []test{
 		{
