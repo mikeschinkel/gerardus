@@ -35,12 +35,7 @@ func (a *App) ExecAddProject(ctx context.Context, i *cli.CommandInvoker) (err er
 	website := i.ArgString(WebsiteArg)
 
 	if len(about) == 0 {
-		var info *persister.RepoInfo
-		injector = AssignFI(ctx, FI{Persister: PersisterFI{RepoInfoRequesterFunc: persister.RequestGitHubRepoInfo}})
-		info, err = injector.Persister.RepoInfoRequesterFunc(repoURL)
-		if err != nil {
-			goto end
-		}
+		info := a.repoInfo
 		about = info.Description
 		website = info.Homepage
 	}
@@ -57,7 +52,7 @@ func (a *App) ExecAddProject(ctx context.Context, i *cli.CommandInvoker) (err er
 		err = ErrFailedToAddProject.Err(err, "project", name, "repo_url", repoURL)
 		goto end
 	}
-	fmt.Printf("\nSuccessfully added project '%s' with repo URL %s.\n",
+	cli.StdOut("\nSuccessfully added project '%s' with repo URL %s.\n",
 		name,
 		repoURL,
 	)

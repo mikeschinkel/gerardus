@@ -10,10 +10,15 @@ import (
 
 // StderrWriter is the writer used to direct output to StdErr, but can be set to
 // a bytes.Buffer to capture output during tests.
+var StdoutWriter io.Writer = os.Stderr
 var StderrWriter io.Writer = os.Stderr
 
 func panicf(msg string, args ...any) {
 	panic(fmt.Sprintf(msg, args...))
+}
+
+func StdOut(msg string, args ...any) {
+	_, _ = fmt.Fprintf(StdoutWriter, msg, args...)
 }
 
 func StdErr(msg string, args ...any) {

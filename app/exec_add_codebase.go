@@ -54,7 +54,7 @@ func (a *App) ExecAddCodebase(ctx context.Context, i *cli.CommandInvoker) (err e
 		)
 		goto end
 	}
-	fmt.Printf("\nSuccessfully added codebase for '%s' version '%s' with source URL %s.\n",
+	cli.StdOut("\nSuccessfully added codebase for '%s' version '%s' with source URL %s.\n",
 		project,
 		versionTag,
 		sourceURL,

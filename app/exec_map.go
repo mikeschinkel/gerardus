@@ -42,7 +42,7 @@ func (a *App) ExecMap(ctx context.Context, i *cli.CommandInvoker) (err error) {
 	var p *parser.Project
 	var dir string
 
-	fmt.Printf("Scanning Go source at %s...\n", options.SourceDir())
+	cli.StdErr("Scanning Go source at %s...\n", options.SourceDir())
 
 	project := i.ArgString(ProjectArg)
 	versionTag := i.ArgString(VersionTagArg)
@@ -64,7 +64,7 @@ func (a *App) ExecMap(ctx context.Context, i *cli.CommandInvoker) (err error) {
 		err = ErrMapCommandFailed.Err(err, "source_dir", options.SourceDir())
 		goto end
 	}
-	fmt.Println("Scanning completed successfully.")
+	cli.StdOut("Scanning completed successfully.")
 end:
 	return err
 }

@@ -8,6 +8,7 @@ import (
 	"reflect"
 
 	"github.com/mikeschinkel/gerardus/channels"
+	"github.com/mikeschinkel/gerardus/cli"
 	"github.com/mikeschinkel/gerardus/collector"
 	"github.com/mikeschinkel/gerardus/parser"
 	"github.com/mikeschinkel/gerardus/scanner"
@@ -162,7 +163,7 @@ func showData(m *parser.Module) {
 	}
 	nm := typegen.NewNodeMarshaler(subs)
 	nodes := nm.Marshal(m)
-	fmt.Println(typegen.NewCodeBuilder("getData", "", nodes))
+	cli.StdOut("%#v", typegen.NewCodeBuilder("getData", "", nodes))
 }
 func (cs *CodeSurveyor) SurveyGoFile(ctx context.Context, gf *parser.GoFile, group *errgroup.Group) (err error) {
 	// TODO Make this work with Survey() in addition to SurveyChan().
