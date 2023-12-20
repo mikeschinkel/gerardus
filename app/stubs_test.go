@@ -92,12 +92,12 @@ func CheckURLStub(url string) (err error) {
 	return err
 }
 
-func RepoInfoRequesterStub(url string) (ri persister.RepoInfo, err error) {
+func RepoInfoRequesterStub(url string) (ri *persister.RepoInfo, err error) {
 	switch url {
 	case "https://github.com/not/there":
 		err = serr.New("oops")
 	case "https://github.com/golang/go":
-		ri = persister.RepoInfo{
+		ri = &persister.RepoInfo{
 			Description: "The Go programming language",
 			Homepage:    "https://go.dev",
 		}

@@ -95,6 +95,7 @@ func TestAppMain(t *testing.T) {
 			},
 			fi: func(fi app.FI) app.FI {
 				fi.CheckURLFunc = CheckURLStub
+				fi.Persister.RepoInfoRequesterFunc = RepoInfoRequesterStub // TODO: Verify this is called by this test
 				return fi
 			},
 		},
