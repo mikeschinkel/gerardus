@@ -98,19 +98,33 @@ func TestAppMain(t *testing.T) {
 				return fi
 			},
 		},
+		{
+			name:   "add project golang https://github.com/golang/go — SUCCESS",
+			args:   []string{"add", "project", "golang", "https://github.com/golang/go"},
+			output: "\nSuccessfully added project 'golang' with repo URL https://github.com/golang/go.\n",
+			errStr: "<n/a>",
+			queries: &app.DataStoreQueriesStub{
+				LoadProjectByNameFunc: LoadMissingProjectByNameStub,
+				UpsertProjectFunc:     SuccessfulUpsertProjectStub,
+			},
+			fi: func(fi app.FI) app.FI {
+				fi.CheckURLFunc = CheckURLStub
 				return fi
 			},
 		},
-		//{
-		//	name:   "add project golang http://github.com/golang/go",
-		//	args:   []string{"add", "project", "golang", "http://github.com/golang/go"},
-		//	stdErr: addProjectGolangGitHubGolangGo(),
-		//	errStr: "<n/a>",
-		//	fiFunc: func(fi app.FI) app.FI {
-		//		fi.CheckURLFunc = CheckURLMock
-		//		return fi
-		//	},
-		//},
+		{
+			name:   "add project golang https://github.com/golang/go — EXISTS",
+			args:   []string{"add", "project", "golang", "https://github.com/golang/go"},
+			output: "\nERROR: Project exists [project='golang']:\n" + projectUsage(),
+			errStr: "project exists [project='golang']",
+			queries: &app.DataStoreQueriesStub{
+				LoadProjectByNameFunc: LoadFoundProjectByNameStub,
+			},
+			fi: func(fi app.FI) app.FI {
+				fi.CheckURLFunc = CheckURLStub
+				return fi
+			},
+		},
 		//{
 		//	name:   "add",
 		//	args:   []string{"codebase", "golang", "1.21.4"},
