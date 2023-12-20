@@ -17,6 +17,7 @@ var Root *App = New()
 type App struct {
 	dataStore persister.DataStore
 	project   *persister.Project
+	repoInfo  *persister.RepoInfo
 	fi        FI
 }
 

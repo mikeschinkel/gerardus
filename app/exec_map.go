@@ -47,7 +47,7 @@ func (a *App) ExecMap(ctx context.Context, i *cli.CommandInvoker) (err error) {
 	versionTag := i.ArgString(VersionTagArg)
 
 	cb = parser.NewCodebase(project, versionTag)
-	p = parser.NewProject(project, Check.project.RepoUrl)
+	p = parser.NewProject(project, a.project.RepoUrl)
 	cs = surveyor.NewCodeSurveyor(cb, p, options.SourceDir())
 	dir = options.SourceDir()
 	ma = mapArgs{
