@@ -11,7 +11,6 @@ import (
 	"github.com/mikeschinkel/gerardus/logger"
 	"github.com/mikeschinkel/gerardus/persister"
 	"github.com/mikeschinkel/go-lib"
-	"github.com/mikeschinkel/go-serr"
 )
 
 // UseStubs allows the developer to easily disable stubs for when developing
@@ -85,17 +84,17 @@ func loggerInitializeStub(logger.Params) error {
 func CheckURLStub(url string) (err error) {
 	switch url {
 	case "https://github.com/not/there":
-		err = serr.New("oops")
+		err = app.ErrURLCouldNotBeDereferenced.Args("repo_url", url)
 	case "https://github.com/golang/go":
 		err = nil
 	}
 	return err
 }
 
-func RepoInfoRequesterStub(url string) (ri *persister.RepoInfo, err error) {
+func RequestGitHubRepoInfoStub(url string) (ri *persister.RepoInfo, err error) {
 	switch url {
 	case "https://github.com/not/there":
-		err = serr.New("oops")
+		err = app.ErrURLCouldNotBeDereferenced.Args("repo_url", url)
 	case "https://github.com/golang/go":
 		ri = &persister.RepoInfo{
 			Description: "The Go programming language",

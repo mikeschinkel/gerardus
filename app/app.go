@@ -112,13 +112,9 @@ end:
 
 func (a *App) checkProjectName(ctx Context, project any, arg *cli.Arg) (err error) {
 	var p persister.Project
-	var injector FI
 
 	projName := project.(string)
-	injector = AssignFI(ctx, FI{Persister: PersisterFI{
-		LoadProjectByNameFunc: a.Queries().LoadProjectByName,
-	}})
-	p, err = injector.Persister.LoadProjectByName(ctx, projName)
+	p, err = a.Queries().LoadProjectByName(ctx, projName)
 	if errors.Is(err, sql.ErrNoRows) {
 		err = ErrProjectNotFound.Args("project", project)
 		goto end
@@ -157,18 +153,12 @@ func (a *App) checkRepoURL(ctx Context, url any, arg *cli.Arg) (err error) {
 		err = ErrInvalidGitHubRepoRootURL
 		goto end
 	}
-	injector = AssignFI(ctx, FI{CheckURLFunc: cli.CheckURL})
-	err = injector.CheckURL(repoURL)
-	if err != nil {
-		err = ErrURLCouldNotBeDereferenced
-		goto end
-	}
 	injector = AssignFI(ctx, FI{
 		Persister: PersisterFI{
-			RepoInfoRequesterFunc: persister.RequestGitHubRepoInfo,
+			RequestGitHubRepoInfoFunc: persister.RequestGitHubRepoInfo,
 		},
 	})
-	a.repoInfo, err = injector.Persister.RepoInfoRequesterFunc(repoURL)
+	a.repoInfo, err = injector.Persister.RequestGitHubRepoInfoFunc(repoURL)
 	if err != nil {
 		goto end
 	}
@@ -182,7 +172,6 @@ end:
 
 func (a *App) checkVersionTag(ctx Context, tag any, arg *cli.Arg) (err error) {
 	var verTag string
-	var injector FI
 
 	projName := options.ProjectName()
 	if len(projName) == 0 {
@@ -195,10 +184,7 @@ func (a *App) checkVersionTag(ctx Context, tag any, arg *cli.Arg) (err error) {
 		goto end
 	}
 
-	injector = AssignFI(ctx, FI{Persister: PersisterFI{
-		LoadCodebaseIDByProjectAndVersionFunc: a.Queries().LoadCodebaseIDByProjectAndVersion,
-	}})
-	_, err = injector.Persister.LoadCodebaseIDByProjectAndVersion(ctx, persister.LoadCodebaseIDByProjectAndVersionParams{
+	_, err = a.Queries().LoadCodebaseIDByProjectAndVersion(ctx, persister.LoadCodebaseIDByProjectAndVersionParams{
 		Name:       projName,
 		VersionTag: verTag,
 	})

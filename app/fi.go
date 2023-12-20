@@ -10,38 +10,21 @@ import (
 
 type FI struct {
 	fi.FI
-	CheckURLFunc func(string) error
-	Persister    PersisterFI
-	Logger       LoggerFI
-}
-
-func (fi FI) CheckURL(url string) error {
-	return fi.CheckURLFunc(url)
+	Persister PersisterFI
+	Logger    LoggerFI
 }
 
 type PersisterFI struct {
 	fi.FI
-	InitializeFunc                        func(Context, string, ...any) (persister.DataStore, error)
-	LoadProjectByNameFunc                 func(Context, string) (persister.Project, error)
-	LoadCodebaseIDByProjectAndVersionFunc func(Context, persister.LoadCodebaseIDByProjectAndVersionParams) (int64, error)
-	RepoInfoRequesterFunc                 func(string) (*persister.RepoInfo, error)
-	UpsertProjectFunc                     func(Context, persister.UpsertProjectParams) (persister.Project, error)
+	InitializeFunc            func(Context, string, ...any) (persister.DataStore, error)
+	RequestGitHubRepoInfoFunc func(string) (*persister.RepoInfo, error)
 }
 
 func (fi PersisterFI) Initialize(ctx Context, s string, args ...any) (persister.DataStore, error) {
 	return fi.InitializeFunc(ctx, s, args...)
 }
 func (fi PersisterFI) RepoInfoRequester(url string) (info *persister.RepoInfo, err error) {
-	return fi.RepoInfoRequesterFunc(url)
-}
-func (fi PersisterFI) UpsertProject(ctx Context, p persister.UpsertProjectParams) (persister.Project, error) {
-	return fi.UpsertProjectFunc(ctx, p)
-}
-func (fi PersisterFI) LoadProjectByName(ctx Context, name string) (persister.Project, error) {
-	return fi.LoadProjectByNameFunc(ctx, name)
-}
-func (fi PersisterFI) LoadCodebaseIDByProjectAndVersion(ctx Context, p persister.LoadCodebaseIDByProjectAndVersionParams) (int64, error) {
-	return fi.LoadCodebaseIDByProjectAndVersionFunc(ctx, p)
+	return fi.RequestGitHubRepoInfoFunc(url)
 }
 
 type LoggerFI struct {
@@ -55,23 +38,14 @@ func (fi LoggerFI) Initialize(p logger.Params) error {
 
 func AssignFI(ctx Context, new FI) FI {
 	injector := fi.GetFI[FI](ctx)
-	if injector.CheckURLFunc == nil {
-		injector.CheckURLFunc = new.CheckURLFunc
+	if injector.Logger.InitializeFunc == nil {
+		injector.Logger.InitializeFunc = new.Logger.InitializeFunc
 	}
 	if injector.Persister.InitializeFunc == nil {
 		injector.Persister.InitializeFunc = new.Persister.InitializeFunc
 	}
-	if injector.Persister.RepoInfoRequesterFunc == nil {
-		injector.Persister.RepoInfoRequesterFunc = new.Persister.RepoInfoRequesterFunc
-	}
-	if injector.Persister.LoadProjectByNameFunc == nil {
-		injector.Persister.LoadProjectByNameFunc = new.Persister.LoadProjectByNameFunc
-	}
-	if injector.Persister.LoadCodebaseIDByProjectAndVersionFunc == nil {
-		injector.Persister.LoadCodebaseIDByProjectAndVersionFunc = new.Persister.LoadCodebaseIDByProjectAndVersion
-	}
-	if injector.Logger.InitializeFunc == nil {
-		injector.Logger.InitializeFunc = new.Logger.InitializeFunc
+	if injector.Persister.RequestGitHubRepoInfoFunc == nil {
+		injector.Persister.RequestGitHubRepoInfoFunc = new.Persister.RequestGitHubRepoInfoFunc
 	}
 	return injector
 }
