@@ -51,46 +51,53 @@ func TestAppMain(t *testing.T) {
 			errStr: "argument cannot be empty [arg_name='<repo_url>']",
 		},
 		{
-			name:    "add project golang https://not.there",
-			args:    []string{"add", "project", "golang", "https://not.there"},
-			stdErr:  addProjectGolangNotThereOutput(),
-			errStr:  "not a valid GitHub repo URL [repo_url='https://not.there']",
-			queries: stubQueriesForLoadProjectByNameMissing(),
+			name:   "add project golang https://not.there",
+			args:   []string{"add", "project", "golang", "https://not.there"},
 			output: "\nERROR: Not a valid GitHub repo URL [repo_url='https://not.there']:\n" + projectUsage(),
+			errStr: "not a valid GitHub repo URL [repo_url='https://not.there']",
+			queries: &app.DataStoreQueriesStub{
+				LoadProjectByNameFunc: LoadMissingProjectByNameStub,
+			},
 		},
 		{
-			name:    "add project golang http://github.com/not/there",
-			args:    []string{"add", "project", "golang", "http://github.com/not/there"},
-			stdErr:  addProjectGolangHTTP(),
-			errStr:  "repo URL does not begin with https://github.com [repo_url='http://github.com/not/there']",
-			queries: stubQueriesForLoadProjectByNameMissing(),
-			fiFunc: func(fi app.FI) app.FI {
-				fi.CheckURLFunc = CheckURLMock
+			name:   "add project golang http://github.com/not/there",
+			args:   []string{"add", "project", "golang", "http://github.com/not/there"},
 			output: "\nERROR: Repo URL does not begin with https://github.com [repo_url='http://github.com/not/there']:\n" + projectUsage(),
+			errStr: "repo URL does not begin with https://github.com [repo_url='http://github.com/not/there']",
+			queries: &app.DataStoreQueriesStub{
+				LoadProjectByNameFunc: LoadMissingProjectByNameStub,
+			},
+			fi: func(fi app.FI) app.FI {
+				fi.CheckURLFunc = CheckURLStub
 				return fi
 			},
 		},
 		{
-			name:    "add project golang https://not/important",
-			args:    []string{"add", "project", "golang", "https://not/important"},
-			stdErr:  addProjectGolangAlreadyExists(),
-			errStr:  "project found [project='golang']",
-			queries: stubQueriesForLoadProjectByName(),
-			fiFunc: func(fi app.FI) app.FI {
-				fi.CheckURLFunc = CheckURLMock
+			name:   "add project golang https://not/important",
+			args:   []string{"add", "project", "golang", "https://not/important"},
 			output: "\nERROR: Project exists [project='golang']:\n" + projectUsage(),
+			errStr: "project exists [project='golang']",
+			queries: &app.DataStoreQueriesStub{
+				LoadProjectByNameFunc: LoadFoundProjectByNameStub,
+			},
+			fi: func(fi app.FI) app.FI {
+				fi.CheckURLFunc = CheckURLStub
 				return fi
 			},
 		},
 		{
-			name:    "add project golang https://github.com/not/there",
-			args:    []string{"add", "project", "golang", "https://github.com/not/there"},
-			stdErr:  addProjectGolangGitHubNotThereOutput(),
-			errStr:  "URL could not be dereferenced [repo_url='https://github.com/not/there']",
-			queries: stubQueriesForLoadProjectByNameMissing(),
-			fiFunc: func(fi app.FI) app.FI {
-				fi.CheckURLFunc = CheckURLMock
+			name:   "add project golang https://github.com/not/there",
+			args:   []string{"add", "project", "golang", "https://github.com/not/there"},
 			output: "\nERROR: URL could not be dereferenced [repo_url='https://github.com/not/there']:\n" + projectUsage(),
+			errStr: "URL could not be dereferenced [repo_url='https://github.com/not/there']",
+			queries: &app.DataStoreQueriesStub{
+				LoadProjectByNameFunc: LoadMissingProjectByNameStub,
+			},
+			fi: func(fi app.FI) app.FI {
+				fi.CheckURLFunc = CheckURLStub
+				return fi
+			},
+		},
 				return fi
 			},
 		},
