@@ -12,7 +12,6 @@ type CommandInvoker struct {
 	AppName   string
 	EnvPrefix string
 	Command   *Command
-	Args      Args
 }
 
 func NewCommandInvoker(params Params) *CommandInvoker {
@@ -24,7 +23,7 @@ func NewCommandInvoker(params Params) *CommandInvoker {
 }
 
 func (i *CommandInvoker) ArgValue(name ArgName) (value *Value) {
-	for _, arg := range i.Args {
+	for _, arg := range i.Args() {
 		if arg.Name != name {
 			continue
 		}
@@ -146,4 +145,8 @@ end:
 // then ReceivedArgsCount returns 3 for "foo bar baz."
 func (i *CommandInvoker) ReceivedArgsCount() int {
 	return len(i.Tokens.Args())
+}
+
+func (i *CommandInvoker) Args() Args {
+	return i.Command.Args
 }
