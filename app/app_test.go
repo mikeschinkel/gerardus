@@ -27,31 +27,31 @@ func TestAppMain(t *testing.T) {
 	}
 	tests := []test{
 		{
-			name:   "No CLI arguments",
+			name:   "FAIL (NO COMMAND)",
 			args:   []string{},
 			output: noCLIArgsOutput(),
 			errStr: "no command specified",
 		},
 		{
-			name:   "add",
+			name:   "FAIL (NO EXEC FUNC)",
 			args:   []string{"add"},
 			output: addArgsOutput(),
 			errStr: "no exec func found",
 		},
 		{
-			name:   "add project",
+			name:   "FAIL (NO PROJECT ARG)",
 			args:   []string{"add", "project"},
 			output: "\nERROR: Argument cannot be empty [arg_name='<project>']:\n" + projectUsage(),
 			errStr: "argument cannot be empty [arg_name='<project>']",
 		},
 		{
-			name:   "add project golang",
+			name:   "FAIL (NO REPO URL ARG)",
 			args:   []string{"add", "project", "golang"},
 			output: "\nERROR: Argument cannot be empty [arg_name='<repo_url>']:\n" + projectUsage(),
 			errStr: "argument cannot be empty [arg_name='<repo_url>']",
 		},
 		{
-			name:   "add project golang https://not.there",
+			name:   "FAIL (NO GITHUB URL)",
 			args:   []string{"add", "project", "golang", "https://not.there"},
 			output: "\nERROR: Not a valid GitHub repo URL [repo_url='https://not.there']:\n" + projectUsage(),
 			errStr: "not a valid GitHub repo URL [repo_url='https://not.there']",
@@ -60,7 +60,7 @@ func TestAppMain(t *testing.T) {
 			},
 		},
 		{
-			name:   "add project golang http://github.com/not/there",
+			name:   "FAIL (NO HTTPS)",
 			args:   []string{"add", "project", "golang", "http://github.com/not/there"},
 			output: "\nERROR: Repo URL does not begin with https://github.com [repo_url='http://github.com/not/there']:\n" + projectUsage(),
 			errStr: "repo URL does not begin with https://github.com [repo_url='http://github.com/not/there']",
@@ -73,7 +73,7 @@ func TestAppMain(t *testing.T) {
 			},
 		},
 		{
-			name:   "add project golang https://not/important",
+			name:   "FAIL (PROJECT EXISTS)",
 			args:   []string{"add", "project", "golang", "https://not/important"},
 			output: "\nERROR: Project exists [project='golang']:\n" + projectUsage(),
 			errStr: "project exists [project='golang']",
@@ -86,7 +86,7 @@ func TestAppMain(t *testing.T) {
 			},
 		},
 		{
-			name:   "add project golang https://github.com/not/there",
+			name:   "CANNOT DEREFERENCE PROJECT URL",
 			args:   []string{"add", "project", "golang", "https://github.com/not/there"},
 			output: "\nERROR: URL could not be dereferenced [repo_url='https://github.com/not/there']:\n" + projectUsage(),
 			errStr: "URL could not be dereferenced [repo_url='https://github.com/not/there']",
@@ -99,7 +99,7 @@ func TestAppMain(t *testing.T) {
 			},
 		},
 		{
-			name:   "add project golang https://github.com/golang/go — SUCCESS",
+			name:   "SUCCESS — ADD PROJECT)",
 			args:   []string{"add", "project", "golang", "https://github.com/golang/go"},
 			output: "\nSuccessfully added project 'golang' with repo URL https://github.com/golang/go.\n",
 			errStr: "<n/a>",
@@ -113,7 +113,7 @@ func TestAppMain(t *testing.T) {
 			},
 		},
 		{
-			name:   "add project golang https://github.com/golang/go — EXISTS",
+			name:   "FAIL (PROJECT EXISTS)",
 			args:   []string{"add", "project", "golang", "https://github.com/golang/go"},
 			output: "\nERROR: Project exists [project='golang']:\n" + projectUsage(),
 			errStr: "project exists [project='golang']",
