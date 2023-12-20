@@ -56,7 +56,7 @@ end:
 	return ok, err
 }
 
-func checkGitHubRepoURL(repoURL string) (parts []string, err error) {
+func checkGitHubRepoURLSyntax(repoURL string) (parts []string, err error) {
 	if repoURL == "" {
 		err = ErrValueCannotBeEmpty.Args("which_value", RepoURLArg)
 		goto end
@@ -84,7 +84,7 @@ func RequestGitHubRepoInfo(repoURL string) (info *RepoInfo, err error) {
 
 	info = &RepoInfo{}
 
-	parts, err := checkGitHubRepoURL(repoURL)
+	parts, err := checkGitHubRepoURLSyntax(repoURL)
 	if err != nil {
 		goto end
 	}
