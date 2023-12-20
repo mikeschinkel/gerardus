@@ -133,6 +133,7 @@ func (db *DataStoreStub) Queries() (q persister.DataStoreQueries) {
 	return q
 }
 
+//goland:noinspection GoUnusedParameter
 func (db *DataStoreStub) Query(ctx context.Context, sql string) error {
 	return nil
 }
@@ -141,6 +142,7 @@ func (db *DataStoreStub) DB() *sql.DB {
 	return &sql.DB{}
 }
 
+//goland:noinspection GoUnusedParameter
 func (db *DataStoreStub) Initialize(ctx context.Context) error {
 	return nil
 }

@@ -109,6 +109,8 @@ end:
 }
 
 // checkDir validates source directory
+//
+//goland:noinspection GoUnusedParameter
 func checkDir(ctx Context, dir any, arg *cli.Arg) (err error) {
 	var info os.FileInfo
 	var absDir string
