@@ -163,7 +163,11 @@ func (a *App) checkRepoURL(ctx Context, url any, arg *cli.Arg) (err error) {
 		err = ErrURLCouldNotBeDereferenced
 		goto end
 	}
-	injector = AssignFI(ctx, FI{Persister: PersisterFI{RepoInfoRequesterFunc: persister.RequestGitHubRepoInfo}})
+	injector = AssignFI(ctx, FI{
+		Persister: PersisterFI{
+			RepoInfoRequesterFunc: persister.RequestGitHubRepoInfo,
+		},
+	})
 	a.repoInfo, err = injector.Persister.RepoInfoRequesterFunc(repoURL)
 	if err != nil {
 		goto end
