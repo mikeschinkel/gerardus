@@ -12,4 +12,7 @@ var (
 	ErrValueCannotBeEmpty     = serr.New("value cannot be empty").ValidArgs("which_value")
 	ErrFailedConvertToAbsPath = serr.New("failed to convert to absolute path").ValidArgs("filepath")
 	ErrFailedToInitDataStore  = serr.New("failed to initialize data store").ValidArgs("data_file")
+
+	ErrFailedToReadHTTPResponseBody = serr.New("failed to read HTTP response body").ValidArgs("request_url")
+	ErrFailedToUnmarshalJSON        = serr.New("failed to unmarshal the JSON").ValidArgs("source")
 )

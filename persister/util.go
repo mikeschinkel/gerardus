@@ -104,14 +104,14 @@ func RequestGitHubRepoInfo(repoURL string) (info *RepoInfo, err error) {
 	// Read the response body
 	body, err = io.ReadAll(resp.Body)
 	if err != nil {
-		err = fmt.Errorf("failed to read the response body; %w", err)
+		err = ErrFailedToReadHTTPResponseBody.Err(err, "request_url", apiURL)
 		goto end
 	}
 
 	// Parse the JSON response
 	err = json.Unmarshal(body, &info)
 	if err != nil {
-		err = fmt.Errorf("failed to unmarshal the JSON response; %w", err)
+		err = ErrFailedToUnmarshalJSON.Err(err, "source", apiURL)
 		goto end
 	}
 end:
