@@ -74,6 +74,9 @@ end:
 	return parts, err
 }
 
+// RequestGitHubRepoInfo retrieves RepoInfo{} from the GitHub API from a passed
+// GitHub repo URL, returning errors if they exist.
+// gofi:stub
 func RequestGitHubRepoInfo(repoURL string) (info *RepoInfo, err error) {
 	var body []byte
 	var owner, repo, apiURL string
