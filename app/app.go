@@ -2,6 +2,9 @@ package app
 
 import (
 	"context"
+	"database/sql"
+	"errors"
+	"strings"
 
 	"github.com/mikeschinkel/gerardus/cli"
 	"github.com/mikeschinkel/gerardus/collector"
@@ -10,6 +13,7 @@ import (
 	"github.com/mikeschinkel/gerardus/options"
 	"github.com/mikeschinkel/gerardus/parser"
 	"github.com/mikeschinkel/gerardus/persister"
+	"github.com/mikeschinkel/go-serr"
 )
 
 var Root *App = New()
