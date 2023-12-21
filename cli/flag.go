@@ -54,21 +54,21 @@ func (f *Flag) signature() string {
 	return fmt.Sprintf("-%s=<%s>", f.Switch, f.Name)
 }
 
-func (f *Flag) Validate(ctx Context) (err error) {
-	if f.CheckFunc == nil {
+func (f *Flag) CheckExists(ctx Context) (err error) {
+	if f.ExistsFunc == nil {
 		goto end
 	}
 	switch f.Type {
 	case reflect.String:
-		err = f.CheckFunc(ctx, f.Value.string, &f.Arg)
+		err = f.ExistsFunc(ctx, f.Value.string, &f.Arg)
 	case reflect.Int:
-		err = f.CheckFunc(ctx, f.Value.int, &f.Arg)
+		err = f.ExistsFunc(ctx, f.Value.int, &f.Arg)
 	default:
 		f.noSetFuncAssigned()
 	}
 end:
-	if err != nil && f.Message != "" {
-		err = serr.New(f.Message).Err(err)
+	if err != nil && f.OnSuccess != "" {
+		err = serr.New(f.OnSuccess).Err(err)
 	}
 	return serr.Cast(err)
 }

@@ -17,6 +17,7 @@ var (
 	ErrArgCannotBeEmpty  = serr.New("argument cannot be empty").ValidArgs("arg_name")
 	ErrArgMustBeEmpty    = serr.New("argument must be empty").ValidArgs("arg_name")
 
-	ErrRequiresCheckFailed = serr.New("args requires check failed")
-	ErrRequiresCheckPassed = serr.New("args requires check passed unwantedly")
+	ErrAlreadyExists   = serr.New("already exists")
+	ErrDoesNotExist    = serr.New("does not exist")
+	ErrDoesNotValidate = serr.New("does not validate")
 )

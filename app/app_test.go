@@ -2,14 +2,31 @@ package app_test
 
 import (
 	"bytes"
+	"context"
+	"database/sql"
+	"log/slog"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/mikeschinkel/gerardus/app"
 	"github.com/mikeschinkel/gerardus/cli"
+	"github.com/mikeschinkel/gerardus/fi"
+	"github.com/mikeschinkel/gerardus/logger"
 	"github.com/mikeschinkel/gerardus/persister"
 	"github.com/mikeschinkel/go-lib"
 )
+
+// UseStubs allows the developer to easily disable stubs for when developing
+// tests to witness behavior that needs to be stubbed out. Normally this should
+// be set to 'true'; if it has been checked into source code with 'false' that
+// would be a mistake.
+const UseStubs = true
+
+type Context = context.Context
+
+type TestOps struct {
+	NoStub bool
+}
 
 type test struct {
 	name    string
@@ -22,109 +39,31 @@ type test struct {
 }
 
 func TestAppMain(t *testing.T) {
+	t.Run("CLI Tests", func(t *testing.T) {
+		t.Run("Root Tests", func(t *testing.T) {
+			runTests(t, rootTests())
+		})
+		t.Run("Add Tests", func(t *testing.T) {
+			runTests(t, rootTests())
+		})
+		t.Run("Add Project Tests", func(t *testing.T) {
+			runTests(t, addProjectTests())
+		})
+		t.Run("Add Codebase Tests", func(t *testing.T) {
+			runTests(t, addCodebaseTests())
+		})
+	})
+}
+
+func runTests(t *testing.T, tests []test) {
 	//goland:noinspection GoBoolExpressions
 	testOpts := TestOps{
 		NoStub: !UseStubs,
 	}
-	tests := []test{
-		{
-			name:   "FAIL — NO COMMAND",
-			fail:   true,
-			args:   []string{},
-			output: noCLIArgsOutput(),
-			errStr: "no command specified",
-		},
-		{
-			name:   "FAIL — NO EXEC FUNC",
-			fail:   true,
-			args:   []string{"add"},
-			output: addArgsOutput(),
-			errStr: "no exec func found",
-		},
-		{
-			name:   "FAIL — NO PROJECT ARG",
-			fail:   true,
-			args:   []string{"add", "project"},
-			output: "\nERROR: Argument cannot be empty [arg_name='<project>']:\n" + projectUsage(),
-			errStr: "argument cannot be empty [arg_name='<project>']",
-		},
-		{
-			name:   "FAIL — NO REPO URL ARG",
-			fail:   true,
-			args:   []string{"add", "project", "golang"},
-			output: "\nERROR: Argument cannot be empty [arg_name='<repo_url>']:\n" + projectUsage(),
-			errStr: "argument cannot be empty [arg_name='<repo_url>']",
-		},
-		{
-			name:   "FAIL — NO GITHUB URL",
-			fail:   true,
-			args:   []string{"add", "project", "golang", "https://not.there"},
-			output: "\nERROR: Not a valid GitHub repo URL [repo_url='https://not.there']:\n" + projectUsage(),
-			errStr: "not a valid GitHub repo URL [repo_url='https://not.there']",
-			queries: &app.DataStoreQueriesStub{
-				LoadProjectByNameFunc: LoadMissingProjectByNameStub,
-			},
-		},
-		{
-			name:   "FAIL — NO HTTPS",
-			fail:   true,
-			args:   []string{"add", "project", "golang", "http://github.com/not/there"},
-			output: "\nERROR: Repo URL does not begin with https://github.com [repo_url='http://github.com/not/there']:\n" + projectUsage(),
-			errStr: "repo URL does not begin with https://github.com [repo_url='http://github.com/not/there']",
-			queries: &app.DataStoreQueriesStub{
-				LoadProjectByNameFunc: LoadMissingProjectByNameStub,
-			},
-		},
-		{
-			name:   "FAIL — PROJECT EXISTS",
-			fail:   true,
-			args:   []string{"add", "project", "golang", "https://github.com/golang/go"},
-			output: "\nERROR: Project exists [project='golang']:\n" + projectUsage(),
-			errStr: "project exists [project='golang']",
-			queries: &app.DataStoreQueriesStub{
-				LoadProjectByNameFunc: LoadFoundProjectByNameStub,
-			},
-		},
-		{
-			name:   "FAIL — CANNOT DEREFERENCE PROJECT URL",
-			fail:   true,
-			args:   []string{"add", "project", "golang", "https://github.com/not/there"},
-			output: "\nERROR: URL could not be dereferenced [repo_url='https://github.com/not/there']:\n" + projectUsage(),
-			errStr: "URL could not be dereferenced [repo_url='https://github.com/not/there']",
-			queries: &app.DataStoreQueriesStub{
-				LoadProjectByNameFunc: LoadMissingProjectByNameStub,
-			},
-			fi: func(fi app.FI) app.FI {
-				fi.Persister.RequestGitHubRepoInfoFunc = RequestGitHubRepoInfoStub // TODO: Verify this is called by this test
-				return fi
-			},
-		},
-		{
-			name:   "SUCCESS — ADD PROJECT",
-			fail:   false,
-			args:   []string{"add", "project", "golang", "https://github.com/golang/go"},
-			output: "\nSuccessfully added project 'golang' with repo URL https://github.com/golang/go.\n",
-			errStr: "<n/a>",
-			queries: &app.DataStoreQueriesStub{
-				LoadProjectByNameFunc: LoadMissingProjectByNameStub,
-				UpsertProjectFunc:     SuccessfulUpsertProjectStub,
-			},
-		},
-		//{
-		//	name:   "add",
-		//	args:   []string{"codebase", "golang", "1.21.4"},
-		//	errStr: "*",
-		//},
-		//{
-		//	name:   "map",
-		//	args:   []string{"map", "golang", "1.21.4"},
-		//	errStr: "*",
-		//},
-	}
 	for _, tt := range tests {
 		tt.args = lib.RightShift(tt.args, cli.ExecutableFilepath(app.AppName))
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := TestingContext(tt, testOpts)
+			ctx := ContextStub(tt, testOpts)
 			app.Initialize(ctx)
 			root := app.Root
 			buf := bytes.Buffer{}
@@ -148,4 +87,132 @@ func TestAppMain(t *testing.T) {
 			}
 		})
 	}
+}
+
+func rootTests() []test {
+	return []test{
+		{
+			name:   "FAIL — NO COMMAND",
+			fail:   true,
+			args:   []string{},
+			output: noCLIArgsOutput(),
+			errStr: "no command specified",
+		},
+	}
+}
+
+func noCLIArgsOutput() string {
+	return `
+ERROR: No command specified:
+
+  Usage: gerardus [<options>] <command> [<args>]
+
+  Commands:
+
+    - add codebase <project> <version_tag>
+    - add project <project> <repo_url> [<about> [<website>]]
+    - help [<command>]
+    - map [-src=<source_dir>] <project> <version_tag>
+
+    Global Options:
+
+      -data=<data_file>: Data file (sqlite3)
+`
+}
+
+func ContextStub(tt test, opts TestOps) Context {
+	ctx := app.DefaultContext()
+	if !opts.NoStub {
+		injector := fi.GetFI[app.FI](ctx)
+		injector.Logger.InitializeFunc = loggerInitializeStub
+		injector.Persister.InitializeFunc = func(c app.Context, s string, a ...any) (persister.DataStore, error) {
+			ds, err := persisterInitializeStub(c, s, a...)
+			ds.SetQueries(tt.queries)
+			return ds, err
+		}
+		if tt.fi != nil {
+			injector = tt.fi(injector)
+		}
+		ctx = fi.WrapContextFI[app.FI](ctx, injector)
+	}
+	return ctx
+}
+
+func persisterInitializeStub(ctx Context, fp string, types ...any) (ds persister.DataStore, err error) {
+	ds = NewDataStoreStub()
+	err = ds.Initialize(ctx)
+	return ds, err
+}
+
+func stubbedLogContent() string {
+	return loggerStub.Handler().(*lib.SLogBufferHandler).Content()
+}
+
+var loggerStub *slog.Logger
+
+func loggerInitializeStub(logger.Params) error {
+	loggerStub = slog.New(lib.NewSLogBufferHandler())
+	slog.SetDefault(loggerStub)
+	return nil
+}
+
+func CheckURLStub(url string) (err error) {
+	switch url {
+	case "https://github.com/not/there":
+		err = app.ErrURLCouldNotBeDereferenced.Args("repo_url", url)
+	case "https://github.com/golang/go":
+		err = nil
+	}
+	return err
+}
+
+func RequestGitHubRepoInfoStub(url string) (ri *persister.RepoInfo, err error) {
+	switch url {
+	case "https://github.com/not/there":
+		err = app.ErrURLCouldNotBeDereferenced.Args("repo_url", url)
+	case "https://github.com/golang/go":
+		ri = &persister.RepoInfo{
+			Description: "The Go programming language",
+			Homepage:    "https://go.dev",
+		}
+	}
+	return ri, err
+}
+
+var _ persister.DataStore = (*DataStoreStub)(nil)
+
+type DataStoreStub struct {
+	persister.DataStore
+}
+
+func NewDataStoreStub() *DataStoreStub {
+	ds := persister.NewSqliteDataStore("/tmp/test.db")
+	return &DataStoreStub{
+		DataStore: ds,
+	}
+}
+
+func (db *DataStoreStub) Open() (err error) {
+	return nil
+}
+func (db *DataStoreStub) Queries() (q persister.DataStoreQueries) {
+	q = db.DataStore.Queries()
+	if q == nil {
+		panic("DatastoreQueries NOT SET for TESTING.")
+	}
+	return q
+}
+
+//goland:noinspection GoUnusedParameter
+func (db *DataStoreStub) Query(ctx context.Context, sql string) error {
+	return nil
+}
+
+func (db *DataStoreStub) DB() *sql.DB {
+	return &sql.DB{}
+}
+
+//goland:noinspection GoUnusedParameter
+func (db *DataStoreStub) Initialize(ctx context.Context) error {
+	return nil
 }

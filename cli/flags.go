@@ -55,7 +55,7 @@ end:
 
 func (flags Flags) Validate(ctx Context) (err error) {
 	for _, f := range flags {
-		err = f.Validate(ctx)
+		err = f.CheckExists(ctx)
 		if err != nil {
 			goto end
 		}

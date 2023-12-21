@@ -14,6 +14,7 @@ import (
 	"github.com/mikeschinkel/gerardus/parser"
 	"github.com/mikeschinkel/gerardus/persister"
 	"github.com/mikeschinkel/go-serr"
+	"golang.org/x/mod/semver"
 )
 
 var Root *App = New()
@@ -110,7 +111,7 @@ end:
 	return help, err
 }
 
-func (a *App) checkProjectName(ctx Context, project any, arg *cli.Arg) (err error) {
+func (a *App) projectExists(ctx Context, project any, arg *cli.Arg) (err error) {
 	var p persister.Project
 
 	projName := project.(string)
@@ -123,13 +124,13 @@ func (a *App) checkProjectName(ctx Context, project any, arg *cli.Arg) (err erro
 		err = ErrProjectNotFound.Err(err, "project", project)
 		goto end
 	}
-	arg.Message = serr.New("project exists").Args(ProjectArg, projName).Error()
+	arg.OnSuccess = serr.New("project exists").Args(ProjectArg, projName).Error()
 	a.project = &p
 end:
 	return err
 }
 
-func (a *App) checkRepoURL(ctx Context, url any, arg *cli.Arg) (err error) {
+func (a *App) repoURLExists(ctx Context, url any, arg *cli.Arg) (err error) {
 	var parts []string
 	var numParts int
 	var injector FI
@@ -170,7 +171,22 @@ end:
 	return err
 }
 
-func (a *App) checkVersionTag(ctx Context, tag any, arg *cli.Arg) (err error) {
+func (a *App) validateVersionTag(ctx Context, tag any, arg *cli.Arg) (err error) {
+	var verTag string
+	verTag = tag.(string)
+
+	if !semver.IsValid(normalizeVersionTag(verTag)) {
+		err = ErrVersionIsNotValid.Err(err,
+			"version_tag", tag.(string),
+			"hint", "Version must be semver.org compatible",
+		)
+		goto end
+	}
+end:
+	return err
+}
+
+func (a *App) versionTagExists(ctx Context, tag any, arg *cli.Arg) (err error) {
 	var verTag string
 
 	projName := options.ProjectName()
@@ -192,6 +208,7 @@ func (a *App) checkVersionTag(ctx Context, tag any, arg *cli.Arg) (err error) {
 		err = ErrFailedToAddCodebase.Err(err, "project", projName, "version_tag", verTag)
 		goto end
 	}
+	arg.OnSuccess = ErrVersionAlreadyExists.Args("project", projName, "version_tag", verTag).Error()
 end:
 	return err
 }

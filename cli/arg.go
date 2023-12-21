@@ -11,12 +11,13 @@ type ArgName string
 type ArgRequires int
 
 const (
-	MustPassCheck ArgRequires = 1 << iota
-	IgnoreCheck
-	MustFailCheck
+	MustExist ArgRequires = 1 << iota
+	IgnoreExists
+	NotExist
 	EmptyOk
 	MustBeEmpty
 	NotEmpty
+	MustValidate
 )
 
 var _ helper = (*Arg)(nil)
@@ -27,12 +28,13 @@ type Arg struct {
 	Usage        string
 	Default      interface{}
 	Optional     bool
-	CheckFunc    func(Context, any, *Arg) error
+	ExistsFunc   func(Context, any, *Arg) error
+	ValidateFunc func(Context, any, *Arg) error
 	Type         reflect.Kind
 	SetValueFunc func(*Value)
 	Value        *Value
 	Requires     ArgRequires
-	Message      string
+	OnSuccess    string
 }
 
 func NewArg(arg Arg) Arg {
@@ -98,27 +100,31 @@ func (arg Arg) MustBeEmpty() Arg {
 	arg.Requires |= MustBeEmpty
 	return arg
 }
-func (arg Arg) MustPassCheck() Arg {
-	arg.Requires &= ^IgnoreCheck
-	arg.Requires &= ^MustFailCheck
-	arg.Requires |= MustPassCheck
+func (arg Arg) MustExist() Arg {
+	arg.Requires &= ^IgnoreExists
+	arg.Requires &= ^NotExist
+	arg.Requires |= MustExist
 	return arg
 }
-func (arg Arg) IgnoreCheck() Arg {
-	arg.Requires &= ^MustPassCheck
-	arg.Requires &= ^MustFailCheck
-	arg.Requires |= IgnoreCheck
+func (arg Arg) IgnoreExists() Arg {
+	arg.Requires &= ^MustExist
+	arg.Requires &= ^NotExist
+	arg.Requires |= IgnoreExists
 	return arg
 }
-func (arg Arg) MustFailCheck() Arg {
-	arg.Requires &= ^MustPassCheck
-	arg.Requires &= ^IgnoreCheck
-	arg.Requires |= MustFailCheck
+func (arg Arg) NotExist() Arg {
+	arg.Requires &= ^MustExist
+	arg.Requires &= ^IgnoreExists
+	arg.Requires |= NotExist
+	return arg
+}
+func (arg Arg) MustValidate() Arg {
+	arg.Requires |= MustValidate
 	return arg
 }
 
 func (arg Arg) ClearCheckFunc() Arg {
-	arg.CheckFunc = nil
+	arg.ExistsFunc = nil
 	return arg
 }
 

@@ -10,8 +10,8 @@ import (
 //goland:noinspection GoUnusedGlobalVariable
 var CmdAddCodebase = CmdAdd.
 	AddSubCommand("codebase", Root.ExecAddCodebase).
-	AddArg(projectArg.NotEmpty().MustPassCheck()).
-	AddArg(versionTagArg.NotEmpty().IgnoreCheck())
+	AddArg(projectArg.NotEmpty().MustExist()).
+	AddArg(versionTagArg.NotEmpty().MustValidate().NotExist())
 
 func (a *App) ExecAddCodebase(ctx context.Context, i *cli.CommandInvoker) (err error) {
 	var p persister.Project
@@ -53,10 +53,9 @@ func (a *App) ExecAddCodebase(ctx context.Context, i *cli.CommandInvoker) (err e
 		)
 		goto end
 	}
-	cli.StdOut("\nSuccessfully added codebase for '%s' version '%s' with source URL %s.\n",
+	cli.StdOut("\nSuccessfully added codebase for '%s' version '%s'.\n",
 		project,
 		versionTag,
-		sourceURL,
 	)
 end:
 	return err

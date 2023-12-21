@@ -19,8 +19,8 @@ import (
 
 //goland:noinspection GoUnusedGlobalVariable
 var CmdMap = cli.AddCommandWithFunc("map", Root.ExecMap).
-	AddArg(projectArg.NotEmpty().MustPassCheck()).
-	AddArg(versionTagArg.NotEmpty().MustPassCheck()).
+	AddArg(projectArg.NotEmpty().MustExist()).
+	AddArg(versionTagArg.NotEmpty().MustExist()).
 	AddFlag(&cli.Flag{
 		Switch: "src",
 		Arg: cli.Arg{
@@ -28,7 +28,7 @@ var CmdMap = cli.AddCommandWithFunc("map", Root.ExecMap).
 			Usage:        "Source directory",
 			Type:         reflect.String,
 			Default:      defaultSourceDir(opts),
-			CheckFunc:    checkDir,
+			ExistsFunc:   checkDir,
 			SetValueFunc: options.SetSourceDir,
 		},
 	})

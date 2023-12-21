@@ -115,7 +115,14 @@ func (i *CommandInvoker) ValidateArgs(ctx Context) (err error) {
 	cmd := i.Command
 	err = cmd.Args.Validate(ctx)
 	if err != nil {
-		if errors.Is(err, ErrRequiresCheckFailed) {
+		if errors.Is(err, ErrDoesNotValidate) {
+			err = err.(serr.SError).Unwrap()
+		}
+		goto end
+	}
+	err = cmd.Args.CheckExistence(ctx)
+	if err != nil {
+		if errors.Is(err, ErrDoesNotExist) {
 			err = err.(serr.SError).Unwrap()
 		}
 		goto end
@@ -144,7 +151,7 @@ end:
 //
 // then ReceivedArgsCount returns 3 for "foo bar baz."
 func (i *CommandInvoker) ReceivedArgsCount() int {
-	return len(i.Tokens.Args())
+	return len(i.Tokens.Args()) - i.Command.commandDepth()
 }
 
 func (i *CommandInvoker) Args() Args {

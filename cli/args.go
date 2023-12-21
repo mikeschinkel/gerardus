@@ -57,38 +57,70 @@ end:
 }
 
 func (args Args) Validate(ctx Context) (err error) {
-	var message string
 	for _, arg := range args {
-		if arg.CheckFunc == nil {
+		if arg.ValidateFunc == nil {
 			continue
 		}
-		emptyState := ExistenceInDB(arg.Requires)
-		if emptyState == IgnoreCheck {
+		validateState := ArgValidation(arg.Requires)
+		if validateState != MustValidate {
 			continue
 		}
 		//goland:noinspection GoSwitchMissingCasesForIotaConsts
 		switch arg.Type {
 		case reflect.String:
-			err = arg.CheckFunc(ctx, arg.Value.string, &arg)
+			err = arg.ValidateFunc(ctx, arg.Value.string, &arg)
 		case reflect.Int:
-			err = arg.CheckFunc(ctx, arg.Value.int, &arg)
+			err = arg.ValidateFunc(ctx, arg.Value.int, &arg)
 		default:
-			arg.noSetFuncAssigned()
+			panicf("No func assigned to `ValidateFunc` for arg '%s'", arg.Unique())
 		}
-		message = arg.Message
-		switch {
-		case emptyState == MustPassCheck && err != nil:
-			err = ErrRequiresCheckFailed.Err(err, "arg_name", arg.Name)
-		case emptyState == MustFailCheck && err == nil:
-			err = ErrRequiresCheckPassed.Err(err, "arg_name", arg.Name)
+		if err != nil {
+			err = ErrDoesNotValidate.Err(err, "arg_name", arg.Name)
+			goto end
+		}
+	}
+end:
+	return serr.Cast(err)
+}
+
+func (args Args) CheckExistence(ctx Context) (err error) {
+	var onSuccess string
+	var value any
+
+	for _, arg := range args {
+		if arg.ExistsFunc == nil {
+			continue
+		}
+		emptyState := ArgExistence(arg.Requires)
+		if emptyState == IgnoreExists {
+			continue
+		}
+		//goland:noinspection GoSwitchMissingCasesForIotaConsts
+		switch arg.Type {
+		case reflect.String:
+			err = arg.ExistsFunc(ctx, arg.Value.string, &arg)
+			value = arg.Value.string
+		case reflect.Int:
+			err = arg.ExistsFunc(ctx, arg.Value.int, &arg)
+			value = arg.Value.int
 		default:
+			panicf("No func assigned to `ExistsFunc` for arg '%s'", arg.Unique())
+		}
+		onSuccess = arg.OnSuccess
+		switch {
+		case emptyState == MustExist && err != nil:
+			err = ErrDoesNotExist.Err(err, "arg_name", arg.Name, "value", value)
+		case emptyState == NotExist && err == nil:
+			err = ErrAlreadyExists.Args("arg_name", arg.Name, "value", value)
+		default:
+			err = nil
 			continue
 		}
 		goto end
 	}
 end:
-	if err != nil && message != "" {
-		err = serr.New(message).Err(err)
+	if err != nil && onSuccess != "" {
+		err = serr.New(onSuccess).Err(err)
 	}
 	return serr.Cast(err)
 }
