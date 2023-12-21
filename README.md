@@ -5,7 +5,7 @@ Gerardus reads all the `.go` files in a directory recursively and then generates
 
 It defaults to reading the directory found in `GOROOT` if you don't specify otherwise.
 
-Still very much pre-alpha.
+Still very much a **work-in-progress**, and thus **pre-alpha.**
 
 
 ## Roadmap
