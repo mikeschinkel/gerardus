@@ -15,12 +15,12 @@ type Flag struct {
 	Arg
 }
 
-func (f *Flag) noSetFuncAssigned() {
+func (f Flag) noSetFuncAssigned() {
 	panicf("No func(<type>) assigned to property `Set<type>ValFunc` for flag '%s'", f.Unique())
 }
 
-func (f *Flag) Initialize() {
-	fu := &Value{}
+func (f Flag) Initialize() Flag {
+	fu := &Value{Type: f.Type}
 	switch f.Type {
 	case reflect.String:
 		flag.StringVar(&fu.string, f.Switch, f.Default.(string), f.Usage)
@@ -30,31 +30,32 @@ func (f *Flag) Initialize() {
 		f.noSetFuncAssigned()
 	}
 	f.Value = fu
+	return f
 }
 
-func (f *Flag) String() string {
+func (f Flag) String() string {
 	return fmt.Sprintf(" [-%s=<%s>]", f.Switch, f.Name)
 }
 
 // Unique returns a string that uniquely identifies a flag for its command
-func (f *Flag) Unique() string {
+func (f Flag) Unique() string {
 	return fmt.Sprintf("%s:%s", f.Parent.Unique(), f.Name)
 }
 
-func (f *Flag) Help(opts HelpOpts) (help string) {
+func (f Flag) Help(opts HelpOpts) (help string) {
 	opts.signature = f.signature()
 	return f.help(opts)
 }
 
-func (f *Flag) SignatureHelp() string {
+func (f Flag) SignatureHelp() string {
 	return fmt.Sprintf(" [%s]", f.signature())
 }
 
-func (f *Flag) signature() string {
+func (f Flag) signature() string {
 	return fmt.Sprintf("-%s=<%s>", f.Switch, f.Name)
 }
 
-func (f *Flag) CheckExists(ctx Context) (err error) {
+func (f Flag) CheckExists(ctx Context) (err error) {
 	if f.ExistsFunc == nil {
 		goto end
 	}

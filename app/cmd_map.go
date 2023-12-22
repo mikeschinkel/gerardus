@@ -21,7 +21,7 @@ import (
 var CmdMap = cli.AddCommandWithFunc("map", Root.ExecMap).
 	AddArg(projectArg.NotEmpty().MustExist()).
 	AddArg(versionTagArg.NotEmpty().MustExist()).
-	AddFlag(&cli.Flag{
+	AddFlag(cli.Flag{
 		Switch: "src",
 		Arg: cli.Arg{
 			Name:         "source_dir",

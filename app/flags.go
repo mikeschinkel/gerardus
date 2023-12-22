@@ -10,7 +10,7 @@ import (
 
 func init() {
 	cli.RootCmd.
-		AddFlag(&cli.Flag{
+		AddFlag(cli.Flag{
 			Switch: "data",
 			Arg: cli.Arg{
 				Name:         "data_file",

@@ -6,7 +6,7 @@ import (
 
 var _ items = (Flags)(nil)
 
-type Flags []*Flag
+type Flags []Flag
 
 func (flags Flags) Len() int {
 	return len(flags)
@@ -86,9 +86,9 @@ func (flags Flags) callSetValueFuncs() Flags {
 // flag.<Type>Var() function on a pointer to f.Arg.Value.<type> so that this flag
 // 'f' will get the values passed on the command line, or the defaults if not
 // passed.
-func (flags Flags) Initialize() (err error) {
-	for _, f := range flags {
-		f.Initialize()
+func (flags Flags) Initialize() Flags {
+	for i, f := range flags {
+		flags[i] = f.Initialize()
 	}
-	return err
+	return flags
 }

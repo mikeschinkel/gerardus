@@ -38,7 +38,7 @@ func Initialize(ctx Context, params Params) (invoker *CommandInvoker, err error)
 	)
 
 	flags = cmd.InvokedFlags()
-	err = flags.Initialize()
+	flags = flags.Initialize()
 	if err != nil {
 		goto end
 	}
@@ -46,7 +46,7 @@ func Initialize(ctx Context, params Params) (invoker *CommandInvoker, err error)
 	if err != nil {
 		goto end
 	}
-	flags.callSetValueFuncs()
+	flags = flags.callSetValueFuncs()
 	cmd.SetFlags(flags)
 
 end:

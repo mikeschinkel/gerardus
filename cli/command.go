@@ -90,7 +90,7 @@ func (c *Command) AddSubCommand(name string, ef ExecFunc) (cmd *Command) {
 	return cmd
 }
 
-func (c *Command) AddFlag(flg *Flag) (cmd *Command) {
+func (c *Command) AddFlag(flg Flag) (cmd *Command) {
 	flg.Parent = c
 	if flg.Default == nil {
 		switch flg.Type {
@@ -243,10 +243,10 @@ func (c *Command) AddArg(arg Arg) (cmd *Command) {
 	return c
 }
 
-func (c *Command) SetFlags(flags Flags) {
-	// TODO: Verify this works as expectec
-	for _, flag := range c.Flags {
-		n := flags.Index(flag.Name)
+func (c *Command) SetFlags(flags Flags) Flags {
+	unsetFlags := flags
+	for i, flag := range flags {
+		n := c.Flags.Index(flag.Name)
 		if n != -1 {
 			c.Flags[n] = flag
 		}
@@ -255,6 +255,7 @@ func (c *Command) SetFlags(flags Flags) {
 		}
 		c.Parent.SetFlags(flags)
 	}
+	return unsetFlags
 }
 
 // InvokedFlags returns all the flags for th invoked command, including all
