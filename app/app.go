@@ -131,7 +131,7 @@ func (a *App) projectExists(ctx Context, project any, arg *cli.Arg) (err error) 
 		err = ErrProjectNotFound.Err(err, "project", project)
 		goto end
 	}
-	arg.OnSuccess = serr.New("project exists").Args(ProjectArg, projName).Error()
+	arg.SuccessMsg = serr.New("project exists").Args(ProjectArg, projName).Error()
 	a.project = &p
 end:
 	return err
@@ -215,7 +215,7 @@ func (a *App) versionTagExists(ctx Context, tag any, arg *cli.Arg) (err error) {
 		err = ErrFailedToAddCodebase.Err(err, "project", projName, "version_tag", verTag)
 		goto end
 	}
-	arg.OnSuccess = ErrVersionAlreadyExists.Args("project", projName, "version_tag", verTag).Error()
+	arg.SuccessMsg = ErrVersionAlreadyExists.Args("project", projName, "version_tag", verTag).Error()
 end:
 	return err
 }

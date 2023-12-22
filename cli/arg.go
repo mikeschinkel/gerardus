@@ -34,7 +34,7 @@ type Arg struct {
 	SetValueFunc func(*Value)
 	Value        *Value
 	Requires     ArgRequires
-	OnSuccess    string
+	SuccessMsg   string
 }
 
 func NewArg(arg Arg) Arg {

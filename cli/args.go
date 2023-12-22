@@ -84,7 +84,7 @@ end:
 }
 
 func (args Args) CheckExistence(ctx Context) (err error) {
-	var onSuccess string
+	var successMsg string
 	var value any
 
 	for _, arg := range args {
@@ -106,7 +106,7 @@ func (args Args) CheckExistence(ctx Context) (err error) {
 		default:
 			panicf("No func assigned to `ExistsFunc` for arg '%s'", arg.Unique())
 		}
-		onSuccess = arg.OnSuccess
+		successMsg = arg.SuccessMsg
 		switch {
 		case emptyState == MustExist && err != nil:
 			err = ErrDoesNotExist.Err(err, "arg_name", arg.Name, "value", value)
@@ -119,8 +119,8 @@ func (args Args) CheckExistence(ctx Context) (err error) {
 		goto end
 	}
 end:
-	if err != nil && onSuccess != "" {
-		err = serr.New(onSuccess).Err(err)
+	if err != nil && successMsg != "" {
+		err = serr.New(successMsg).Err(err)
 	}
 	return serr.Cast(err)
 }

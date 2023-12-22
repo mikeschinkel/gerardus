@@ -67,8 +67,8 @@ func (f *Flag) CheckExists(ctx Context) (err error) {
 		f.noSetFuncAssigned()
 	}
 end:
-	if err != nil && f.OnSuccess != "" {
-		err = serr.New(f.OnSuccess).Err(err)
+	if err != nil && f.SuccessMsg != "" {
+		err = serr.New(f.SuccessMsg).Err(err)
 	}
 	return serr.Cast(err)
 }
