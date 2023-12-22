@@ -10,7 +10,8 @@ import (
 )
 
 type Help struct {
-	invoker *CommandInvoker
+	invoker             *CommandInvoker
+	SetStderrWriterFunc func(io.Writer)
 }
 
 func NewHelp(invoker *CommandInvoker) Help {
@@ -22,7 +23,8 @@ func NewHelp(invoker *CommandInvoker) Help {
 func (h Help) Usage(err error, w io.Writer) {
 	var help string
 
-	StderrWriter = w
+	// Set the stdErr writer
+	h.SetStderrWriterFunc(w)
 
 	switch h.commandType() {
 	case Root:

@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+var StdErrWriter io.Writer = os.Stderr
+
 func panicf(msg string, args ...any) {
 	panic(fmt.Sprintf(msg, args...))
 }
@@ -32,7 +34,7 @@ func Close(c io.Closer, f func(err error)) {
 
 func WarnOnError(err error) {
 	if err != nil {
-		_, _ = fmt.Fprint(os.Stderr, err.Error())
+		_, _ = fmt.Fprint(StdErrWriter, err.Error())
 	}
 }
 

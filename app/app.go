@@ -90,7 +90,14 @@ func (a *App) Main(ctx Context, osArgs []string) (help cli.Help, err error) {
 	if err != nil {
 		goto end
 	}
-
+	// Set this in case help.Usage() needs to corral Stderr for capture of error
+	// output during testing.
+	help.SetStderrWriterFunc = func(w io.Writer) {
+		cli.StderrWriter = w
+		parser.StderrWriter = w
+		logger.StderrWriter = w
+		persister.StdErrWriter = w
+	}
 	a.dataStore, err = a.fi.Persister.Initialize(ctx,
 		options.DataFile(),
 		collector.SymbolTypes,
