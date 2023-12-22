@@ -15,10 +15,6 @@ func panicf(msg string, args ...any) {
 	panic(fmt.Sprintf(msg, args...))
 }
 
-func StdErr(msg string, args ...any) {
-	_, _ = fmt.Fprintf(os.Stderr, msg, args...)
-}
-
 func CheckURL(url string) (err error) {
 	var resp *http.Response
 	var status int
