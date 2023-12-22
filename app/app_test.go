@@ -101,6 +101,20 @@ func rootTests() []test {
 			output: noCLIArgsOutput(),
 			errStr: "no command specified",
 		},
+		{
+			name:   "FAIL — NO DB FILE",
+			fail:   true,
+			args:   []string{"-data"},
+			output: "",
+			errStr: "",
+		},
+		{
+			name:   "FAIL — MISSING DB FILE",
+			fail:   true,
+			args:   []string{"-data=/not/there.db"},
+			output: "\nERROR: Failed to initialize data store [data_file='/not/there.db']\n",
+			errStr: "failed to initialize data store [data_file='/not/there.db']",
+		},
 	}
 }
 
