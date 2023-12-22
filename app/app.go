@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"io"
 	"strings"
 
 	"github.com/mikeschinkel/gerardus/cli"
