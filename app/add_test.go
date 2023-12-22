@@ -6,6 +6,7 @@ import (
 
 func TestAddCommand(t *testing.T) {}
 
+//goland:noinspection GoUnusedFunction
 func addTests() []test {
 	return []test{
 		{
@@ -17,6 +18,7 @@ func addTests() []test {
 		},
 	}
 }
+
 func addArgsOutput() string {
 	return `
 ERROR: There is no 'add' command, but there are these commands:
