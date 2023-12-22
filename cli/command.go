@@ -249,11 +249,13 @@ func (c *Command) SetFlags(flags Flags) Flags {
 		n := c.Flags.Index(flag.Name)
 		if n != -1 {
 			c.Flags[n] = flag
+			unsetFlags = unsetFlags.Remove(i)
+			continue
 		}
 		if c.Parent == nil {
 			continue
 		}
-		c.Parent.SetFlags(flags)
+		unsetFlags = c.Parent.SetFlags(unsetFlags)
 	}
 	return unsetFlags
 }
