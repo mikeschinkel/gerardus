@@ -52,6 +52,9 @@ func TestAppMain(t *testing.T) {
 		t.Run("Add Codebase Tests", func(t *testing.T) {
 			runTests(t, addCodebaseTests())
 		})
+		t.Run("Map Tests", func(t *testing.T) {
+			runTests(t, mapTests())
+		})
 	})
 }
 
