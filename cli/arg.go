@@ -54,16 +54,20 @@ func (arg Arg) Check(requires ArgRequires) bool {
 	return arg.Requires&requires != 0
 }
 
-func (arg Arg) EmptyStateSatisfied() (err error) {
+// EmptyStateSatisfied ensures that values of .Requires for .Args are satisfied
+func (arg Arg) EmptyStateSatisfied(ctx Context, tt TokenType) (err error) {
 	e := ArgEmptiness(arg.Requires)
 	isZero := arg.Value.IsZero()
-	name := fmt.Sprintf("<%s>", arg.Name)
+	name := arg.Name
+	if tt == FlagType {
+		name = "-" + name
+	}
 	switch {
 	case e == NotEmpty && isZero:
-		err = ErrArgCannotBeEmpty.Args("arg_name", name)
+		err = ErrTokenValueCannotBeEmpty.Args(tt, name)
 		goto end
 	case e == MustBeEmpty && !isZero:
-		err = ErrArgMustBeEmpty.Args("arg_name", name)
+		err = ErrTokenValueMustBeEmpty.Args(tt, name)
 		goto end
 	}
 end:
