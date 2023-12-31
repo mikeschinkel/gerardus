@@ -180,8 +180,7 @@ end:
 }
 
 func (a *App) validateVersionTag(ctx Context, tag any, arg *cli.Arg) (err error) {
-	var verTag string
-	verTag = tag.(string)
+	verTag := tag.(string)
 
 	if !semver.IsValid(normalizeVersionTag(verTag)) {
 		err = ErrVersionIsNotValid.Err(err,
