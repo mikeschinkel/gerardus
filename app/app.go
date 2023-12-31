@@ -107,7 +107,7 @@ func (a *App) Main(ctx Context, osArgs []string) (help cli.Help, err error) {
 	if err != nil {
 		goto end
 	}
-	err = invoker.Validate(ctx)
+	err = invoker.MeetsRequirements(ctx)
 	if err != nil {
 		goto end
 	}

@@ -44,7 +44,7 @@ func TestAppMain(t *testing.T) {
 			runTests(t, rootTests())
 		})
 		t.Run("Add Tests", func(t *testing.T) {
-			runTests(t, rootTests())
+			runTests(t, addTests())
 		})
 		t.Run("Add Project Tests", func(t *testing.T) {
 			runTests(t, addProjectTests())
