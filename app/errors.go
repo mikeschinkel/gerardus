@@ -28,4 +28,5 @@ var (
 	ErrMapCommandFailed          = serr.New("`map` command failed").ValidArgs("source_dir")
 	ErrFailedConvertingToAbsPath = serr.New("failed to convert directory to absolute path").ValidArgs("path")
 	ErrVersionIsNotValid         = serr.New("version is not valid").ValidArgs("version_tag")
+	ErrInvalidFilepath           = serr.New("invalid filepath").ValidArgs("filepath")
 )
