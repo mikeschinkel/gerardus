@@ -5,7 +5,9 @@ import (
 )
 
 var (
+	ErrOptionAfterArgs    = serr.New("option found after args").ValidArgs("options", "args")
 	ErrNoCommandSpecified = serr.New("no command specified")
+	ErrCommandNotValid    = serr.New("command is not valid").ValidArgs("command")
 	ErrNoExecFuncFound    = serr.New("no exec func found")
 
 	ErrNoCLIArgsProvided  = serr.New("no command line args provided")
@@ -15,9 +17,11 @@ var (
 	ErrTooFewArgsPassed  = serr.New("too few arguments passed").ValidArgs("expected", "got")
 	ErrTooManyArgsPassed = serr.New("too many arguments passed").ValidArgs("expected", "got")
 
-	ErrAlreadyExists   = serr.New("already exists")
-	ErrDoesNotExist    = serr.New("does not exist")
-	ErrDoesNotValidate = serr.New("does not validate")
+	ErrAlreadyExists   = serr.New("already exists").ValidArgs("arg_name", "value")
+	ErrDoesNotExist    = serr.New("does not exist").ValidArgs("arg_name", "value")
+	ErrDoesNotValidate = serr.New("does not validate").ValidArgs("arg_name", "value")
+
+	ErrEmptyStateNotSatisfied = serr.New("not satisfied").ValidArgs("arg_name", "value")
 
 	// ErrTokenValueCannotBeEmpty omits the word "token" to display a message "value
 	// cannot be empty" and omits in order to differentiate from a potential generic

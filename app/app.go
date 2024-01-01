@@ -211,8 +211,12 @@ func (a *App) versionTagExists(ctx Context, tag any, arg *cli.Arg) (err error) {
 		Name:       projName,
 		VersionTag: verTag,
 	})
+	if errors.Is(err, sql.ErrNoRows) {
+		err = ErrVersionTagDoesNotExist.Err(err, "project", projName, "version_tag", verTag)
+		goto end
+	}
 	if err != nil {
-		err = ErrFailedToAddCodebase.Err(err, "project", projName, "version_tag", verTag)
+		err = ErrUnexpectedError
 		goto end
 	}
 	arg.SuccessMsg = ErrVersionTagAlreadyExists.Args("project", projName, "version_tag", verTag).Error()

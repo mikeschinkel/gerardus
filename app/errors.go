@@ -30,4 +30,5 @@ var (
 	ErrFailedConvertingToAbsPath = serr.New("failed to convert directory to absolute path").ValidArgs("path")
 	ErrVersionTagNotValid        = serr.New("version tag is not valid").ValidArgs("version_tag")
 	ErrInvalidFilepath           = serr.New("invalid filepath").ValidArgs("filepath")
+	ErrUnexpectedError           = serr.New("unexpected error")
 )
