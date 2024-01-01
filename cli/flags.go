@@ -1,9 +1,5 @@
 package cli
 
-import (
-	"github.com/mikeschinkel/go-serr"
-)
-
 var _ items = (Flags)(nil)
 
 type Flags []Flag
@@ -54,29 +50,6 @@ func (flags Flags) DisplayWidth(minWidth int) (width int) {
 		width = max(width, len(flag.Name))
 	}
 	return
-}
-
-// EmptyStateSatisfied ensures that values of .Requires are satisfied
-func (flags Flags) EmptyStateSatisfied() (err error) {
-	for _, flag := range flags {
-		err = flag.EmptyStateSatisfied()
-		if err != nil {
-			goto end
-		}
-	}
-end:
-	return serr.Cast(err)
-}
-
-func (flags Flags) Validate(ctx Context) (err error) {
-	for _, f := range flags {
-		err = f.CheckExists(ctx)
-		if err != nil {
-			goto end
-		}
-	}
-end:
-	return err
 }
 
 func (flags Flags) SignatureHelp() (s string) {

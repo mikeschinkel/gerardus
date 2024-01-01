@@ -4,8 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"reflect"
-
-	"github.com/mikeschinkel/go-serr"
 )
 
 var _ helper = (*Flag)(nil)
@@ -53,23 +51,4 @@ func (f Flag) SignatureHelp() string {
 
 func (f Flag) signature() string {
 	return fmt.Sprintf("-%s=<%s>", f.Switch, f.Name)
-}
-
-func (f Flag) CheckExists(ctx Context) (err error) {
-	if f.ExistsFunc == nil {
-		goto end
-	}
-	switch f.Type {
-	case reflect.String:
-		err = f.ExistsFunc(ctx, f.Value.string, &f.Arg)
-	case reflect.Int:
-		err = f.ExistsFunc(ctx, f.Value.int, &f.Arg)
-	default:
-		f.noSetFuncAssigned()
-	}
-end:
-	if err != nil && f.SuccessMsg != "" {
-		err = serr.New(f.SuccessMsg).Err(err)
-	}
-	return serr.Cast(err)
 }

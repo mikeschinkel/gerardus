@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"log/slog"
 	"reflect"
 	"slices"
 	"strings"
@@ -43,6 +44,73 @@ end:
 
 func (c *Command) IsLeaf() bool {
 	return len(c.SubCommands) == 0
+}
+
+// MeetsRequirements validates args and options passed on the CLI for full command path.
+func (c *Command) MeetsRequirements(ctx Context, tokenCnt int) (err error) {
+	var expected, got int
+	var cmds []*Command
+
+	slog.Info("Validating CLI Args and Flags")
+
+	if c.ExecFunc == nil {
+		if c == RootCmd {
+			err = ErrNoCommandSpecified
+			goto end
+		}
+		// For when using a partial command like 'add' when the command is 'add project'.
+		err = ErrNoExecFuncFound
+		goto end
+	}
+
+	cmds = c.commandPath()
+	for _, cmd := range cmds {
+		err = cmd.meetsRequirements(ctx, tokenCnt)
+		if err != nil {
+			goto end
+		}
+	}
+
+	expected = c.RequiredArgsCount()
+	got = c.ReceivedArgsCount(tokenCnt)
+	if got < expected {
+		// TODO: Add 'missing'
+		err = ErrTooFewArgsPassed.Args("expected", expected, "passed", got)
+		goto end
+	}
+	expected = c.DeclaredArgsCount()
+	if got > expected {
+		// TODO: Add 'extra'
+		err = ErrTooManyArgsPassed.Args("expected", expected, "passed", got)
+		goto end
+	}
+
+end:
+	return err
+}
+
+type TokenType string
+
+const (
+	ArgType  TokenType = "arg"
+	FlagType TokenType = "option"
+)
+
+// meetsRequirements validates all args and options meet requirements for one command.
+func (c *Command) meetsRequirements(ctx Context, tokenCnt int) (err error) {
+
+	err = MeetsRequirements(ctx, ArgType, c.Args)
+	if err != nil {
+		goto end
+	}
+
+	err = MeetsRequirements(ctx, FlagType, c.Flags)
+	if err != nil {
+		goto end
+	}
+
+end:
+	return err
 }
 
 func (c *Command) Help() string {

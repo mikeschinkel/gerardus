@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+
+	"github.com/mikeschinkel/go-serr"
 )
 
 type ArgName string
@@ -200,4 +202,69 @@ func (arg Arg) noSetFuncAssigned() {
 func callSetArgValueFunc(arg Arg) Arg {
 	arg.SetValueFunc(arg.Value)
 	return arg
+}
+
+func (arg Arg) CheckExistence(ctx Context) (err error) {
+	var value any
+	var successMsg string
+	var emptyState ArgRequires
+
+	if arg.ExistsFunc == nil {
+		goto end
+	}
+	emptyState = ArgExistence(arg.Requires)
+	if emptyState == IgnoreExists {
+		goto end
+	}
+	//goland:noinspection GoSwitchMissingCasesForIotaConsts
+	switch arg.Type {
+	case reflect.String:
+		err = arg.ExistsFunc(ctx, arg.Value.string, &arg)
+		value = arg.Value.string
+	case reflect.Int:
+		err = arg.ExistsFunc(ctx, arg.Value.int, &arg)
+		value = arg.Value.int
+	default:
+		panicf("No func assigned to `ExistsFunc` for arg '%s'", arg.Unique())
+	}
+	successMsg = arg.SuccessMsg
+	switch {
+	case emptyState == MustExist && err != nil:
+		err = ErrDoesNotExist.Err(err, "arg_name", arg.Name, "value", value)
+	case emptyState == NotExist && err == nil:
+		err = ErrAlreadyExists.Args("arg_name", arg.Name, "value", value)
+	default:
+		err = nil
+	}
+end:
+	if err != nil && successMsg != "" {
+		err = serr.New(successMsg).Err(err)
+	}
+	return err
+}
+
+func (arg Arg) ValidateByFunc(ctx Context) (err error) {
+	var validateState ArgRequires
+
+	if arg.ValidateFunc == nil {
+		goto end
+	}
+	validateState = ArgValidation(arg.Requires)
+	if validateState != MustValidate {
+		goto end
+	}
+	//goland:noinspection GoSwitchMissingCasesForIotaConsts
+	switch arg.Type {
+	case reflect.String:
+		err = arg.ValidateFunc(ctx, arg.Value.string, &arg)
+	case reflect.Int:
+		err = arg.ValidateFunc(ctx, arg.Value.int, &arg)
+	default:
+		panicf("No func assigned to `ValidateFunc` for '%s'", arg.Name)
+	}
+end:
+	if err != nil {
+		err = ErrDoesNotValidate.Err(err, "arg_name", arg.Name)
+	}
+	return err
 }
