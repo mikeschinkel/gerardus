@@ -36,7 +36,7 @@ func Initialize(ctx Context, params Params) (invoker *CommandInvoker, err error)
 
 	fs = flag.NewFlagSet(
 		ExecutableFilepath(params.AppName),
-		flag.ExitOnError,
+		flag.ContinueOnError,
 	)
 	fs.SetOutput(StderrWriter)
 	flag.CommandLine = fs
