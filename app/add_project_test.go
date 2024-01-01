@@ -106,14 +106,17 @@ func addProjectUsage() string {
 `
 }
 
+//goland:noinspection GoUnusedParameter
 func SuccessfulUpsertProjectStub(ctx context.Context, arg persister.UpsertProjectParams) (persister.Project, error) {
 	return projectID1NameGolangStub(), nil
 }
 
+//goland:noinspection GoUnusedParameter
 func LoadFoundProjectByNameStub(ctx context.Context, name string) (persister.Project, error) {
 	return projectID1NameGolangStub(), nil
 }
 
+//goland:noinspection GoUnusedParameter
 func LoadMissingProjectByNameStub(ctx context.Context, name string) (persister.Project, error) {
 	return persister.Project{}, sql.ErrNoRows
 }

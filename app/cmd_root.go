@@ -23,6 +23,7 @@ func init() {
 			}})
 }
 
+//goland:noinspection GoUnusedParameter
 func (a *App) validateDataFile(ctx Context, file any, arg *cli.Arg) (err error) {
 	fileName := file.(string)
 	exists, err := paths.FileExists(fileName)

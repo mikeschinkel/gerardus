@@ -57,6 +57,8 @@ func (arg Arg) Check(requires ArgRequires) bool {
 }
 
 // EmptyStateSatisfied ensures that values of .Requires for .Args are satisfied
+//
+//goland:noinspection GoUnusedParameter
 func (arg Arg) EmptyStateSatisfied(ctx Context, tt TokenType) (err error) {
 	e := ArgEmptiness(arg.Requires)
 	isZero := arg.Value.IsZero()

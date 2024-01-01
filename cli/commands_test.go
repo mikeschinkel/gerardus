@@ -142,7 +142,8 @@ func TestCommands(t *testing.T) {
 	}
 }
 
-func stubFunc(context cli.Context, invoker *cli.CommandInvoker) error {
+//goland:noinspection GoUnusedParameter
+func stubFunc(ctx cli.Context, invoker *cli.CommandInvoker) error {
 	return nil
 }
 func rootCommand() *cli.Command {

@@ -17,7 +17,8 @@ func (f Flag) noSetFuncAssigned() {
 	panicf("No func(<type>) assigned to property `Set<type>ValFunc` for flag '%s'", f.Unique())
 }
 
-func (f Flag) Initialize() Flag {
+//goland:noinspection GoUnusedParameter
+func (f Flag) Initialize(ctx Context) Flag {
 	fu := &Value{Type: f.Type}
 	switch f.Type {
 	case reflect.String:

@@ -156,6 +156,7 @@ func ContextStub(tt test, opts TestOps) Context {
 	return ctx
 }
 
+//goland:noinspection GoUnusedParameter
 func persisterInitializeStub(ctx Context, fp string, types ...any) (ds persister.DataStore, err error) {
 	ds = NewDataStoreStub()
 	err = ds.Initialize(ctx)

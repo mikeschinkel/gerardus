@@ -83,13 +83,17 @@ func addCodebaseUsage() string {
 `
 }
 
+//goland:noinspection GoUnusedParameter
 func SuccessfulUpsertCodebaseStub(ctx context.Context, arg persister.UpsertCodebaseParams) (persister.Codebase, error) {
 	return codebaseID1ProjectGolangVersion1214(), nil
 }
 
+//goland:noinspection GoUnusedParameter
 func LoadFoundCodebaseIDByProjectAndVersionStub(ctx context.Context, arg persister.LoadCodebaseIDByProjectAndVersionParams) (int64, error) {
 	return 1, nil
 }
+
+//goland:noinspection GoUnusedParameter
 func LoadMissingCodebaseIDByProjectAndVersionStub(ctx context.Context, arg persister.LoadCodebaseIDByProjectAndVersionParams) (int64, error) {
 	return 0, sql.ErrNoRows
 }

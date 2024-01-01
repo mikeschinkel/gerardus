@@ -131,6 +131,7 @@ end:
 	return err
 }
 
+//goland:noinspection GoUnusedParameter
 func (a *App) repoURLExists(ctx Context, url any, arg *cli.Arg) (err error) {
 	var parts []string
 	var numParts int
@@ -172,6 +173,7 @@ end:
 	return err
 }
 
+//goland:noinspection GoUnusedParameter
 func (a *App) validateVersionTag(ctx Context, tag any, arg *cli.Arg) (err error) {
 	verTag := tag.(string)
 
