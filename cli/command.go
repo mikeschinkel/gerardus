@@ -65,7 +65,7 @@ func (c *Command) MeetsRequirements(ctx Context, tokenCnt int) (err error) {
 
 	cmds = c.commandPath()
 	for _, cmd := range cmds {
-		err = cmd.meetsRequirements(ctx, tokenCnt)
+		err = cmd.meetsRequirements(ctx)
 		if err != nil {
 			goto end
 		}
@@ -97,7 +97,7 @@ const (
 )
 
 // meetsRequirements validates all args and options meet requirements for one command.
-func (c *Command) meetsRequirements(ctx Context, tokenCnt int) (err error) {
+func (c *Command) meetsRequirements(ctx Context) (err error) {
 
 	err = MeetsRequirements(ctx, ArgType, c.Args)
 	if err != nil {

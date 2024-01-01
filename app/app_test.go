@@ -174,16 +174,6 @@ func loggerInitializeStub(logger.Params) error {
 	return nil
 }
 
-func CheckURLStub(url string) (err error) {
-	switch url {
-	case "https://github.com/not/there":
-		err = app.ErrURLCouldNotBeDereferenced.Args("repo_url", url)
-	case "https://github.com/golang/go":
-		err = nil
-	}
-	return err
-}
-
 func RequestGitHubRepoInfoStub(url string) (ri *persister.RepoInfo, err error) {
 	switch url {
 	case "https://github.com/not/there":

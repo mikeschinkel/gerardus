@@ -33,13 +33,6 @@ func New() *App {
 	}
 }
 
-func NewWithDeps(a App) *App {
-	if a.fi.IsValid() {
-		a.fi = New().fi
-	}
-	return &a
-}
-
 func (a *App) DataStore() persister.DataStore {
 	return a.dataStore
 }
