@@ -41,17 +41,6 @@ end:
 	return cmd, depth
 }
 
-//func (i *CommandInvoker) ArgCount() (cnt int, err error) {
-//	var depth int
-//	_, depth, err = InvokedCommand(i.Tokens)
-//	if err != nil {
-//		goto end
-//	}
-//	cnt -= depth
-//end:
-//	return cnt, err
-//}
-
 func (i *CommandInvoker) InvokeCommand(ctx Context) (err error) {
 	cmd := i.Command
 	slog.Info("Invoking command", "command", cmd.String())

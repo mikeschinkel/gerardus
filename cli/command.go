@@ -15,7 +15,6 @@ type Command struct {
 	Args         Args
 	SubCommands  CommandMap
 	invokedFlags Flags
-	argsMap      ArgsMap
 }
 
 func NewCommand(name Token, ef ExecFunc) *Command {
@@ -156,36 +155,6 @@ func (c *Command) commandDepth() (n int) {
 	}
 	return n
 }
-
-//func (c *Command) ArgsMap(args []string) (_ ArgsMap, err error) {
-//	var index, depth int
-//
-//	if len(c.argsMap) > 0 {
-//		goto end
-//	}
-//	c.argsMap = make(ArgsMap)
-//
-//	depth = c.commandDepth()
-//	if depth >= len(args) {
-//		goto end
-//	}
-//	args = args[1+depth:]
-//
-//	for _, arg := range c.Args {
-//		if index < len(args) {
-//			value := args[index]
-//			if value[0] == '-' {
-//				continue
-//			}
-//			index++
-//			arg.Value.string = value
-//		}
-//		arg.Value.Type = arg.Type
-//		c.argsMap[arg.Name] = arg
-//	}
-//end:
-//	return c.argsMap, err
-//}
 
 // setArgValues sets the Value values
 func (c *Command) setArgValues(args Tokens) (err error) {
