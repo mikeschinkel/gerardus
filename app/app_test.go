@@ -99,27 +99,27 @@ func rootTests() []test {
 			name:   "FAIL — NO COMMAND",
 			fail:   true,
 			args:   []string{},
-			output: noCLIArgsOutput(),
+			output: rootArgsOutput(),
 			errStr: "no command specified",
 		},
 		{
 			name:   "FAIL — NO DB FILE",
 			fail:   true,
 			args:   []string{"-data"},
-			output: "",
-			errStr: "",
+			output: rootArgsOutput(),
+			errStr: "no command specified",
 		},
 		{
 			name:   "FAIL — MISSING DB FILE",
 			fail:   true,
 			args:   []string{"-data=/not/there.db"},
-			output: "\nERROR: Failed to initialize data store [data_file='/not/there.db']\n",
-			errStr: "failed to initialize data store [data_file='/not/there.db']",
+			output: rootArgsOutput(),
+			errStr: "no command specified",
 		},
 	}
 }
 
-func noCLIArgsOutput() string {
+func rootArgsOutput() string {
 	return `
 ERROR: No command specified:
 
@@ -216,7 +216,7 @@ func (db *DataStoreStub) Open() (err error) {
 func (db *DataStoreStub) Queries() (q persister.DataStoreQueries) {
 	q = db.DataStore.Queries()
 	if q == nil {
-		panic("DatastoreQueries NOT SET for TESTING.")
+		panic("TODO: tt.queries NOT *YET* SET for this test case.")
 	}
 	return q
 }

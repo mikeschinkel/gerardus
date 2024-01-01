@@ -14,14 +14,14 @@ func mapTests() []test {
 			fail:   true,
 			args:   []string{"map"},
 			output: mapArgsOutput(),
-			errStr: "argument cannot be empty [arg_name='<project>']",
+			errStr: "value cannot be empty [arg=project]",
 		},
 	}
 }
 
 func mapArgsOutput() string {
 	return `
-ERROR: Argument cannot be empty [arg_name='<project>']:
+ERROR: Value cannot be empty [arg=project]:
 
   Usage: gerardus [<options>] <command> [<args>]
 
