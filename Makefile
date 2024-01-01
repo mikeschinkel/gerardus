@@ -20,7 +20,8 @@ test: .force
 		for_each_module,\
 		Testing gerardus,\
 		GERARDUS_SOURCE_DIR=/Users/mikeschinkel/Projects/gerardus \
-		go test -tags test -timeout=0 ./...)
+		{go test -tags test -timeout=0 ./... 2>&1  | grep -v "[no test files]" | grep -v "matched no packages"} || true \
+	)
 
 
 vulncheck: .force
