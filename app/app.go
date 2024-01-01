@@ -183,7 +183,7 @@ func (a *App) validateVersionTag(ctx Context, tag any, arg *cli.Arg) (err error)
 	verTag := tag.(string)
 
 	if !semver.IsValid(normalizeVersionTag(verTag)) {
-		err = ErrVersionIsNotValid.Err(err,
+		err = ErrVersionTagNotValid.Err(err,
 			"version_tag", tag.(string),
 			"hint", "Version must be semver.org compatible",
 		)
@@ -215,7 +215,7 @@ func (a *App) versionTagExists(ctx Context, tag any, arg *cli.Arg) (err error) {
 		err = ErrFailedToAddCodebase.Err(err, "project", projName, "version_tag", verTag)
 		goto end
 	}
-	arg.SuccessMsg = ErrVersionAlreadyExists.Args("project", projName, "version_tag", verTag).Error()
+	arg.SuccessMsg = ErrVersionTagAlreadyExists.Args("project", projName, "version_tag", verTag).Error()
 end:
 	return err
 }
