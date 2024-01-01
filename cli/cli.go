@@ -44,7 +44,7 @@ func Initialize(ctx Context, params Params) (invoker *CommandInvoker, err error)
 	fs.SetOutput(StderrWriter)
 	flag.CommandLine = fs
 
-	flags = cmd.InvokedFlags().Initialize()
+	flags = cmd.InvokedFlags().Initialize(ctx)
 
 	err = flag.CommandLine.Parse(params.Options().StringSlice())
 	if err != nil {

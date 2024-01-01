@@ -74,9 +74,9 @@ func (flags Flags) callSetValueFuncs() Flags {
 // flag.<Type>Var() function on a pointer to f.Arg.Value.<type> so that this flag
 // 'f' will get the values passed on the command line, or the defaults if not
 // passed.
-func (flags Flags) Initialize() Flags {
+func (flags Flags) Initialize(ctx Context) Flags {
 	for i, f := range flags {
-		flags[i] = f.Initialize()
+		flags[i] = f.Initialize(ctx)
 	}
 	return flags
 }
