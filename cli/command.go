@@ -274,6 +274,16 @@ func (c *Command) DeclaredArgsCount() (cnt int) {
 	return len(c.Args)
 }
 
+// ReceivedArgsCount returns number of args received on command line. Example: If
+// the command is "make widget" and the os.Args has:
+//
+//	"/path/to/maker make widget -v -n foo bar baz"
+//
+// then ReceivedArgsCount returns 3 for "foo bar baz."
+func (c *Command) ReceivedArgsCount(tokenCnt int) int {
+	return tokenCnt - c.commandDepth()
+}
+
 func (c *Command) AddArg(arg Arg) (cmd *Command) {
 	arg.Parent = c
 	c.Args = append(c.Args, NewArg(arg))
