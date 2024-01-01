@@ -34,16 +34,15 @@ func Initialize(ctx Context, params Params) (invoker *CommandInvoker, err error)
 		goto end
 	}
 
-	flag.CommandLine = flag.NewFlagSet(
+	fs = flag.NewFlagSet(
 		ExecutableFilepath(params.AppName),
 		flag.ExitOnError,
 	)
+	fs.SetOutput(StderrWriter)
+	flag.CommandLine = fs
 
-	flags = cmd.InvokedFlags()
-	flags = flags.Initialize()
-	if err != nil {
-		goto end
-	}
+	flags = cmd.InvokedFlags().Initialize()
+
 	err = flag.CommandLine.Parse(params.Options().StringSlice())
 	if err != nil {
 		goto end
