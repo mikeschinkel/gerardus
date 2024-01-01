@@ -8,7 +8,7 @@ import (
 )
 
 func TestSetExecFunc(t *testing.T) {
-	ef := func(*cli.CommandInvoker) error { return nil }
+	ef := func(cli.Context, *cli.CommandInvoker) error { return nil }
 	tests := []struct {
 		name string
 		ef   cli.ExecFunc
