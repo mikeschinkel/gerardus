@@ -73,6 +73,9 @@ func (arg Arg) EmptyStateSatisfied(ctx Context, tt TokenType) (err error) {
 		goto end
 	}
 end:
+	if err != nil {
+		err = ErrEmptyStateNotSatisfied.Err(err, "arg_name", arg.Name)
+	}
 	return err
 }
 
