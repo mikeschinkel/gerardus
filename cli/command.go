@@ -322,3 +322,17 @@ func (c *Command) InvokedFlags() (flags Flags) {
 end:
 	return flags
 }
+
+// commandPath returns a slice of *Command by scanning parents.
+// e.g. `myapp -a 10 -b hello foo bar baz` would be
+//
+//	[]Arg{fooArg,barArg,bazArg}
+func (c *Command) commandPath() (cmds []*Command) {
+	if c.Parent == nil {
+		// At root, don't use root's name, which should be empty
+		goto end
+	}
+	cmds = append(c.Parent.commandPath(), c)
+end:
+	return cmds
+}
