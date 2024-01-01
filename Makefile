@@ -16,7 +16,11 @@ define for_each_module
 endef
 
 test: .force
-	$(call for_each_module,Testing WPFR,go test -timeout=0 ./...)
+	$(call \
+		for_each_module,\
+		Testing gerardus,\
+		GERARDUS_SOURCE_DIR=/Users/mikeschinkel/Projects/gerardus \
+		go test -tags test -timeout=0 ./...)
 
 
 vulncheck: .force
