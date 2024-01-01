@@ -21,15 +21,15 @@ func TestSetExecFunc(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			setExecFunc(tt.name, tt.ef)
-			if !hasCommand(tt.name) {
+			if !hasCommandByName(cli.RootCmd, tt.name) {
 				t.Errorf("setExecFunc() failed for %s", tt.name)
 			}
 		})
 	}
 }
 
-func hasCommand(name string) (has bool) {
-	cmd, _ := cli.CommandByName(name)
+func hasCommandByName(rootCmd *cli.Command, name string) (has bool) {
+	cmd, _ := cli.CommandByName(rootCmd, name)
 	return cmd != nil && cmd.ExecFunc != nil
 }
 
@@ -42,28 +42,34 @@ func setExecFunc(name string, ef cli.ExecFunc) {
 	}
 	ensureCommand := func(a args) (cmd *cli.Command) {
 		var ok bool
-		cmd, ok = a.commands[a.name]
+
+		token := cli.Token(a.name)
+		cmd, ok = a.commands[token]
 		if !ok {
-			cmd = cli.NewCommand(a.name, a.execFunc)
-			a.commands[a.name] = cmd
+			cmd = cli.NewCommand(token, a.execFunc)
+			a.commands[token] = cmd
 		} else if a.execFunc != nil {
 			cmd.ExecFunc = a.execFunc
 		}
-		cmd.Name = a.name
+		cmd.Name = token
 		cmd.Parent = a.parent
 		return cmd
 	}
 	var traverseCommands func(args)
 	traverseCommands = func(a args) {
-		names := cli.MatchSpaces.Split(a.name, -1)
+		names := cli.MatchSpaces.Split(string(a.name), -1)
 		switch len(names) {
 		case 0:
 		case 1:
 			ensureCommand(args{a.commands, a.name, a.parent, a.execFunc})
 		default:
 			cmd := ensureCommand(args{cli.Commands(), names[0], a.parent, nil})
-			name = strings.Join(names[1:], " ")
-			traverseCommands(args{cmd.SubCommands, name, cmd, a.execFunc})
+			traverseCommands(args{
+				cmd.SubCommands,
+				strings.Join(names[1:], " "),
+				cmd,
+				a.execFunc,
+			})
 		}
 	}
 	traverseCommands(args{cli.Commands(), name, nil, ef})

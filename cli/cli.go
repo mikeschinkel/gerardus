@@ -10,13 +10,15 @@ var MatchSpaces = regexp.MustCompile(`\s+`)
 
 func Initialize(ctx Context, params Params) (invoker *CommandInvoker, err error) {
 	var flags Flags
+	var cmd *Command
+	var fs *flag.FlagSet
 
 	slog.Info("Initializing commands")
 
 	invoker = NewCommandInvoker(params)
 	args := params.Args()
 
-	cmd, _, err := InvokedCommand(args)
+	cmd, _, err = InvokedCommand(RootCmd, args)
 	if err != nil {
 		goto end
 	}
@@ -42,10 +44,11 @@ func Initialize(ctx Context, params Params) (invoker *CommandInvoker, err error)
 	if err != nil {
 		goto end
 	}
-	err = flag.CommandLine.Parse(params.Options())
+	err = flag.CommandLine.Parse(params.Options().StringSlice())
 	if err != nil {
 		goto end
 	}
+
 	flags = flags.callSetValueFuncs()
 	cmd.SetFlags(flags)
 

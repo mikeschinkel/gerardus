@@ -19,10 +19,10 @@ end:
 	return p.tokens
 }
 
-func (p Params) Args() []string {
+func (p Params) Args() (Tokens, error) {
 	return p.Tokens().Args()
 }
 
-func (p Params) Options() []string {
+func (p Params) Options() Tokens {
 	return p.Tokens().Options()
 }

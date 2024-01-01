@@ -40,6 +40,8 @@ func (v Value) IsZero() (zero bool) {
 
 func (v Value) asString(value any) (s string) {
 	switch t := value.(type) {
+	case Token:
+		s = string(t)
 	case string:
 		s = t
 	case int:
@@ -53,6 +55,8 @@ func (v Value) asString(value any) (s string) {
 }
 func (v Value) asInt(value any) (n int) {
 	switch t := value.(type) {
+	case Token:
+		n, _ = strconv.Atoi(string(t))
 	case string:
 		n, _ = strconv.Atoi(t)
 	case int:

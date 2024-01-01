@@ -8,7 +8,7 @@ import (
 )
 
 type Command struct {
-	Name         string
+	Name         Token
 	Parent       *Command
 	ExecFunc     ExecFunc
 	Flags        Flags
@@ -18,7 +18,7 @@ type Command struct {
 	argsMap      ArgsMap
 }
 
-func NewCommand(name string, ef ExecFunc) *Command {
+func NewCommand(name Token, ef ExecFunc) *Command {
 	return &Command{
 		Name:        name,
 		ExecFunc:    ef,
@@ -30,7 +30,7 @@ func NewCommand(name string, ef ExecFunc) *Command {
 
 func (c *Command) FullName() (name string) {
 	if c.Parent == nil {
-		name = c.Name
+		name = string(c.Name)
 		goto end
 	}
 	name = fmt.Sprintf("%s %s", c.Parent.FullName(), c.Name)
@@ -83,7 +83,7 @@ func (c *Command) SignatureHelp() string {
 	return sb.String()
 }
 
-func (c *Command) AddSubCommand(name string, ef ExecFunc) (cmd *Command) {
+func (c *Command) AddSubCommand(name Token, ef ExecFunc) (cmd *Command) {
 	cmd = NewCommand(name, ef)
 	cmd.Parent = c
 	c.SubCommands[name] = cmd
@@ -121,7 +121,7 @@ func (c *Command) Unique() (s string) {
 	if len(cmd.Name) == 0 {
 		cmdNames[0] = "root"
 	} else {
-		cmdNames[0] = cmd.Name
+		cmdNames[0] = string(cmd.Name)
 	}
 	if len(cmd.SubCommands) == 0 {
 		s = cmdNames[0]
@@ -129,7 +129,7 @@ func (c *Command) Unique() (s string) {
 	}
 	for c.Parent != nil {
 		cmd = c.Parent
-		cmdNames = append(cmdNames, cmd.Name)
+		cmdNames = append(cmdNames, string(cmd.Name))
 	}
 	slices.Reverse(cmdNames)
 	for _, name := range cmdNames {
@@ -143,7 +143,7 @@ end:
 }
 
 func (c *Command) String() string {
-	return c.Name
+	return string(c.Name)
 }
 
 // commandDepth returns how deep the command is.
@@ -187,8 +187,8 @@ func (c *Command) commandDepth() (n int) {
 //	return c.argsMap, err
 //}
 
-// callSetArgValues sets the Value values
-func (c *Command) callSetArgValues(args []string) (err error) {
+// setArgValues sets the Value values
+func (c *Command) setArgValues(args Tokens) (err error) {
 	var index, depth int
 	depth = c.commandDepth()
 	if depth <= len(args) {
