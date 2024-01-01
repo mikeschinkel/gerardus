@@ -163,6 +163,7 @@ func persisterInitializeStub(ctx Context, fp string, types ...any) (ds persister
 	return ds, err
 }
 
+//goland:noinspection GoUnusedFunction
 func stubbedLogContent() string {
 	return loggerStub.Handler().(*lib.SLogBufferHandler).Content()
 }
