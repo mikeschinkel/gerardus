@@ -24,16 +24,16 @@ test: .force
 
 
 vulncheck: .force
-	$(call for_each_module,Vulnerability Checking WPFR,govulncheck ./... > /dev/null)
+	$(call for_each_module,Vulnerability Checking gerardus,govulncheck ./... > /dev/null)
 
 tidy: .force
-	$(call for_each_module,Tidying WPFR,go mod tidy)
+	$(call for_each_module,Tidying gerardus,go mod tidy)
 
 why: .force
-	$(call for_each_module,Why for $(package) in WPFR,go mod why -m $(package))
+	$(call for_each_module,Why for $(package) in gerardus,go mod why -m $(package))
 
 graph: .force
-	$(call for_each_module,Graph for $(package) in WPFR,go mod graph | grep $(package))
+	$(call for_each_module,Graph for $(package) in gerardus,go mod graph | grep $(package))
 
 test-release: .force
 	@echo "Running GoReleaser..."
@@ -44,7 +44,7 @@ test-release: .force
 
 test-run: .force
 	@rm -f ./test/testdata/bendavis.out.sql \
-	  	&& time ./bin/wpfrcli run \
+	  	&& time ./bin/gerardus run \
 		--input ./test/testdata/bendavis.sql \
 		--output ./test/testdata/bendavis.out.sql \
 		--find bendavis.com \
