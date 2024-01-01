@@ -24,7 +24,7 @@ func Initialize(ctx Context, params Params) (invoker *CommandInvoker, err error)
 	}
 	invoker.Command = cmd
 
-	err = cmd.callSetArgValues(args)
+	err = cmd.setArgValues(args)
 	if err != nil {
 		goto end
 	}
