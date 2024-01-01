@@ -18,7 +18,7 @@ var (
 	ErrNoVersionTagSpecified     = serr.New("no version tag specified")
 	ErrVersionTagAlreadyExists   = serr.New("version tag already exists").ValidArgs("project", "version_tag")
 	ErrVersionTagDoesNotExist    = serr.New("version tag does not exist").ValidArgs("project", "version_tag")
-	ErrFailedToAddCodebase       = serr.New("failed to add codebase")
+	//ErrFailedToAddCodebase       = serr.New("failed to add codebase")
 	ErrProjectNotFound           = serr.New("project not found")
 	ErrFailedToAddProject        = serr.New("failed to add project").ValidArgs("project", "repo_url")
 	ErrInvalidCodebaseSourceURL  = serr.New("invalid codebase source URL")

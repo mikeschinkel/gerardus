@@ -10,9 +10,9 @@ var (
 	ErrCommandNotValid    = serr.New("command is not valid").ValidArgs("command")
 	ErrNoExecFuncFound    = serr.New("no exec func found")
 
-	ErrNoCLIArgsProvided  = serr.New("no command line args provided")
-	ErrHelpNeeded         = serr.New("help needed")
-	ErrFailedToRunCommand = serr.New("failed to run command").ValidArgs("command")
+	//ErrNoCLIArgsProvided  = serr.New("no command line args provided")
+	//ErrHelpNeeded         = serr.New("help needed")
+	//ErrFailedToRunCommand = serr.New("failed to run command").ValidArgs("command")
 
 	ErrTooFewArgsPassed  = serr.New("too few arguments passed").ValidArgs("expected", "got")
 	ErrTooManyArgsPassed = serr.New("too many arguments passed").ValidArgs("expected", "got")
