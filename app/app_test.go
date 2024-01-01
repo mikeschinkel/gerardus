@@ -71,6 +71,7 @@ func runTests(t *testing.T, tests []test) {
 			root := app.Root
 			buf := bytes.Buffer{}
 			cli.StdoutWriter = &buf
+			cli.StderrWriter = &buf
 			help, err := root.Main(ctx, tt.args)
 			if err != nil {
 				help.Usage(err, &buf)
