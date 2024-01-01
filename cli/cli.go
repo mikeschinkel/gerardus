@@ -16,7 +16,10 @@ func Initialize(ctx Context, params Params) (invoker *CommandInvoker, err error)
 	slog.Info("Initializing commands")
 
 	invoker = NewCommandInvoker(params)
-	args := params.Args()
+	args, err := params.Args()
+	if err != nil {
+		goto end
+	}
 
 	cmd, _, err = InvokedCommand(RootCmd, args)
 	if err != nil {
