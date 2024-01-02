@@ -62,16 +62,17 @@ func (arg Arg) Check(requires ArgRequires) bool {
 func (arg Arg) EmptyStateSatisfied(ctx Context, tt TokenType) (err error) {
 	e := ArgEmptiness(arg.Requires)
 	isZero := arg.Value.IsZero()
-	name := arg.Name
+	value := arg.Name
+	name := string(tt) + "_name"
 	if tt == FlagType {
-		name = "-" + name
+		value = "-" + value
 	}
 	switch {
 	case e == NotEmpty && isZero:
-		err = ErrTokenValueCannotBeEmpty.Args(tt, name)
+		err = ErrTokenValueCannotBeEmpty.Args(name, value)
 		goto end
 	case e == MustBeEmpty && !isZero:
-		err = ErrTokenValueMustBeEmpty.Args(tt, name)
+		err = ErrTokenValueMustBeEmpty.Args(name, value)
 		goto end
 	}
 end:
