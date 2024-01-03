@@ -7,13 +7,13 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/mikeschinkel/gerardus/app"
 	"github.com/mikeschinkel/gerardus/cli"
 	"github.com/mikeschinkel/gerardus/fi"
 	"github.com/mikeschinkel/gerardus/logger"
 	"github.com/mikeschinkel/gerardus/persister"
 	"github.com/mikeschinkel/go-lib"
+	"github.com/mikeschinkel/go-lib/diff"
 )
 
 // UseStubs allows the developer to easily disable stubs for when developing
@@ -63,6 +63,10 @@ func runTests(t *testing.T, tests []test) {
 	testOpts := TestOps{
 		NoStub: !UseStubs,
 	}
+	opts := &diff.CompareOpts{
+		MatchingPadLen: diff.NewLen(25),
+		MinSubstrLen:   diff.NewLen(2),
+	}
 	for _, tt := range tests {
 		tt.args = lib.RightShift(tt.args, cli.ExecutableFilepath(app.AppName))
 		t.Run(tt.name, func(t *testing.T) {
@@ -77,7 +81,9 @@ func runTests(t *testing.T, tests []test) {
 				help.Usage(err, &buf)
 			}
 			if tt.output != buf.String() {
-				t.Errorf("Main() value -want +got: %s", cmp.Diff(tt.output, buf.String()))
+				t.Errorf("Main(): got/want: %s",
+					diff.CompareStrings(tt.output, buf.String(), opts),
+				)
 			}
 			if tt.errStr == "<n/a>" {
 				return
@@ -87,7 +93,9 @@ func runTests(t *testing.T, tests []test) {
 				return
 			}
 			if tt.errStr != err.Error() {
-				t.Errorf("Main() error -want +got: %s", cmp.Diff(tt.errStr, err.Error()))
+				t.Errorf("Main() error: got/want: %s",
+					diff.CompareStrings(tt.errStr, err.Error(), opts),
+				)
 			}
 		})
 	}
