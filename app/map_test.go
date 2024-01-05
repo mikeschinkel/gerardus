@@ -28,6 +28,17 @@ func mapTests() []test {
 				LoadProjectByNameFunc: LoadMissingProjectByNameStub,
 			},
 		},
+		{
+			name:   "FAIL — INVALID VERSION TAG",
+			fail:   true,
+			args:   []string{"map", "golang", "foo-bar"},
+			output: "\nERROR: Version tag does not exist [version_tag='go1.21.4'] [project='golang']:\n" + mapUsage(),
+			errStr: "version tag does not exist [version_tag='go1.21.4'] [project='golang']",
+			queries: &app.DataStoreQueriesStub{
+				LoadProjectByNameFunc:                 LoadFoundProjectByNameStub,
+				LoadCodebaseIDByProjectAndVersionFunc: LoadMissingCodebaseIDByProjectAndVersionStub,
+			},
+		},
 	}
 }
 
