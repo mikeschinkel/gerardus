@@ -43,7 +43,7 @@ func addCodebaseTests() []test {
 			fail:   true,
 			args:   []string{"add", "codebase", "golang", "go1.21.4"},
 			output: "\nERROR: Version tag already exists [version_tag='go1.21.4'] [project='golang']:\n" + addCodebaseUsage(),
-			errStr: "version tag already exists [project='golang'] [version_tag='go1.21.4']",
+			errStr: "version tag already exists [version_tag='go1.21.4'] [project='golang']",
 			queries: &app.DataStoreQueriesStub{
 				LoadProjectByNameFunc:                 LoadFoundProjectByNameStub,
 				LoadCodebaseIDByProjectAndVersionFunc: LoadFoundCodebaseIDByProjectAndVersionStub,
