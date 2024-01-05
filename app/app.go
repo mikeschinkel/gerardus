@@ -207,14 +207,14 @@ func (a *App) versionTagExists(ctx Context, tag any, arg *cli.Arg) (err error) {
 		VersionTag: verTag,
 	})
 	if errors.Is(err, sql.ErrNoRows) {
-		err = ErrVersionTagDoesNotExist.Err(err, "project", projName, "version_tag", verTag)
+		err = ErrVersionTagDoesNotExist.Err(err, "version_tag", verTag, "project", projName)
 		goto end
 	}
 	if err != nil {
 		err = ErrUnexpectedError
 		goto end
 	}
-	arg.SuccessMsg = ErrVersionTagAlreadyExists.Args("project", projName, "version_tag", verTag).Error()
+	arg.SuccessMsg = ErrVersionTagAlreadyExists.Args("version_tag", verTag, "project", projName).Error()
 end:
 	return err
 }
