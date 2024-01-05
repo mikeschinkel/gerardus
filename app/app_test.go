@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/mikeschinkel/gerardus/app"
 	"github.com/mikeschinkel/gerardus/cli"
 	"github.com/mikeschinkel/gerardus/fi"
@@ -80,9 +81,7 @@ func runTests(t *testing.T, tests []test) {
 				help.Usage(err, &buf)
 			}
 			if tt.output != buf.String() {
-				t.Errorf("Main(): got/want: %s",
-					diff.CompareStrings(tt.output, buf.String(), opts),
-				)
+				t.Errorf("Main() value -want +got: %s", cmp.Diff(tt.output, buf.String()))
 			}
 			if tt.errStr == "<n/a>" {
 				return
