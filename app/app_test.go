@@ -64,8 +64,7 @@ func runTests(t *testing.T, tests []test) {
 		NoStub: !UseStubs,
 	}
 	opts := &diff.CompareOpts{
-		MatchingPadLen: diff.NewLen(25),
-		MinSubstrLen:   diff.NewLen(2),
+		MinSubstrLen: diff.NewLen(2),
 	}
 	for _, tt := range tests {
 		tt.args = lib.RightShift(tt.args, cli.ExecutableFilepath(app.AppName))
