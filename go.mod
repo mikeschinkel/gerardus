@@ -13,7 +13,7 @@ replace github.com/mikeschinkel/go-lib => ../go-lib
 require (
 	github.com/google/go-cmp v0.6.0
 	github.com/mattn/go-sqlite3 v1.14.18
-	github.com/mikeschinkel/go-lib v0.0.0-00010101000000-000000000000
+	github.com/mikeschinkel/go-lib v0.0.0-20240105150559-6b08a12c3c43
 	github.com/mikeschinkel/go-serr v0.0.0-00010101000000-000000000000
 	github.com/mikeschinkel/go-typegen v0.0.0-00010101000000-000000000000
 	golang.org/x/mod v0.14.0

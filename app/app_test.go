@@ -13,8 +13,8 @@ import (
 	"github.com/mikeschinkel/gerardus/fi"
 	"github.com/mikeschinkel/gerardus/logger"
 	"github.com/mikeschinkel/gerardus/persister"
+	"github.com/mikeschinkel/go-diffator"
 	"github.com/mikeschinkel/go-lib"
-	"github.com/mikeschinkel/go-lib/diff"
 )
 
 // UseStubs allows the developer to easily disable stubs for when developing
@@ -64,8 +64,8 @@ func runTests(t *testing.T, tests []test) {
 	testOpts := TestOps{
 		NoStub: !UseStubs,
 	}
-	opts := &diff.CompareOpts{
-		MinSubstrLen: diff.NewLen(2),
+	opts := &diffator.StringOpts{
+		MinSubstrLen: diffator.Int(2),
 	}
 	for _, tt := range tests {
 		tt.args = lib.RightShift(tt.args, cli.ExecutableFilepath(app.AppName))
@@ -92,7 +92,7 @@ func runTests(t *testing.T, tests []test) {
 			}
 			if tt.errStr != err.Error() {
 				t.Errorf("Main() error: got/want: %s",
-					diff.CompareStrings(tt.errStr, err.Error(), opts),
+					diffator.CompareStrings(tt.errStr, err.Error(), opts),
 				)
 			}
 		})
