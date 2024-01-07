@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"log/slog"
+	"reflect"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -12,6 +13,7 @@ import (
 	"github.com/mikeschinkel/gerardus/cli"
 	"github.com/mikeschinkel/gerardus/fi"
 	"github.com/mikeschinkel/gerardus/logger"
+	"github.com/mikeschinkel/gerardus/options"
 	"github.com/mikeschinkel/gerardus/persister"
 	"github.com/mikeschinkel/go-diffator"
 	"github.com/mikeschinkel/go-lib"
@@ -21,7 +23,10 @@ import (
 // tests to witness behavior that needs to be stubbed out. Normally this should
 // be set to 'true'; if it has been checked into source code with 'false' that
 // would be a mistake.
-const UseStubs = true
+const (
+	UseStubs      = true
+	TestSourceDir = "/tmp/test/dir"
+)
 
 type Context = context.Context
 
@@ -165,6 +170,11 @@ func ContextStub(tt test, opts TestOps) Context {
 
 //goland:noinspection GoUnusedParameter
 func persisterInitializeStub(ctx Context, fp string, types ...any) (ds persister.DataStore, err error) {
+	// This is just a convenient place to set the `source_dir`
+	dir := cli.NewValue(reflect.String, TestSourceDir)
+	options.SetSourceDir(dir)
+	app.CmdMap.SetFlagDefault("source_dir", dir.String())
+
 	ds = NewDataStoreStub()
 	err = ds.Initialize(ctx)
 	return ds, err

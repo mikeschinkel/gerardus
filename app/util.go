@@ -15,8 +15,8 @@ func makeAbs(path string) (string, error) {
 	return absDir, err
 }
 
-func defaultSourceDir(opts Opts) string {
-	dir := os.Getenv(opts.EnvPrefix() + "SOURCE_DIR")
+func DefaultSourceDir(envPrefix string) (dir string) {
+	dir = os.Getenv(envPrefix + "SOURCE_DIR")
 	if len(dir) > 0 {
 		goto end
 	}

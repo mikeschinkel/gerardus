@@ -290,6 +290,17 @@ func (c *Command) AddArg(arg Arg) (cmd *Command) {
 	return c
 }
 
+func (c *Command) SetFlagDefault(name, value string) {
+	for i, f := range c.Flags {
+		if f.Name != ArgName(name) {
+			continue
+		}
+		c.Flags[i].Default = value
+		goto end
+	}
+end:
+}
+
 func (c *Command) SetFlags(flags Flags) Flags {
 	unsetFlags := flags
 	for i, flag := range flags {

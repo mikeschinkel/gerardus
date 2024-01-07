@@ -43,7 +43,7 @@ func mapTests() []test {
 }
 
 func mapUsage() string {
-	return `
+	return fmt.Sprintf(`
   Usage: gerardus [<options>] <command> [<args>]
 
   Command:
@@ -63,5 +63,5 @@ func mapUsage() string {
         Global Options:
 
           -data=<data_file>: Data file (sqlite3)
-`
+`, TestSourceDir)
 }
