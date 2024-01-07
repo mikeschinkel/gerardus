@@ -88,14 +88,14 @@ func runTests(t *testing.T, tests []test) {
 			if tt.output != buf.String() {
 				t.Errorf("Main() value -want +got: %s", cmp.Diff(tt.output, buf.String()))
 			}
-			if tt.errStr == "<n/a>" {
+			if tt.errStr == "<n/a>" && !tt.fail {
 				return
 			}
-			if err == nil {
+			if err == nil && tt.fail {
 				t.Errorf("Main() error wanting but got no error: %s", tt.errStr)
 				return
 			}
-			if tt.errStr != err.Error() {
+			if err != nil && tt.errStr != err.Error() {
 				t.Errorf("Main() error: got/want: %s",
 					diffator.CompareStrings(tt.errStr, err.Error(), opts),
 				)
