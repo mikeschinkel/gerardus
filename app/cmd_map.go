@@ -35,16 +35,30 @@ var CmdMap = cli.AddCommandWithFunc("map", Root.ExecMap).
 
 //goland:noinspection GoUnusedParameter
 func (a *App) ExecMap(ctx context.Context, i *cli.CommandInvoker) (err error) {
+
+	project := i.ArgString(ProjectArg)
+	versionTag := i.ArgString(VersionTagArg)
+
+	dir := options.SourceDir()
+
+	cli.StdOut("Scanning Go source at %s...\n", dir)
+
+	err = a.fi.App.Map(ctx, project, versionTag, a)
+	if err != nil {
+		err = ErrMapCommandFailed.Err(err, "source_dir", dir)
+		goto end
+	}
+	cli.StdOut("Scanning completed successfully.")
+end:
+	return err
+}
+
+func Map(ctx Context, project, versionTag string, a *App) (err error) {
 	var ma mapArgs
 	var cs *surveyor.CodeSurveyor
 	var cb *parser.Codebase
 	var p *parser.Project
 	var dir string
-
-	cli.StdErr("Scanning Go source at %s...\n", options.SourceDir())
-
-	project := i.ArgString(ProjectArg)
-	versionTag := i.ArgString(VersionTagArg)
 
 	cb = parser.NewCodebase(project, versionTag)
 	p = parser.NewProject(project, a.project.RepoUrl)
@@ -59,12 +73,7 @@ func (a *App) ExecMap(ctx context.Context, i *cli.CommandInvoker) (err error) {
 
 	//err = mapWithSlices(ctx,ma)
 	err = mapWithChans(ctx, ma)
-	if err != nil {
-		err = ErrMapCommandFailed.Err(err, "source_dir", options.SourceDir())
-		goto end
-	}
-	cli.StdOut("Scanning completed successfully.")
-end:
+
 	return err
 }
 

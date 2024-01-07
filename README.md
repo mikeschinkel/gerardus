@@ -18,7 +18,7 @@ In no particular order:
     2. ~~Stubbing out the database~~
     3. ~~Add tests for `add project` command.~~
     4. ~~Add tests for `add codebase` command.~~
-    5. Add tests for `map` command.
+    5. ~~Add tests for `map` command.~~
     6. Add tests for `help` command.
         1. Add tests for `help add` command.
         2. Add tests for `help add project` command.
