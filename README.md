@@ -35,6 +35,7 @@ In no particular order:
 5. ~~Add Web client to get About and Website~~
     1. ~~https://chat.openai.com/share/cb482a49-aad6-4f3b-abf9-201d60055054~~
 6. Get slices vs. chans working
+7. Leverage https://deps.dev/
 
 ### CLI
 1. ~~Add other commands besides `map`~~
