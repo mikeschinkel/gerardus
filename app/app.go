@@ -47,11 +47,14 @@ func Initialize(ctx Context) {
 
 func DefaultFI() FI {
 	return FI{
+		App: AppFI{
+			Map: Map,
+		},
 		Persister: PersisterFI{
-			InitializeFunc: persister.Initialize,
+			Initialize: persister.Initialize,
 		},
 		Logger: LoggerFI{
-			InitializeFunc: logger.Initialize,
+			Initialize: logger.Initialize,
 		},
 	}
 }
@@ -158,10 +161,10 @@ func (a *App) repoURLExists(ctx Context, url any, arg *cli.Arg) (err error) {
 	}
 	injector = AssignFI(ctx, FI{
 		Persister: PersisterFI{
-			RequestGitHubRepoInfoFunc: persister.RequestGitHubRepoInfo,
+			RequestGitHubRepoInfo: persister.RequestGitHubRepoInfo,
 		},
 	})
-	a.repoInfo, err = injector.Persister.RequestGitHubRepoInfoFunc(repoURL)
+	a.repoInfo, err = injector.Persister.RequestGitHubRepoInfo(repoURL)
 	if err != nil {
 		goto end
 	}

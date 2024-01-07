@@ -67,7 +67,7 @@ func addProjectTests() []test {
 				LoadProjectByNameFunc: LoadMissingProjectByNameStub,
 			},
 			fi: func(fi app.FI) app.FI {
-				fi.Persister.RequestGitHubRepoInfoFunc = RequestGitHubRepoInfoStub // TODO: Verify this is called by this test
+				fi.Persister.RequestGitHubRepoInfo = RequestGitHubRepoInfoStub // TODO: Verify this is called by this test
 				return fi
 			},
 		},

@@ -148,8 +148,9 @@ func ContextStub(tt test, opts TestOps) Context {
 	ctx := app.DefaultContext()
 	if !opts.NoStub {
 		injector := fi.GetFI[app.FI](ctx)
-		injector.Logger.InitializeFunc = loggerInitializeStub
-		injector.Persister.InitializeFunc = func(c app.Context, s string, a ...any) (persister.DataStore, error) {
+		injector.App.Map = app.Map
+		injector.Logger.Initialize = loggerInitializeStub
+		injector.Persister.Initialize = func(c app.Context, s string, a ...any) (persister.DataStore, error) {
 			ds, err := persisterInitializeStub(c, s, a...)
 			ds.SetQueries(tt.queries)
 			return ds, err

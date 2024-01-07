@@ -10,42 +10,40 @@ import (
 
 type FI struct {
 	fi.FI
+	App       AppFI
 	Persister PersisterFI
 	Logger    LoggerFI
 }
 
-type PersisterFI struct {
+type AppFI struct {
 	fi.FI
-	InitializeFunc            func(Context, string, ...any) (persister.DataStore, error)
-	RequestGitHubRepoInfoFunc func(string) (*persister.RepoInfo, error)
+	Map func(Context, string, string, *App) error
 }
 
-func (fi PersisterFI) Initialize(ctx Context, s string, args ...any) (persister.DataStore, error) {
-	return fi.InitializeFunc(ctx, s, args...)
-}
-func (fi PersisterFI) RepoInfoRequester(url string) (info *persister.RepoInfo, err error) {
-	return fi.RequestGitHubRepoInfoFunc(url)
+type PersisterFI struct {
+	fi.FI
+	Initialize            func(Context, string, ...any) (persister.DataStore, error)
+	RequestGitHubRepoInfo func(string) (*persister.RepoInfo, error)
 }
 
 type LoggerFI struct {
 	fi.FI
-	InitializeFunc func(logger.Params) error
-}
-
-func (fi LoggerFI) Initialize(p logger.Params) error {
-	return fi.InitializeFunc(p)
+	Initialize func(logger.Params) error
 }
 
 func AssignFI(ctx Context, new FI) FI {
 	injector := fi.GetFI[FI](ctx)
-	if injector.Logger.InitializeFunc == nil {
-		injector.Logger.InitializeFunc = new.Logger.InitializeFunc
+	if injector.App.Map == nil {
+		injector.App.Map = new.App.Map
 	}
-	if injector.Persister.InitializeFunc == nil {
-		injector.Persister.InitializeFunc = new.Persister.InitializeFunc
+	if injector.Logger.Initialize == nil {
+		injector.Logger.Initialize = new.Logger.Initialize
 	}
-	if injector.Persister.RequestGitHubRepoInfoFunc == nil {
-		injector.Persister.RequestGitHubRepoInfoFunc = new.Persister.RequestGitHubRepoInfoFunc
+	if injector.Persister.Initialize == nil {
+		injector.Persister.Initialize = new.Persister.Initialize
+	}
+	if injector.Persister.RequestGitHubRepoInfo == nil {
+		injector.Persister.RequestGitHubRepoInfo = new.Persister.RequestGitHubRepoInfo
 	}
 	return injector
 }
