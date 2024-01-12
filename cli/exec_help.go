@@ -8,7 +8,7 @@ var CmdHelp = AddCommandWithFunc("help", ExecHelp).
 		Optional: true,
 	})
 
-func ExecHelp(Context, *CommandInvoker) (err error) {
+func ExecHelp(ctx Context, i *CommandInvoker) (err error) {
 	// TODO Implement help
-	return err
+	return ErrHelpSentinel
 }

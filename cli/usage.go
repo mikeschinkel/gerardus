@@ -26,16 +26,18 @@ func (h Help) Usage(err error, w io.Writer) {
 	// Set the stdErr writer
 	h.SetStderrWriterFunc(w)
 
-	switch h.commandType() {
-	case Root:
+	switch h.commandType(err) {
+	case RootCommand:
 		help = h.rootCmdHelp(err)
-	case Branch:
+	case BranchCommand:
 		help = h.branchCmdHelp(err)
-	case Leaf:
+	case LeafCommand:
 		help = h.leafCmdHelp(err)
+	case HelpCommand:
+		help = h.helpCmdHelp(err)
 	default:
 		panicf("Undefined command type %d for '%s'",
-			h.commandType(),
+			h.commandType(err),
 			h.command().Name,
 		)
 	}
@@ -44,6 +46,16 @@ func (h Help) Usage(err error, w io.Writer) {
 
 func (h Help) command() *Command {
 	return h.invoker.Command
+}
+
+func (h Help) helpCmdHelp(err error) string {
+	var sb = strings.Builder{}
+	sb.WriteString(h.usageHeader(nil))
+	sb.WriteString(RootCmd.Help())
+	sb.WriteString(h.globalOptionsHelp(HelpOpts{
+		indent: strings.Repeat(Indent, 2),
+	}))
+	return sb.String()
 }
 
 func (h Help) rootCmdHelp(err error) string {
@@ -115,8 +127,12 @@ func (h Help) AppName() string {
 
 func (h Help) usageHeader(err error) string {
 	var sb = strings.Builder{}
-	msg := lib.UpperFirst(err.Error())
-	sb.WriteString(fmt.Sprintf("\nERROR: %s:\n\n", msg))
+	if err == nil {
+		sb.WriteString("\n")
+	} else {
+		msg := lib.UpperFirst(err.Error())
+		sb.WriteString(fmt.Sprintf("\nERROR: %s:\n\n", msg))
+	}
 	sb.WriteString(fmt.Sprintf("%sUsage: %s [<options>] <command> [<args>]\n\n", Indent, h.AppName()))
 	if h.numSubCommands() > 0 {
 		sb.WriteString(fmt.Sprintf("%sCommands:\n\n", Indent))
@@ -126,16 +142,20 @@ func (h Help) usageHeader(err error) string {
 	return sb.String()
 }
 
-func (h Help) commandType() (ct CommandType) {
+func (h Help) commandType(err error) (ct CommandType) {
+	if errors.Is(err, ErrHelpSentinel) {
+		ct = HelpCommand
+		goto end
+	}
 	if h.isRootCommand() {
-		ct = Root
+		ct = RootCommand
 		goto end
 	}
 	if h.numSubCommands() == 0 {
-		ct = Leaf
+		ct = LeafCommand
 		goto end
 	}
-	ct = Branch
+	ct = BranchCommand
 end:
 	return ct
 }

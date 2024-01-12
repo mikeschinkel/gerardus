@@ -4,7 +4,8 @@ type CommandType int
 
 const (
 	Undefined CommandType = iota
-	Root
-	Branch
-	Leaf
+	RootCommand
+	BranchCommand
+	LeafCommand
+	HelpCommand
 )

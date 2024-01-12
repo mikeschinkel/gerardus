@@ -31,4 +31,7 @@ var (
 	// must be empty" and omits in order to differentiate from a potential generic
 	// `ErrValueMustBeEmpty` error.
 	ErrTokenValueMustBeEmpty = serr.New("value must be empty").ValidArgs(string(ArgType), string(FlagType))
+
+	// ErrHelpSentinel is used to trigger help.Usage() in main() by just checking for err==nil when returned from an app.Main().
+	ErrHelpSentinel = serr.New("help")
 )
