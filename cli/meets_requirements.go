@@ -39,7 +39,7 @@ func MeetsRequirements[S ~[]RM, RM RequirementsMeeter](ctx Context, tt TokenType
 	err = EmptyStateSatisfied(ctx, tt, rms)
 	if err != nil {
 		if errors.Is(err, ErrEmptyStateNotSatisfied) {
-			err = err.(serr.SError).Unwrap()
+			err = err.(serr.SError).CloneUnwrap()
 		}
 		goto end
 	}
@@ -47,7 +47,7 @@ func MeetsRequirements[S ~[]RM, RM RequirementsMeeter](ctx Context, tt TokenType
 	err = ValidateByFunc(ctx, rms)
 	if err != nil {
 		if errors.Is(err, ErrDoesNotValidate) {
-			err = err.(serr.SError).Unwrap()
+			err = err.(serr.SError).CloneUnwrap()
 		}
 		goto end
 	}
@@ -55,7 +55,7 @@ func MeetsRequirements[S ~[]RM, RM RequirementsMeeter](ctx Context, tt TokenType
 	err = CheckExistence(ctx, rms)
 	if err != nil {
 		if errors.Is(err, ErrDoesNotExist) {
-			err = err.(serr.SError).Unwrap()
+			err = err.(serr.SError).CloneUnwrap()
 		}
 		goto end
 	}
