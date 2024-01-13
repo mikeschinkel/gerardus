@@ -21,10 +21,12 @@ func NewHelp(invoker *CommandInvoker) Help {
 }
 
 func (h Help) Usage(err error, w io.Writer) {
-	var help string
-
 	// Set the stdErr writer
 	h.SetStderrWriterFunc(w)
+	StdErr(h.GetUsage(err))
+}
+
+func (h Help) GetUsage(err error) (help string) {
 
 	switch h.commandType(err) {
 	case RootCommand:
@@ -34,28 +36,75 @@ func (h Help) Usage(err error, w io.Writer) {
 	case LeafCommand:
 		help = h.leafCmdHelp(err)
 	case HelpCommand:
-		help = h.helpCmdHelp(err)
+		help = h.helpCmdHelp()
 	default:
 		panicf("Undefined command type %d for '%s'",
 			h.commandType(err),
 			h.command().Name,
 		)
 	}
-	StdErr(help)
+	return help
 }
 
 func (h Help) command() *Command {
 	return h.invoker.Command
 }
 
-func (h Help) helpCmdHelp(err error) string {
-	var sb = strings.Builder{}
-	sb.WriteString(h.usageHeader(nil))
-	sb.WriteString(RootCmd.Help())
-	sb.WriteString(h.globalOptionsHelp(HelpOpts{
-		indent: strings.Repeat(Indent, 2),
-	}))
-	return sb.String()
+func (h Help) withCommand(cmd *Command) Help {
+	h.invoker.Command = cmd
+	return h
+}
+func (h Help) withTokens(tokens Tokens) Help {
+	h.invoker.Tokens = tokens
+	return h
+}
+
+func (h Help) cmdForHelp() (cmd *Command, tokens Tokens) {
+	var first, name string
+
+	tokens = h.invoker.Tokens
+	if len(tokens) >= 2 {
+		first = string(tokens[1])
+	}
+	switch {
+	case ArgName(first) != HelpArg:
+		panicf("Help.cmdForHelp() called when 'help' is not the top level command.")
+
+	case len(tokens) <= 2:
+		// We have no command, or just a 'help' command (though the former should never happen.)
+		cmd = RootCmd
+		// Make sure tokens is just the executable file name.
+		tokens = tokens[:1]
+
+	default:
+		// Save the executable filepath
+		exe := tokens[0]
+		// Omit executable file name (tokens[0]) and the "help" command (tokens[1]).
+		tokens = tokens[2:]
+		// Convert to a string for command lookup via CommandByName
+		name = tokens.Join(" ")
+		// Get command for help
+		cmd, _ = CommandByName(RootCmd, name)
+		// Rebuild tokens for the command, so we can get help for that command.
+		tokens = append(Tokens{exe}, tokens...)
+	}
+	return cmd, tokens
+}
+
+func (h Help) helpCmdHelp() string {
+	var err error
+
+	cmd, tokens := h.cmdForHelp()
+	if cmd == nil {
+		// If we do not have a command, or it is invalid, then note the error.
+		err = ErrCommandNotValid.Args("command", tokens[1:].Join(" "))
+		// Use the RootCmd for spoofing GetUsage().
+		cmd = RootCmd
+	}
+	// Set command and tokens to spoof GetUsage() into providing help for that
+	return h.withCommand(cmd).
+		withTokens(tokens).
+		GetUsage(err)
 }
 
 func (h Help) rootCmdHelp(err error) string {

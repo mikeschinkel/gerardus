@@ -30,6 +30,7 @@ type Arg struct {
 	Usage        string
 	Default      interface{}
 	Optional     bool
+	Variadic     bool
 	ExistsFunc   func(Context, any, *Arg) error
 	ValidateFunc func(Context, any, *Arg) error
 	Type         reflect.Kind

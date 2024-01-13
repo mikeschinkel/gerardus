@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"log/slog"
+	"math"
 	"reflect"
 	"slices"
 	"strings"
@@ -271,7 +272,16 @@ func (c *Command) OptionalArgsCount() (cnt int) {
 
 // DeclaredArgsCount returns the number of total args; required and optional
 func (c *Command) DeclaredArgsCount() (cnt int) {
-	return len(c.Args)
+	cnt = len(c.Args)
+	switch {
+	case cnt == 0:
+		goto end
+	case c.Args[cnt-1].Variadic:
+		cnt = math.MaxInt
+		goto end
+	}
+end:
+	return cnt
 }
 
 // ReceivedArgsCount returns number of args received on command line. Example: If

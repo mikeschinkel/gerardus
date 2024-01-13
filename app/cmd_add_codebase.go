@@ -34,7 +34,7 @@ func (a *App) ExecAddCodebase(ctx context.Context, i *cli.CommandInvoker) (err e
 			"project", project,
 			"version_tag", versionTag,
 			"repo_url", p.RepoUrl,
-			"help", "Potentially bad project name, version tag, or repo URL.",
+			cli.HelpArg, "Potentially bad project name, version tag, or repo URL.",
 		)
 		goto end
 	}
