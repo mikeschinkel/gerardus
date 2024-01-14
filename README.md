@@ -12,6 +12,10 @@ Still very much a **work-in-progress**, and thus **pre-alpha.**
 
 In no particular order:
 
+### CI/CD
+1. Install commands for `go generate` in GitHub Actions `yaml`
+2. Vendor dependencies
+
 ### Testing
 1. ~~Implement robust integration tests~~ 
     1. ~~Simulate calling from the command line.~~
