@@ -10,3 +10,5 @@
 /test/quick/
 /test/quick/**
 /gerardus.log
+/go.work
+/go.work.sum
