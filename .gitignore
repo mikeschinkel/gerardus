@@ -1,8 +1,5 @@
 /bin
 /bin/**
-/persister/db.go
-/persister/models.go
-/persister/query.sql.go
 /test/output
 /test/output/**
 /test/dummy/
