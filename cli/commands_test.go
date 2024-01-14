@@ -91,7 +91,7 @@ func TestCommands(t *testing.T) {
 			panic:    true,
 			panicMsg: "CommandString(rootRmd,tokens) expects tokens will have '-flags' filtered out, yet flag '-foo=' found.",
 			flags:    setFlagRequires(oneCommand(rootCmd).Flags, "foo", cli.NotEmpty),
-			errMsg:   "value cannot be empty [option=-foo]",
+			errMsg:   "value cannot be empty [option_name=-foo]",
 			wantErr:  true,
 		},
 	}
