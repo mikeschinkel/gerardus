@@ -1,4 +1,4 @@
-package app_test
+package test
 
 import (
 	"fmt"
@@ -74,11 +74,11 @@ func mapTests() []test {
 	}
 }
 
-func mapSuccessStub(ctx Context, project, versionTag string, a *app.App) error {
+func mapSuccessStub(Context, string, string, *app.App) error {
 	return nil
 }
 
-func mapFailureStub(ctx Context, project, versionTag string, a *app.App) error {
+func mapFailureStub(Context, string, string, *app.App) error {
 	return serr.New("test-invoked failure")
 }
 
