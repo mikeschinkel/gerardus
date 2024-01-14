@@ -9,7 +9,9 @@ var CmdHelp = AddCommandWithFunc(Token(HelpArg), ExecHelp).
 		Variadic: true,
 	}.EmptyOk())
 
-func ExecHelp(ctx Context, i *CommandInvoker) (err error) {
-	// TODO Implement help
+// ExecHelp "implements" the help command by simply delegating to help.Usage() by
+// returning an sentinel error which help.Usage() will recognize and generate the
+// appropriate output.
+func ExecHelp(Context, *CommandInvoker) (err error) {
 	return ErrHelpSentinel
 }

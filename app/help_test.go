@@ -2,9 +2,6 @@ package app_test
 
 import (
 	"testing"
-
-	"github.com/mikeschinkel/gerardus/app"
-	"github.com/mikeschinkel/go-serr"
 )
 
 func TestHelpCommand(t *testing.T) {}
@@ -55,14 +52,6 @@ func helpTests() []test {
 			errStr: "<n/a>",
 		},
 	}
-}
-
-func helpSuccessStub(ctx Context, project, versionTag string, a *app.App) error {
-	return nil
-}
-
-func helpFailureStub(ctx Context, project, versionTag string, a *app.App) error {
-	return serr.New("test-invoked failure")
 }
 
 func helpUsage() string {
