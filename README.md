@@ -13,19 +13,13 @@ Still very much a **work-in-progress**, and thus **pre-alpha.**
 In no particular order:
 
 ### Testing
-1. Implement robust integration tests 
+1. ~~Implement robust integration tests~~ 
     1. ~~Simulate calling from the command line.~~
     2. ~~Stubbing out the database~~
     3. ~~Add tests for `add project` command.~~
     4. ~~Add tests for `add codebase` command.~~
     5. ~~Add tests for `map` command.~~
-    6. Add tests for `help` command.
-        1. Add tests for `help add` command.
-        2. Add tests for `help add project` command.
-        3. Add tests for `help add codebase` command.
-        4. Add tests for `help add codebase` command.
-        5. Add tests for `help map` command.
-    6. Add tests for `--data` option, all commands.
+    6. ~~Add tests for `help` command.~~
 
 ### Miscellaneous
 1. ~~Ensure chans refactor works~~

@@ -61,6 +61,9 @@ func TestAppMain(t *testing.T) {
 		t.Run("Map Tests", func(t *testing.T) {
 			runTests(t, mapTests())
 		})
+		t.Run("Help Tests", func(t *testing.T) {
+			runTests(t, helpTests())
+		})
 	})
 }
 
