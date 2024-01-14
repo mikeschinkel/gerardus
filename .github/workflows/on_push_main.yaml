@@ -1,0 +1,38 @@
+name: On Push Main
+
+on:
+  pull_request:
+  push:
+    branches:
+    - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v5
+
+    - name: Format
+      run: gofmt -s -w . && git diff --exit-code
+
+    - name: Tidy
+      run: go mod tidy && git diff --exit-code
+
+    - name: Test
+      run: |
+        mkdir -p "${{ runner.temp }}/covdata"
+        go test -tags test -v -cover ./...  -test.gocoverdir="${{ runner.temp }}/covdata"
+        go tool covdata percent -i="${{ runner.temp }}/covdata"
+        go tool covdata textfmt -o "${{ runner.temp }}/coverage.out" -i="${{ runner.temp }}/covdata"
+
+    - name: Coverage report
+      uses: ncruces/go-coverage-report@v0
+      with:
+        coverage-file: "${{ runner.temp }}/coverage.out"
+        report: true
+        chart: true
+        amend: true
+      if: |
+        github.event_name == 'push'
+      continue-on-error: true
