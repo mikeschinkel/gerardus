@@ -1,0 +1,9 @@
+go 1.21
+
+use (
+	.
+	../go-diffator
+	../go-lib
+	../go-serr
+	../go-typegen
+)
