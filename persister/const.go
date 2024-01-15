@@ -1,6 +1,6 @@
 package persister
 
 const (
-	SqliteDB   = "./gerardus.db"
+	SqliteDB   = "./data/gerardus.db"
 	RepoURLArg = "repo_url"
 )

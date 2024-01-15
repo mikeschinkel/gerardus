@@ -9,3 +9,6 @@
 /gerardus.log
 /go.work
 /go.work.sum
+/data/.fseventsd
+/data/.fseventsd/**
+/data/gerardus.db
