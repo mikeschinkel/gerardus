@@ -10,7 +10,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       pages: write  # Grant write access to pages, which includes the wiki
     steps:
     - uses: actions/checkout@v4
